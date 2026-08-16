@@ -1,0 +1,755 @@
+<title>DefenseClaw AI Discovery</title>
+<style>
+  :root {
+    --bg: #eceff0;
+    --panel: #ffffff;
+    --panel-2: #f6f8f8;
+    --ink: #0f1a1e;
+    --ink-2: #294046;
+    --muted: #5b6d73;
+    --line: #ccd7da;
+    --edge: #7e9298;
+    --accent: #0a747f;
+    --accent-soft: #dcedef;
+    --warn: #8c5a06;
+    --alert: #a3382c;
+    --ok: #2b6b49;
+
+    --font-display: ui-sans-serif, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-body: Charter, "Bitstream Charter", "Iowan Old Style", "Source Serif 4", Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+
+    --measure: 68ch;
+    --page: 1120px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a1114;
+      --panel: #111c20;
+      --panel-2: #16242a;
+      --ink: #e1eaec;
+      --ink-2: #bccbcf;
+      --muted: #8ea3a9;
+      --line: #29393f;
+      --edge: #6b858d;
+      --accent: #4ecfdb;
+      --accent-soft: #0d3238;
+      --warn: #d99b46;
+      --alert: #e07a68;
+      --ok: #5cb489;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0a1114;
+    --panel: #111c20;
+    --panel-2: #16242a;
+    --ink: #e1eaec;
+    --ink-2: #bccbcf;
+    --muted: #8ea3a9;
+    --line: #29393f;
+    --edge: #6b858d;
+    --accent: #4ecfdb;
+    --accent-soft: #0d3238;
+    --warn: #d99b46;
+    --alert: #e07a68;
+    --ok: #5cb489;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.62;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .wrap {
+    max-width: var(--page);
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  .prose { max-width: var(--measure); }
+
+  /* ---- masthead ---- */
+  .masthead { display: flex; flex-direction: column; gap: 18px; }
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-size: clamp(34px, 5vw, 52px);
+    line-height: 1.04;
+    letter-spacing: -0.028em;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+    max-width: 20ch;
+  }
+  .standfirst {
+    margin: 0;
+    max-width: var(--measure);
+    font-size: 19px;
+    color: var(--ink-2);
+  }
+  .source {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+  .source a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--line); }
+  .source a:hover { border-bottom-color: var(--accent); }
+
+  /* ---- sections ---- */
+  section { display: flex; flex-direction: column; gap: 22px; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .eyebrow::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-size: clamp(23px, 2.6vw, 30px);
+    letter-spacing: -0.02em;
+    line-height: 1.16;
+    font-weight: 650;
+    margin: 0;
+    text-wrap: balance;
+  }
+  h3 {
+    font-family: var(--font-display);
+    font-size: 17px;
+    letter-spacing: -0.01em;
+    font-weight: 650;
+    margin: 0 0 6px;
+  }
+  p { margin: 0; }
+  .prose p + p { margin-top: 14px; }
+  strong { font-weight: 650; }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.86em;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 1px 5px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  /* ---- figures ---- */
+  figure {
+    margin: 0;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 26px 26px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-x: auto;
+  }
+  figure svg {
+    display: block;
+    width: 100%;
+    min-width: 620px;
+    max-width: 100%;
+    height: auto;
+  }
+  figcaption {
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 84ch;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+  figcaption b { color: var(--ink-2); font-weight: 650; }
+
+  /* svg typography */
+  figure svg text { font-family: var(--font-mono); font-size: 12.5px; fill: var(--ink); }
+  figure svg .t { font-size: 13px; font-weight: 600; }
+  figure svg .s { font-size: 11.5px; fill: var(--muted); }
+  figure svg .lbl { font-size: 11px; fill: var(--muted); }
+  figure svg .hd { font-size: 11px; fill: var(--accent); letter-spacing: 0.1em; }
+  figure svg .hi { fill: var(--accent); }
+  figure svg .warnt { fill: var(--alert); }
+  figure svg .node { fill: var(--panel-2); stroke: var(--line); stroke-width: 1.4; }
+  figure svg .node-a { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; }
+  figure svg .node-q { fill: none; stroke: var(--edge); stroke-width: 1.2; stroke-dasharray: 5 4; }
+  figure svg .edge { fill: none; stroke: var(--edge); stroke-width: 1.5; }
+  figure svg .edge-a { fill: none; stroke: var(--accent); stroke-width: 1.7; }
+  figure svg .edge-d { fill: none; stroke: var(--edge); stroke-width: 1.4; stroke-dasharray: 5 4; }
+  figure svg .ah { fill: var(--edge); }
+  figure svg .ah-a { fill: var(--accent); }
+
+  /* ---- grids ---- */
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .card .tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .card p { font-size: 15px; line-height: 1.5; color: var(--ink-2); }
+  .card .cmd {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 6px 8px;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* ---- terminal block ---- */
+  .term {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .term-bar {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-2);
+  }
+  .term pre {
+    margin: 0;
+    padding: 18px 16px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--ink);
+  }
+  .term .c { color: var(--accent); }
+  .term .g { color: var(--muted); }
+
+  /* ---- table ---- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+  table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 14.5px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--panel-2);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.mono { font-family: var(--font-mono); font-size: 12.5px; white-space: nowrap; color: var(--ink); }
+  td.mono .flag { color: var(--muted); }
+
+  /* ---- privacy list ---- */
+  .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; list-style: none; margin: 0; padding: 0; }
+  .rules li {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ok);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .rules li b { color: var(--ink); font-weight: 650; display: block; font-family: var(--font-display); font-size: 14px; margin-bottom: 3px; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 80ch;
+  }
+
+  @media (max-width: 640px) {
+    .wrap { padding: 40px 16px 72px; gap: 44px; }
+    figure { padding: 18px 14px 14px; }
+    body { font-size: 16px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">Cisco AI Defense · DefenseClaw</div>
+    <h1>AI Discovery, drawn from end to end</h1>
+    <p class="standfirst">DefenseClaw answers one question before it enforces anything: <em>what AI is installed or running on this machine?</em> Four discovery surfaces feed one inventory — here is how each one moves data.</p>
+    <p class="source">Source: <a href="https://cisco-ai-defense.github.io/defenseclaw/docs/ai-discovery/">cisco-ai-defense.github.io/defenseclaw/docs/ai-discovery</a></p>
+  </header>
+
+  <!-- ================= 1. WHERE DISCOVERY SITS ================= -->
+  <section>
+    <div class="eyebrow">01 — Orientation</div>
+    <h2>Where discovery sits in DefenseClaw</h2>
+    <div class="prose">
+      <p>DefenseClaw is a governance layer around AI coding agents: a Go gateway on the data path, a Python operator CLI beside it, and connector hooks inside 14 agent runtimes. Every capability an agent reaches for is scanned, logged, and — depending on mode — blocked. AI Discovery is the scanner that inventories the machine rather than the traffic.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 1000 344" role="img" aria-label="Agent runtimes connect through hooks to the DefenseClaw gateway, which runs the AI Discovery scanner alongside skill, MCP and A2A scanners and a policy engine; the gateway writes every event to local audit history and optional observability sinks, and returns an allow, block, or pause verdict to the runtime. The operator CLI configures the gateway.">
+        <defs>
+          <marker id="f1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="ah" />
+          </marker>
+        </defs>
+
+        <!-- operator CLI -->
+        <rect class="node" x="16" y="20" width="190" height="60" rx="7" />
+        <text class="t" x="111" y="45" text-anchor="middle">Operator CLI</text>
+        <text class="s" x="111" y="64" text-anchor="middle">python · defenseclaw</text>
+        <path class="edge" d="M206,50 H262 V104" marker-end="url(#f1a)" />
+        <text class="lbl" x="274" y="44">config · approvals</text>
+
+        <!-- agent runtime -->
+        <rect class="node" x="16" y="118" width="190" height="106" rx="7" />
+        <text class="t" x="111" y="146" text-anchor="middle">Agent runtime</text>
+        <text class="s" x="111" y="169" text-anchor="middle">Claude Code · Cursor</text>
+        <text class="s" x="111" y="188" text-anchor="middle">OpenClaw · Codex</text>
+        <text class="s" x="111" y="207" text-anchor="middle">Copilot CLI · +10</text>
+        <path class="edge" d="M206,171 H298" marker-end="url(#f1a)" />
+        <text class="lbl" x="252" y="161" text-anchor="middle">hooks / proxy</text>
+
+        <!-- gateway -->
+        <rect class="node" x="300" y="70" width="240" height="200" rx="8" />
+        <text class="t" x="420" y="96" text-anchor="middle">Go gateway</text>
+        <rect class="node-a" x="316" y="110" width="208" height="40" rx="6" />
+        <text class="t hi" x="420" y="135" text-anchor="middle">AI Discovery scanner</text>
+        <rect class="node" x="316" y="158" width="208" height="40" rx="6" />
+        <text x="420" y="183" text-anchor="middle">skill · mcp · a2a scan</text>
+        <rect class="node" x="316" y="206" width="208" height="46" rx="6" />
+        <text x="420" y="226" text-anchor="middle">policy engine</text>
+        <text class="s" x="420" y="243" text-anchor="middle">observe / action / HITL</text>
+
+        <!-- destinations -->
+        <path class="edge" d="M540,130 H626" marker-end="url(#f1a)" />
+        <text class="lbl" x="583" y="120" text-anchor="middle">every event</text>
+        <rect class="node" x="628" y="96" width="356" height="70" rx="7" />
+        <text class="t" x="806" y="124" text-anchor="middle">Local audit history</text>
+        <text class="s" x="806" y="145" text-anchor="middle">SQLite + JSONL — mandatory, always on</text>
+
+        <path class="edge" d="M540,230 H626" marker-end="url(#f1a)" />
+        <text class="lbl" x="583" y="220" text-anchor="middle">transitions</text>
+        <rect class="node" x="628" y="196" width="356" height="70" rx="7" />
+        <text class="t" x="806" y="224" text-anchor="middle">Observability sinks</text>
+        <text class="s" x="806" y="245" text-anchor="middle">OTLP · Splunk · Grafana · webhooks</text>
+
+        <!-- verdict return -->
+        <path class="edge-a" d="M420,270 V308 H111 V226" marker-end="url(#f1a)" />
+        <text class="lbl hi" x="266" y="328" text-anchor="middle">allow · block · pause for approval</text>
+      </svg>
+      <figcaption><b>One gateway, two directions.</b> Traffic and capability requests flow in from the runtime and a verdict flows back; findings fan out to an audit log that is never optional and to sinks that are. AI Discovery is the one scanner that also looks sideways — at the filesystem, processes, and configs of the host itself.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ================= 2. FOUR SURFACES ================= -->
+  <section>
+    <div class="eyebrow">02 — The four surfaces</div>
+    <h2>Four ways to ask the same question</h2>
+    <div class="grid-4">
+      <div class="card">
+        <span class="tag">Continuous</span>
+        <h3>Gateway scanner</h3>
+        <p>Fingerprints AI artifacts on a timer and emits <code>ai_discovery</code> events when something appears, changes, or disappears.</p>
+        <div class="cmd">agent discovery enable</div>
+      </div>
+      <div class="card">
+        <span class="tag">On demand</span>
+        <h3>CLI discovery</h3>
+        <p>Immediate connector inventory in one command. No gateway required, and it can run strictly local.</p>
+        <div class="cmd">agent discover</div>
+      </div>
+      <div class="card">
+        <span class="tag">Compliance</span>
+        <h3>AIBOM</h3>
+        <p>Provenance for skills, plugins, MCP servers, agents, models, and memory — hashed and version-stamped.</p>
+        <div class="cmd">aibom scan --json</div>
+      </div>
+      <div class="card">
+        <span class="tag">Admission</span>
+        <h3>Registry</h3>
+        <p>The approved catalog. Once required, anything discovered but unlisted is blocked until an operator approves it.</p>
+        <div class="cmd">registry require --type skill</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3. PIPELINE ================= -->
+  <section>
+    <div class="eyebrow">03 — Data flow</div>
+    <h2>Three lanes over one machine</h2>
+    <div class="prose">
+      <p>The same local surfaces feed three independent paths. They differ in who runs them, whether a gateway is involved, and what comes out the far end.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 1040 486" role="img" aria-label="Local surfaces such as connector configs, binaries, processes, model files, package manifests, environment variable names and DNS feed three lanes: agent discover produces a table or JSON and optionally posts a sanitized report to the gateway; the gateway scanner writes a signal store with state and confidence, emitting only new, changed and gone transitions to sinks while agent usage queries the snapshot; aibom scan produces aibom.json.">
+        <defs>
+          <marker id="f2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="ah" />
+          </marker>
+          <marker id="f2b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="ah-a" />
+          </marker>
+        </defs>
+
+        <!-- left: the machine -->
+        <text class="hd" x="16" y="30">LOCAL SURFACES</text>
+        <rect class="node" x="16" y="44" width="196" height="404" rx="8" />
+        <text class="s" x="34" y="82">connector configs</text>
+        <text class="s" x="34" y="122">binaries + version probe</text>
+        <text class="s" x="34" y="162">running processes</text>
+        <text class="s" x="34" y="202">editor extensions</text>
+        <text class="s" x="34" y="242">model files on disk</text>
+        <text class="s" x="34" y="282">loopback model APIs</text>
+        <text class="s" x="34" y="322">package manifests</text>
+        <text class="s" x="34" y="362">env var names</text>
+        <text class="s" x="34" y="402">provider DNS lookups</text>
+        <text class="lbl" x="34" y="432">no values, only names</text>
+
+        <!-- lane A -->
+        <text class="hd" x="246" y="30">ON DEMAND</text>
+        <path class="edge" d="M212,92 H244" marker-end="url(#f2a)" />
+        <rect class="node" x="246" y="60" width="238" height="72" rx="7" />
+        <text class="t" x="365" y="90" text-anchor="middle">agent discover</text>
+        <text class="s" x="365" y="110" text-anchor="middle">walks known connector paths</text>
+        <path class="edge" d="M484,96 H556" marker-end="url(#f2a)" />
+        <rect class="node" x="558" y="60" width="190" height="72" rx="7" />
+        <text class="t" x="653" y="90" text-anchor="middle">table or --json</text>
+        <text class="s" x="653" y="110" text-anchor="middle">printed locally</text>
+        <path class="edge-d" d="M748,96 H818" marker-end="url(#f2a)" />
+        <text class="lbl" x="783" y="86" text-anchor="middle">--emit-otel</text>
+        <rect class="node-q" x="820" y="60" width="200" height="72" rx="7" />
+        <text class="t" x="920" y="90" text-anchor="middle">sanitized report</text>
+        <text class="s" x="920" y="110" text-anchor="middle">posted to gateway</text>
+        <text class="lbl" x="920" y="150" text-anchor="middle">--no-emit-otel keeps it local</text>
+
+        <!-- lane B -->
+        <text class="hd" x="246" y="196">CONTINUOUS</text>
+        <path class="edge-a" d="M212,266 H244" marker-end="url(#f2b)" />
+        <rect class="node-a" x="246" y="216" width="238" height="98" rx="7" />
+        <text class="t hi" x="365" y="248" text-anchor="middle">gateway discovery scanner</text>
+        <text class="s" x="365" y="270" text-anchor="middle">every --scan-interval-min</text>
+        <text class="s" x="365" y="291" text-anchor="middle">bounded traversal + cursors</text>
+        <path class="edge-a" d="M484,266 H556" marker-end="url(#f2b)" />
+        <text class="lbl" x="520" y="256" text-anchor="middle">classify</text>
+        <rect class="node" x="558" y="216" width="190" height="98" rx="7" />
+        <text class="t" x="653" y="246" text-anchor="middle">signal store</text>
+        <text class="s" x="653" y="267" text-anchor="middle">15+ categories</text>
+        <text class="s" x="653" y="286" text-anchor="middle">confidence 0–1</text>
+        <text class="s" x="653" y="305" text-anchor="middle">state + timestamps</text>
+        <path class="edge-a" d="M748,244 H818" marker-end="url(#f2b)" />
+        <text class="lbl" x="783" y="234" text-anchor="middle">transitions only</text>
+        <rect class="node" x="820" y="216" width="200" height="46" rx="7" />
+        <text class="t" x="920" y="244" text-anchor="middle">ai_discovery events</text>
+        <path class="edge" d="M818,296 H750" marker-end="url(#f2a)" />
+        <text class="lbl" x="784" y="286" text-anchor="middle">reads snapshot</text>
+        <rect class="node" x="820" y="270" width="200" height="46" rx="7" />
+        <text class="t" x="920" y="298" text-anchor="middle">agent usage</text>
+
+        <!-- lane C -->
+        <text class="hd" x="246" y="378">COMPLIANCE</text>
+        <path class="edge" d="M212,424 H244" marker-end="url(#f2a)" />
+        <rect class="node" x="246" y="392" width="238" height="66" rx="7" />
+        <text class="t" x="365" y="420" text-anchor="middle">aibom scan</text>
+        <text class="s" x="365" y="440" text-anchor="middle">per connector, on request</text>
+        <path class="edge" d="M484,424 H556" marker-end="url(#f2a)" />
+        <rect class="node" x="558" y="392" width="462" height="66" rx="7" />
+        <text class="t" x="789" y="420" text-anchor="middle">aibom.json</text>
+        <text class="s" x="789" y="440" text-anchor="middle">skills · plugins · mcp · agents · models · memory — hashed, version-stamped</text>
+      </svg>
+      <figcaption><b>Only the middle lane keeps state.</b> <code>agent discover</code> is a one-shot read that prints and exits; the gateway scanner is the only path that remembers what it saw last time, which is what makes <em>changed</em> and <em>gone</em> expressible at all. AIBOM is a third read of the same machine, shaped for auditors rather than alerts.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ================= 4. STATE ================= -->
+  <section>
+    <div class="eyebrow">04 — Signal lifecycle</div>
+    <h2>Why the event stream stays quiet</h2>
+    <div class="prose">
+      <p>Every signal carries a state and two timestamps. Rescans move signals between states, but only the transitions leave the machine — a laptop with a stable toolchain produces almost no traffic after its first scan.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 940 296" role="img" aria-label="State machine: a signal starts as new, becomes seen on the next unchanged scan, moves to changed when its fingerprint differs and back to seen, and becomes gone only when absent after a completed scan. New, changed and gone each emit an HMAC-stamped ai_discovery event; seen emits nothing.">
+        <defs>
+          <marker id="f3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="ah" />
+          </marker>
+          <marker id="f3b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="ah-a" />
+          </marker>
+        </defs>
+
+        <rect class="node-a" x="40" y="64" width="150" height="54" rx="27" />
+        <text class="t hi" x="115" y="97" text-anchor="middle">new</text>
+
+        <path class="edge" d="M190,91 H268" marker-end="url(#f3a)" />
+        <text class="lbl" x="229" y="81" text-anchor="middle">rescan, same</text>
+
+        <rect class="node" x="270" y="64" width="150" height="54" rx="27" />
+        <text class="t" x="345" y="97" text-anchor="middle">seen</text>
+
+        <path class="edge" d="M420,91 H498" marker-end="url(#f3a)" />
+        <text class="lbl" x="459" y="81" text-anchor="middle">fingerprint differs</text>
+
+        <rect class="node-a" x="500" y="64" width="150" height="54" rx="27" />
+        <text class="t hi" x="575" y="97" text-anchor="middle">changed</text>
+
+        <path class="edge" d="M650,91 H728" marker-end="url(#f3a)" />
+        <text class="lbl" x="689" y="81" text-anchor="middle">absent, full scan</text>
+
+        <rect class="node-a" x="730" y="64" width="150" height="54" rx="27" />
+        <text class="t hi" x="805" y="97" text-anchor="middle">gone</text>
+
+        <!-- changed loops back to seen -->
+        <path class="edge" d="M560,64 C540,20 380,20 355,60" marker-end="url(#f3a)" />
+        <text class="lbl" x="458" y="26" text-anchor="middle">next rescan, settles back to seen</text>
+
+        <!-- emissions -->
+        <path class="edge-a" d="M115,118 V204" marker-end="url(#f3b)" />
+        <path class="edge-a" d="M575,118 V204" marker-end="url(#f3b)" />
+        <path class="edge-a" d="M805,118 V204" marker-end="url(#f3b)" />
+        <path class="edge-d" d="M345,118 V160" />
+        <text class="lbl" x="345" y="180" text-anchor="middle">no event</text>
+
+        <rect class="node" x="40" y="206" width="840" height="58" rx="8" />
+        <text class="t" x="460" y="232" text-anchor="middle">ai_discovery event — HMAC-stamped per installation</text>
+        <text class="s" x="460" y="252" text-anchor="middle">OTLP logs · Splunk inventory dashboard · Grafana counters</text>
+      </svg>
+      <figcaption><b>Absence has to be proven.</b> A failed API pass or a permission-blocked directory carries the row forward as <code>seen</code> and reports <code>result: partial</code>; only a completed scan cycle is allowed to mark something <code>gone</code>. That rule is what keeps a sleeping laptop or a denied macOS folder from firing false removals.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ================= 5. LOCAL MODELS ================= -->
+  <section>
+    <div class="eyebrow">05 — Local models</div>
+    <h2>Finding weights without loading them</h2>
+    <div class="prose">
+      <p>Local model discovery is the part most likely to worry a privacy reviewer, so it is deliberately metadata-only and needs no running inference engine. Two scopes feed two readers, and neither reader ever touches a tensor.</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 1000 392" role="img" aria-label="Passive mode scans known model stores and operator-specified roots; enhanced mode adds bounded home traversal and macOS application storage. Both feed a metadata reader that reads only file headers and never tensor payloads, and a separate path lists five vetted loopback APIs with response and count caps and no inference calls. Both produce local_model rows carrying owner application, modality, relevance and discovery confidence.">
+        <defs>
+          <marker id="f4a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="ah" />
+          </marker>
+        </defs>
+
+        <text class="hd" x="16" y="30">SCOPE</text>
+        <rect class="node" x="16" y="44" width="264" height="106" rx="7" />
+        <text class="t" x="36" y="74">passive — default</text>
+        <text class="s" x="36" y="100">known model stores only</text>
+        <text class="s" x="36" y="122">+ roots you name with --scan-roots</text>
+
+        <rect class="node-q" x="16" y="176" width="264" height="126" rx="7" />
+        <text class="t hi" x="36" y="206">enhanced — opt in</text>
+        <text class="s" x="36" y="232">everything passive finds, plus</text>
+        <text class="s" x="36" y="254">broad home directory traversal</text>
+        <text class="s" x="36" y="276">macOS app storage, TCC respected</text>
+
+        <path class="edge" d="M280,97 H334" marker-end="url(#f4a)" />
+        <path class="edge" d="M280,239 C310,239 310,140 334,127" marker-end="url(#f4a)" />
+        <path class="edge" d="M280,262 C310,262 310,300 334,300" marker-end="url(#f4a)" />
+
+        <text class="hd" x="336" y="30">READ</text>
+        <rect class="node" x="336" y="44" width="272" height="140" rx="7" />
+        <text class="t" x="472" y="74" text-anchor="middle">metadata reader</text>
+        <text class="s" x="472" y="100" text-anchor="middle">bounded GGUF / GGML headers</text>
+        <text class="s" x="472" y="120" text-anchor="middle">safetensors · Core ML · Q4NX</text>
+        <text class="s" x="472" y="140" text-anchor="middle">shards grouped into one row</text>
+        <text class="warnt" x="472" y="166" text-anchor="middle">never reads tensor payloads</text>
+
+        <rect class="node" x="336" y="240" width="272" height="126" rx="7" />
+        <text class="t" x="472" y="270" text-anchor="middle">five vetted loopback APIs</text>
+        <text class="s" x="472" y="294" text-anchor="middle">Ollama · LM Studio · LocalAI</text>
+        <text class="s" x="472" y="314" text-anchor="middle">vLLM · Lemonade Server</text>
+        <text class="warnt" x="472" y="342" text-anchor="middle">≤1 MiB · ≤256 models · no inference routes</text>
+
+        <path class="edge" d="M608,114 H684" marker-end="url(#f4a)" />
+        <text class="lbl" x="646" y="104" text-anchor="middle">on disk</text>
+        <path class="edge" d="M608,300 C650,300 650,240 684,228" marker-end="url(#f4a)" />
+        <text class="lbl" x="650" y="320" text-anchor="middle">loaded now</text>
+
+        <text class="hd" x="686" y="30">ROW</text>
+        <rect class="node-a" x="686" y="86" width="298" height="176" rx="7" />
+        <text class="t hi" x="835" y="116" text-anchor="middle">local_model signal</text>
+        <text class="s" x="710" y="146">owner_application</text>
+        <text class="s" x="710" y="174">modality — generative, speech, vision…</text>
+        <text class="s" x="710" y="202">relevance — primary, supporting, embedded</text>
+        <text class="s" x="710" y="230">discovery_confidence — 0 to 1</text>
+        <text class="lbl" x="835" y="288" text-anchor="middle">TUI hides low-confidence and embedded rows by default</text>
+      </svg>
+      <figcaption><b>Two evidence sources, one row.</b> Files on disk prove a model is <em>installed</em>; a loopback API listing proves one is <em>loaded</em>. The confidence score exists because filesystem evidence is circumstantial — <code>agent confidence explain</code> prints the evidence trail behind any score, and detector weights are tunable.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ================= 6. LOOP ================= -->
+  <section>
+    <div class="eyebrow">06 — Closing the loop</div>
+    <h2>Discovery finds it, the registry decides</h2>
+
+    <figure>
+      <svg viewBox="0 0 900 316" role="img" aria-label="A four-step cycle: baseline assets with agent discover and aibom scan, promote trusted entries into the registry, turn on registry required mode so unlisted capabilities are blocked, then approve each new discovery individually, which returns to the baseline.">
+        <defs>
+          <marker id="f5a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="ah" />
+          </marker>
+        </defs>
+
+        <rect class="node" x="40" y="40" width="280" height="82" rx="7" />
+        <text class="hd" x="60" y="66">STEP 1</text>
+        <text class="t" x="60" y="90">Baseline what exists</text>
+        <text class="s" x="60" y="110">agent discover · aibom scan</text>
+
+        <path class="edge" d="M320,81 H578" marker-end="url(#f5a)" />
+        <text class="lbl" x="449" y="71" text-anchor="middle">trusted entries</text>
+
+        <rect class="node" x="580" y="40" width="280" height="82" rx="7" />
+        <text class="hd" x="600" y="66">STEP 2</text>
+        <text class="t" x="600" y="90">Promote into registry</text>
+        <text class="s" x="600" y="110">the approved catalog</text>
+
+        <path class="edge" d="M720,122 V192" marker-end="url(#f5a)" />
+        <text class="lbl" x="732" y="162">turn on enforcement</text>
+
+        <rect class="node-a" x="580" y="194" width="280" height="82" rx="7" />
+        <text class="hd" x="600" y="220">STEP 3</text>
+        <text class="t hi" x="600" y="244">Require registry</text>
+        <text class="s" x="600" y="264">registry require --type skill</text>
+
+        <path class="edge" d="M578,235 H322" marker-end="url(#f5a)" />
+        <text class="lbl" x="450" y="225" text-anchor="middle">unlisted skill is blocked</text>
+
+        <rect class="node" x="40" y="194" width="280" height="82" rx="7" />
+        <text class="hd" x="60" y="220">STEP 4</text>
+        <text class="t" x="60" y="244">Approve one at a time</text>
+        <text class="s" x="60" y="264">each new discovery, deliberately</text>
+
+        <path class="edge" d="M180,194 V122" marker-end="url(#f5a)" />
+        <text class="lbl" x="192" y="162">inventory grows</text>
+      </svg>
+      <figcaption><b>Discovery answers "what's there"; the registry answers "what's allowed".</b> Neither is governance on its own — the loop only closes when an unlisted capability discovered at step 4 cannot run until someone puts it back through step 2.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ================= 7. RUN IT ================= -->
+  <section>
+    <div class="eyebrow">07 — The 30-second tour</div>
+    <h2>Run it now</h2>
+    <div class="prose">
+      <p>One command walks the known connector paths — OpenClaw, Claude Code, Cursor, Windsurf, Gemini CLI, GitHub Copilot CLI and six more — checks config files and binaries, probes versions, and prints a table.</p>
+    </div>
+
+    <div class="term">
+      <div class="term-bar">on-demand discovery · no gateway required</div>
+      <pre><span class="c">$</span> defenseclaw agent discover
+
+<span class="g"># machine-readable</span>
+<span class="c">$</span> defenseclaw agent discover --json
+
+<span class="g"># strictly local: nothing leaves the host</span>
+<span class="c">$</span> defenseclaw agent discover --no-emit-otel
+
+<span class="g"># CI gate: fail if the gateway is unreachable</span>
+<span class="c">$</span> defenseclaw agent discover --require-otel</pre>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>What it does</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">agent discovery enable <span class="flag">--restart --scan</span></td><td>Turns on continuous discovery, restarts the gateway, runs a full scan immediately.</td></tr>
+          <tr><td class="mono">agent discovery status</td><td>Enabled settings, scan roots, signature pack, last scan time.</td></tr>
+          <tr><td class="mono">agent discovery scan</td><td>Fresh scan now, without a restart — use it after onboarding a tool.</td></tr>
+          <tr><td class="mono">agent usage <span class="flag">--state new --state changed</span></td><td>Queries the continuous snapshot for what moved.</td></tr>
+          <tr><td class="mono">agent processes <span class="flag">--limit 20</span></td><td>Live AI processes from the same snapshot.</td></tr>
+          <tr><td class="mono">agent components <span class="flag">--ecosystem npm</span></td><td>AI-related package dependencies by ecosystem.</td></tr>
+          <tr><td class="mono">agent confidence explain <span class="flag">claudecode</span></td><td>The evidence trail behind a detection score.</td></tr>
+          <tr><td class="mono">agent signatures install <span class="flag">./corp.yaml</span></td><td>Adds a custom pack so internal tooling reports as first-party, not <code>unknown</code>.</td></tr>
+          <tr><td class="mono">aibom scan <span class="flag">--summary</span></td><td>Count-only output, sized for a CI gate.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <p>To cut noise on a shared or personal machine, narrow the scope rather than turning discovery off:</p>
+    </div>
+    <div class="term">
+      <div class="term-bar">quieter continuous discovery</div>
+      <pre><span class="c">$</span> defenseclaw agent discovery enable --mode passive --scan-roots ~/work \
+    --no-include-shell-history --no-include-network-domains</pre>
+    </div>
+  </section>
+
+  <!-- ================= 8. PRIVACY ================= -->
+  <section>
+    <div class="eyebrow">08 — Trust model</div>
+    <h2>What discovery refuses to collect</h2>
+    <ul class="rules">
+      <li><b>Names, not values</b>Environment variable names are recorded; their values never are. File paths are hashed, and redacted output keeps only basenames.</li>
+      <li><b>Headers, not weights</b>Model discovery reads bounded headers and small config metadata. It never reads tensor payloads and never calls an inference route.</li>
+      <li><b>Capped API reads</b>Loopback listings stop at 1 MiB and 256 models, across five vetted local servers only.</li>
+      <li><b>Optional path trust</b>Set <code>require_trusted_binary_paths: true</code> and version probes only execute binaries from safe directories.</li>
+      <li><b>Tamper-evident events</b>Continuous-discovery events are HMAC-stamped per installation, so a modified event does not verify.</li>
+      <li><b>Separate switches</b>Provider-domain checks, shell history, package manifests, and env-name collection each toggle independently.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Diagrams drawn from the DefenseClaw AI Discovery documentation, cisco-ai-defense.github.io/defenseclaw/docs/ai-discovery. DefenseClaw is an enforcement and evidence layer — it does not certify that any discovered agent, model, or third-party capability is safe.
+  </footer>
+
+</div>
