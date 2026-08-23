@@ -47,6 +47,30 @@ Two details that are easy to get wrong and are checked:
   are what now/next and the calendar export both use, because they are when
   that person is actually on.
 
+## Publishing it
+
+`.github/workflows/pages.yml` builds the single file and deploys it to GitHub
+Pages. It is **manual-trigger only** — Actions → Publish to GitHub Pages → Run
+workflow — and will not run on a push.
+
+That is not caution for its own sake. This is a staff pack: it names 19 people
+and carries 88 Webex meeting passwords and 104 join links, each also encoded in
+a QR code. **A Pages site is readable by anyone who has the URL even when the
+repository behind it is private** — private Pages needs access control on
+GitHub Enterprise Cloud. Making the repo private protects the git history, not
+the published site.
+
+So the workflow refuses to deploy while the built document still contains
+meeting passwords, unless it is run with `publish_credentials: yes`. It also
+checks the markup digest, so a document that has been edited away from the
+published one does not go up.
+
+Before it can run at all:
+
+1. The workflow has to be on the default branch — `workflow_dispatch` only
+   appears in the Actions UI for workflows on `main`.
+2. Settings → Pages → Source: **GitHub Actions**.
+
 ## Working on it
 
 `src/` is the same document with the parts kept as real files. It is what you
