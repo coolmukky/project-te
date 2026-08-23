@@ -1,0 +1,5 @@
+# build.py output - rebuilt from src/ in a second, so it is not tracked
+dist/
+
+__pycache__/
+*.pyc

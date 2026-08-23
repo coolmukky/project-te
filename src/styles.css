@@ -1,0 +1,813 @@
+:root {
+  --cisco-blue: #0d274d;
+  --cisco-blue-mid: #1b3a63;
+  --cisco-accent: #00bceb;
+  --cisco-accent-dark: #0d5c75;
+  --ink: #14181f;
+  --ink-soft: #4a5462;
+  --line: #d8dee7;
+  --line-soft: #e9edf3;
+  --paper: #ffffff;
+  --canvas: #f4f6fa;
+  --warn-bg: #fff4e0;
+  --warn-line: #d98324;
+  --warn-ink: #7a4708;
+  --error-bg: #fdeaea;
+  --error-line: #c62828;
+  --error-ink: #8b1a1a;
+  --ok-bg: #e8f6ee;
+  --ok-line: #2e7d52;
+  --info-bg: #e8f2fb;
+  --info-line: #2b6cb0;
+  /* reviewed-and-covered: amber, but calmer than a warning */
+  --ack-bg: #fdf8ee;
+  --ack-line: #c08a2e;
+  --ack-ink: #6b4b12;
+  /* decided but nobody named yet: an open action, and deliberately not the calm
+     amber of a resolved acknowledgement */
+  --action-bg: #f5ecfb;
+  --action-line: #7b3fa0;
+  --action-ink: #4a2064;
+  /* hand-written annotation: warm neutral, distinct from every source-data tone */
+  --ann-bg: #f7f5f0;
+  --ann-line: #9a8f7a;
+  --pin: #c8102e;
+  --radius: 10px;
+  --shadow: 0 1px 2px rgba(13, 39, 77, .07), 0 4px 14px rgba(13, 39, 77, .06);
+}
+
+* { box-sizing: border-box; }
+
+/* An anchor has to land just below the sticky toolbar, and the toolbar's height
+   is not a constant. .toolbar-inner is a wrapping flex row, so the search box,
+   the day chips, Clear and the count fall onto one, two or three rows as the
+   screen narrows - and *where* they wrap depends on the engine's own font
+   metrics and text measurement, not on the viewport width alone. So a value
+   measured in one browser is wrong in another. That is not a tuning problem, it
+   is the reason a hard-coded number cannot work: the flat 200px this replaces
+   was derived from Chrome's 194.83px toolbar at 320px, and on iOS Safari - where
+   the same controls wrap into a shorter toolbar - it pushed the heading far
+   enough down the viewport to bring the preceding section back into view above
+   it.
+
+   The height is therefore measured at runtime. initToolbarMetrics() in app.js
+   writes the toolbar's real getBoundingClientRect().height into --toolbar-h on
+   the root element, on load, on resize, on orientationchange and whenever a
+   ResizeObserver sees the chips rewrap. An inline custom property beats the
+   declarations here, so with scripting available this offset is correct in any
+   engine by construction, and there is no band table to keep in step with the
+   toolbar any more.
+
+   The values declared here are only the fallback for a reader with scripting
+   unavailable, which is why they still err high: too much scroll padding leaves
+   harmless whitespace above the target, too little hides the target behind the
+   toolbar. They are the worst case measured on 18 August above and below 720px.
+
+   This property is the *fallback* half of the mechanism, not the whole of it.
+   initAnchorScroll() scrolls in JS from the same measurement, because how well
+   an engine implements scroll padding on fragment navigation is exactly what
+   cannot be verified from here. The print block at the foot of this file still
+   zeroes the property, so none of this reaches paper. */
+html {
+  --toolbar-h: 104px;
+  --anchor-gap: 8px;
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--toolbar-h) + var(--anchor-gap));
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+a { color: var(--cisco-accent-dark); }
+a:hover { color: var(--cisco-blue); }
+
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 18px; }
+
+/* ---------- header ---------- */
+.hero {
+  background: linear-gradient(135deg, var(--cisco-blue) 0%, var(--cisco-blue-mid) 60%, var(--cisco-accent-dark) 100%);
+  color: #fff;
+  padding: 30px 0 26px;
+}
+.hero h1 { margin: 0 0 4px; font-size: 1.9rem; line-height: 1.2; letter-spacing: -.01em; }
+.hero .sub { margin: 0; color: #cfe9f5; font-size: 1.02rem; }
+.hero .built { margin: 10px 0 0; color: #9fc4d8; font-size: .82rem; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.stat {
+  background: rgba(255, 255, 255, .12);
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 999px;
+  padding: 4px 13px;
+  font-size: .82rem;
+}
+.stat b { font-weight: 700; }
+
+/* ---------- generic blocks ---------- */
+.panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  margin: 18px 0;
+}
+h2.section-title {
+  font-size: 1.15rem;
+  margin: 26px 0 10px;
+  color: var(--cisco-blue);
+  letter-spacing: -.01em;
+}
+.muted { color: var(--ink-soft); }
+.small { font-size: .84rem; }
+
+/* ---------- collapsible information sections ----------
+   Important Links and Logistics. Both are rendered as an open details element
+   and collapsed after load by initFoldouts(), which also reopens them for
+   print. Nothing in the print block below hides a fold body, so the content is
+   on paper whether or not any script ran. */
+details.fold > summary {
+  cursor: pointer;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: baseline;
+  list-style: none;
+}
+details.fold > summary::-webkit-details-marker { display: none; }
+details.fold > summary::before {
+  content: "\25B8";
+  color: var(--ink-soft);
+  transition: transform .15s;
+  display: inline-block;
+  width: 12px;
+}
+details.fold[open] > summary::before { transform: rotate(90deg); }
+details.fold > summary:hover .fold-cue { color: var(--cisco-accent-dark); }
+.fold-cue { font-size: .8rem; color: var(--ink-soft); font-weight: 600; }
+details.fold > summary .fold-cue::after { content: "Click to expand"; }
+details.fold[open] > summary .fold-cue::after { content: "Click to collapse"; }
+.fold-body { padding-top: 10px; }
+
+/* ---------- global links ---------- */
+.linklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.linklist li {
+  border-left: 4px solid var(--cisco-accent);
+  padding: 8px 0 8px 12px;
+  background: var(--info-bg);
+  border-radius: 0 6px 6px 0;
+}
+/* Pending by design, so the neutral annotation tone rather than the warning one:
+   an amber panel reads as something having gone wrong. */
+.linklist li.placeholder { border-left-color: var(--ann-line); background: var(--ann-bg); }
+.linklist li.placeholder .pill { background: var(--ann-line); }
+.linklist .label { font-weight: 700; display: block; }
+.pill {
+  display: inline-block;
+  background: var(--warn-line);
+  color: #fff;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .07em;
+  border-radius: 4px;
+  padding: 2px 7px;
+  vertical-align: 2px;
+  margin-left: 6px;
+}
+
+/* ---------- logistics ----------
+   Informational, and nothing in it links anywhere: a grey rule rather than the
+   links list's accent border, so it does not read as something to click. */
+.logilist { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.logilist li {
+  border-left: 4px solid var(--line);
+  padding: 8px 0 8px 12px;
+  border-radius: 0 6px 6px 0;
+}
+.logilist .label { font-weight: 700; display: block; color: var(--cisco-blue); }
+.logilist .logi-what { display: block; }
+.logilist .logi-where { display: block; font-size: .84rem; color: var(--ink-soft); }
+
+/* ---------- toolbar / search ---------- */
+.toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, .96);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--line);
+}
+.toolbar-inner { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 18px; max-width: 1140px; margin: 0 auto; }
+#q {
+  flex: 1 1 260px;
+  min-width: 0;
+  font: inherit;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+#q:focus { outline: 2px solid var(--cisco-accent); outline-offset: 1px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  font: inherit;
+  font-size: .82rem;
+  padding: 6px 11px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--ink-soft);
+}
+.chip[aria-pressed="true"] { background: var(--cisco-blue); border-color: var(--cisco-blue); color: #fff; font-weight: 600; }
+#count { font-size: .82rem; color: var(--ink-soft); white-space: nowrap; }
+
+/* ---------- table of contents ---------- */
+.jumpgrid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.jumpgrid a {
+  font-size: .82rem;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 11px;
+  color: var(--cisco-blue);
+  background: #fff;
+}
+.jumpgrid a:hover { background: var(--cisco-blue); color: #fff; border-color: var(--cisco-blue); }
+
+details.toc-person { border-top: 1px solid var(--line-soft); }
+details.toc-person:last-child { border-bottom: 1px solid var(--line-soft); }
+details.toc-person > summary {
+  cursor: pointer;
+  padding: 9px 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+  list-style: none;
+}
+details.toc-person > summary::-webkit-details-marker { display: none; }
+details.toc-person > summary::before {
+  content: "\25B8";
+  color: var(--ink-soft);
+  transition: transform .15s;
+  display: inline-block;
+  width: 12px;
+}
+details.toc-person[open] > summary::before { transform: rotate(90deg); }
+.toc-name { font-weight: 700; color: var(--cisco-blue); }
+.toc-meta { font-size: .82rem; color: var(--ink-soft); }
+.toc-sessions { list-style: none; margin: 0 0 12px; padding: 0 0 0 26px; display: grid; gap: 3px; }
+.toc-sessions a { text-decoration: none; font-size: .87rem; display: block; padding: 3px 6px; border-radius: 5px; }
+.toc-sessions a:hover { background: var(--info-bg); }
+.toc-sessions .tid { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .8rem; color: var(--cisco-accent-dark); }
+.toc-sessions .when { color: var(--ink-soft); }
+
+/* ---------- badges ---------- */
+.badge {
+  display: inline-block;
+  font-size: .7rem;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+.badge.warn { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); }
+.badge.error { background: var(--error-bg); color: var(--error-ink); border: 1px solid var(--error-line); }
+.badge.ok { background: var(--ok-bg); color: #1d5c3a; border: 1px solid var(--ok-line); }
+.badge.neutral { background: var(--line-soft); color: var(--ink-soft); border: 1px solid var(--line); }
+.badge.action { background: var(--action-bg); color: var(--action-ink); border: 1px solid var(--action-line); }
+/* Informational, not a warning: a photographer being booked is good news, and
+   prework being required is a heads-up rather than a problem. Neither is styled
+   like the warning badges for that reason, and text-transform is dropped so the
+   supplied capitalisation is what prints. One tone, two markers - .badge.prework
+   joined it on 20 August rather than inventing a second informational style. */
+.badge.photo, .badge.prework {
+  background: var(--info-bg);
+  color: var(--info-line);
+  border: 1px solid var(--info-line);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ---------- alerts ---------- */
+.alert-summary { margin: 0 0 12px; font-size: .92rem; color: var(--ink); }
+.alert-head {
+  margin: 16px 0 8px;
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--ink-soft);
+}
+.alert-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.alert-item {
+  border: 1px solid var(--warn-line);
+  background: var(--warn-bg);
+  border-left-width: 5px;
+  border-radius: 0 6px 6px 0;
+  padding: 9px 12px;
+  font-size: .9rem;
+}
+.alert-item.is-overlap { border-color: var(--error-line); background: var(--error-bg); }
+/* Reviewed findings stay on the list, deliberately quieter than the open ones. */
+.alert-item.is-ack { border-color: var(--ack-line); background: var(--ack-bg); }
+/* decided, owner outstanding: still open, and it should not look settled */
+.alert-item.is-action { border-color: var(--action-line); background: var(--action-bg); border-left-width: 4px; }
+.alert-item .who { font-weight: 700; }
+.alert-item .gap { font-weight: 800; }
+.alert-item .ack-inline { display: block; margin-top: 4px; font-size: .86rem; color: var(--ack-ink); }
+.alert-item .action-inline { color: var(--action-ink); font-weight: 600; }
+
+/* ---------- person section ---------- */
+.person { margin: 30px 0 46px; }
+.person-head {
+  background: var(--cisco-blue);
+  color: #fff;
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+.person-head h2 { margin: 0; font-size: 1.5rem; letter-spacing: -.01em; }
+.person-head .rolemeta { margin-top: 4px; color: #bcdcec; font-size: .9rem; }
+/* The name and its meta stay a stacked pair; the button is pushed to the end. */
+.person-head h2 { flex: 0 0 auto; }
+.person-head .rolemeta { flex: 1 1 auto; margin-top: 0; }
+
+.printbtn {
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .55);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.printbtn:hover { background: rgba(255, 255, 255, .26); }
+.printbtn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+/* The Home button's target, at the very top of the body.
+   It used to be an empty inline element, and an empty inline element is entitled
+   to have no box at all: CSS 2.1 9.4.2 says a line box holding nothing but empty
+   inline boxes "must be treated as not existing for any other purpose". An
+   engine that takes that literally leaves a fragment navigation with no geometry
+   to scroll to, and the link silently does nothing. A block box exists
+   unconditionally, and at zero height it occupies no space and moves nothing. */
+.doc-top { display: block; height: 0; }
+
+.homebtn {
+  position: fixed;
+  right: 16px;
+  /* Lifted clear of the home indicator and of any bottom browser chrome that
+     reports itself as a safe-area inset. Resolves to plain 16px where there is
+     no inset, so nothing changes on a desktop. */
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  font-size: .85rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--cisco-blue);
+  border: 1px solid var(--cisco-accent);
+  border-radius: 999px;
+  padding: 9px 16px;
+  text-decoration: none;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .28);
+}
+.homebtn:hover { background: var(--cisco-accent); }
+.homebtn:focus-visible { outline: 2px solid var(--cisco-accent); outline-offset: 2px; }
+.person-body {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 18px 20px 22px;
+  box-shadow: var(--shadow);
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.summary-cell { background: var(--canvas); border-radius: 8px; padding: 10px 12px; }
+.summary-cell .k { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); font-weight: 700; }
+.summary-cell .v { font-size: .95rem; margin-top: 2px; }
+
+h3.day-heading {
+  margin: 26px 0 10px;
+  font-size: 1.05rem;
+  color: var(--cisco-blue);
+  border-bottom: 2px solid var(--cisco-accent);
+  padding-bottom: 5px;
+}
+
+/* ---------- venue maps ---------- */
+.venue { margin-top: 16px; }
+/* Two fixed tracks, deliberately not auto-fit. auto-fit collapses the empty track
+   and hands the whole row to a lone card, so the six people who work one level got a
+   map at 1060 px against everyone else's 521 px - twice the width, four times the
+   area, and upscaled from the 1600 px plan on a 2x display. A fixed two-track grid
+   makes a single card occupy one of two tracks, so it lands on the same width a
+   paired card would at every viewport.
+   Constrain the track, never the image: .venue-card img stays width:100% so that
+   .map-wrap and the image are exactly coincident, which is the only reason the
+   percentage-positioned pins track the plan. */
+.venue-grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.venue-card { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+.venue-card h4 { margin: 0; padding: 9px 12px; background: var(--canvas); font-size: .92rem; border-bottom: 1px solid var(--line); }
+.venue-card img { display: block; width: 100%; height: auto; background: #fff; }
+.venue-legend { list-style: none; margin: 0; padding: 10px 12px; display: grid; gap: 8px; font-size: .86rem; border-top: 1px solid var(--line-soft); }
+.venue-legend li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px; align-items: start; }
+.venue-legend .lg-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--pin);
+  color: #fff;
+  font-size: .74rem;
+  font-weight: 800;
+  flex: none;
+}
+.venue-legend .rm { font-weight: 700; }
+.venue-legend .sess { color: var(--ink-soft); display: block; font-size: .82rem; }
+.venue-legend .pin-note { font-style: italic; }
+/* Moved out of .venue-card on 20 August - one per person, above the grid - so it no
+   longer needs the card's own side padding to line up with the legend inside it. */
+.map-caveat { font-size: .78rem; color: var(--ink-soft); margin: 0 0 10px; font-style: italic; }
+
+/* ---------- map pins ---------- */
+.map-wrap { position: relative; display: block; }
+
+.pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 0;
+  z-index: 2;
+  pointer-events: none; /* let clicks fall through to the map's lightbox handler */
+}
+.pin-num {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--pin);
+  color: #fff;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .45);
+  font-size: .74rem;
+  font-weight: 800;
+  line-height: 1;
+}
+/* No label on the plan: the pin is the number and nothing else. The room name, its
+   entrance letter, the combined space and the capacity are all in the legend row
+   directly below the map, so nothing is lost by taking them off the drawing - and a
+   plan carrying up to six white boxes was unreadable at any width.
+   The .pin-left / .pin-right / .pin-below edge classes are still emitted; they only
+   ever moved the label, so they now have nothing to do. Kept because the pin
+   coordinates are measured against the plan images' exact pixels and the markup
+   that carries them is not the place to tidy. */
+
+/* ---------- session card ---------- */
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  margin: 14px 0;
+  overflow: hidden;
+}
+.card.is-flagged { border-color: var(--warn-line); }
+.card.has-overlap { border-color: var(--error-line); }
+.card.has-review { border-color: var(--ack-line); }
+.card.has-action { border-color: var(--action-line); }
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  align-items: baseline;
+  padding: 12px 16px;
+  background: var(--canvas);
+  border-bottom: 1px solid var(--line);
+}
+.card-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 700;
+  color: var(--cisco-blue);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 8px;
+  font-size: .88rem;
+}
+.card-when { font-weight: 700; }
+/* Only present when the rostered-hours label is switched on. Holds the time range
+   together so the head breaks after "Your hours:" rather than inside the range. */
+.when-time { white-space: nowrap; }
+.card-where { color: var(--ink-soft); }
+/* Whose package this card is in. A wayfinding label, not a heading and not a status
+   badge: small, quiet and set apart on the right, so it answers "who am I looking at"
+   without competing with the session title below it.
+
+   margin-left:auto is what puts it right. On a wide head it takes the free space
+   after the badges; when the head wraps on a phone it lands on its own line and
+   right-aligns there instead of colliding with them. No white-space:nowrap - a long
+   name may wrap rather than widen the card. */
+.card-owner {
+  margin-left: auto;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  color: var(--ink-soft);
+  text-align: right;
+}
+.card-body { padding: 14px 16px 16px; }
+.card-title { margin: 0 0 10px; font-size: 1.06rem; line-height: 1.35; }
+
+.kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 14px;
+  margin: 0 0 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+}
+.kv .k { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); font-weight: 700; }
+.kv .v { font-size: .92rem; }
+
+.staffing { margin: 0 0 12px; font-size: .95rem; }
+.staffing .with { font-weight: 700; }
+
+.callout {
+  border-left: 5px solid var(--warn-line);
+  background: var(--warn-bg);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 13px;
+  margin: 0 0 12px;
+  font-size: .9rem;
+}
+.callout.error { border-left-color: var(--error-line); background: var(--error-bg); }
+.callout.info { border-left-color: var(--info-line); background: var(--info-bg); }
+.callout.note { border-left-color: var(--cisco-accent-dark); background: #eef7fb; }
+/* hand-written annotation from data/manual_annotations.json */
+.callout.ann { border-left-color: var(--ann-line); background: var(--ann-bg); }
+/* a clash with an agreed arrangement recorded against it: still shown, deliberately
+   quieter. Since 20 August this tone and the callout's own title are the whole of
+   what distinguishes it from an open one, the badge that used to say so having gone. */
+.callout.ack { border-left-color: var(--ack-line); background: var(--ack-bg); }
+.callout .ct { font-weight: 800; display: block; margin-bottom: 3px; text-transform: uppercase; font-size: .72rem; letter-spacing: .06em; }
+.callout ul { margin: 4px 0 0; padding-left: 18px; }
+.callout .verbatim { font-style: italic; }
+.callout p { margin: 6px 0 0; }
+.callout .prov { font-size: .78rem; color: var(--ink-soft); }
+/* a value replaced because the source workbook has it wrong */
+.callout.fix { border-left-color: var(--ann-line); }
+.ann-window { font-size: .9rem; }
+.ann-gap { font-weight: 700; color: var(--ack-ink); }
+.ann-ok { font-size: .84rem; color: var(--ink-soft); }
+.review-flag { font-size: .86rem; font-weight: 600; }
+/* an open action: a decision with nobody named against it yet */
+.callout.action { border-left-color: var(--action-line); border-left-width: 5px; background: var(--action-bg); }
+.action-body { margin-top: 8px; border-top: 1px solid rgba(123, 63, 160, .35); padding-top: 7px; }
+.action-owner { font-size: .86rem; font-weight: 600; color: var(--action-ink); }
+.action-owner code, .callout.action code { background: #fff; border: 1px solid var(--action-line); color: var(--action-ink); }
+.action-tag {
+  display: inline-block;
+  background: var(--action-line);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 8px;
+  margin-right: 7px;
+  font-size: .7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  vertical-align: 1px;
+}
+
+.ack-body { margin-top: 8px; border-top: 1px solid rgba(192, 138, 46, .35); padding-top: 7px; }
+/* Nothing renders .ack-tag or .prov as of 20 August - the Covered / Reviewed chip and
+   the hand-attribution line were both dropped from the output that day, and a check
+   forbids either coming back unannounced. Kept, unused, so restoring one is a change
+   in one renderer rather than a rule to write again from scratch. */
+.ack-tag {
+  display: inline-block;
+  background: var(--ack-line);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 8px;
+  margin-right: 7px;
+  font-size: .7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  vertical-align: 1px;
+}
+
+.resources { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; margin-top: 4px; }
+.resources .eurl { word-break: break-all; font-size: .92rem; }
+.qr { text-align: center; }
+.qr img { display: block; width: 128px; height: 128px; image-rendering: pixelated; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.qr figcaption { font-size: .7rem; color: var(--ink-soft); margin-top: 3px; text-transform: uppercase; letter-spacing: .06em; }
+
+.roomblock { margin-top: 14px; border-top: 1px solid var(--line-soft); padding-top: 12px; }
+.roomblock h5 { margin: 0 0 8px; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); }
+.roomgrid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr); gap: 14px; align-items: start; }
+.diagram-wrap { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+.diagram-wrap img { display: block; width: 100%; height: auto; cursor: zoom-in; }
+.diagram-note { margin: 6px 0 0; font-size: .76rem; color: var(--ink-soft); }
+.diagram-note strong { color: var(--ink); }
+/* A/V panel: labels always in column 1, their values always in column 2 of the
+   same row. Both columns are placed explicitly, so a full-width heading can
+   never shunt the values one row out of step with their labels. */
+.avlist {
+  margin: 0;
+  font-size: .82rem;
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  gap: 2px 10px;
+  align-content: start;
+}
+.avlist dt { grid-column: 1; color: var(--ink-soft); }
+.avlist dd { grid-column: 2; margin: 0; }
+.avlist dt.av-head {
+  grid-column: 1 / -1;
+  font-weight: 800;
+  color: var(--cisco-blue);
+  margin-top: 5px;
+}
+/* leaf lines that qualify the label above them, e.g. the mic breakdown */
+.avlist dd.av-sub { grid-column: 1 / -1; color: var(--ink-soft); }
+.avlist .lvl1 { padding-left: 12px; }
+.avlist .lvl2 { padding-left: 24px; }
+.avlist .lvl3 { padding-left: 36px; }
+
+/* .cap-note and .cap-fix styled the two capacity paragraphs under the A/V panel.
+   Both paragraphs were deleted on 2026-08-14 once the workbook's capacities were
+   corrected at source, so the rules are gone with them rather than left as dead
+   selectors a later reader would take as evidence the paragraphs still exist. */
+
+@media (max-width: 480px) {
+  /* Stack each label above its own value rather than let a long value squeeze
+     the label column to nothing. */
+  .avlist { grid-template-columns: minmax(0, 1fr); }
+  .avlist dt, .avlist dd { grid-column: 1; }
+  .avlist dd.av-value { padding-left: 12px; font-weight: 600; }
+}
+
+/* ---------- lightbox ---------- */
+#lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 16, 28, .9);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+  cursor: zoom-out;
+}
+#lightbox.open { display: flex; }
+#lightbox img { width: auto; height: auto; max-width: 100%; max-height: 100%; border-radius: 6px; background: #fff; }
+/* A zoomed venue map is cloned in with its pins. The wrapper's width and height are
+   set in JS from the plan's aspect ratio and the image fills it exactly, so the two
+   boxes are coincident and the pins' percentages keep resolving against the plan.
+   Shrink-wrapping cannot be used here: the lightbox is a flex container, so a
+   display:inline-block child is blockified and would stretch past the image. */
+#lightbox .lb-map { flex: 0 0 auto; max-width: 100%; max-height: 100%; }
+#lightbox .lb-map img { display: block; width: 100%; height: 100%; border-radius: 6px; }
+#lightbox .lb-cap { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; color: #dceaf5; font-size: .88rem; }
+
+.no-results { display: none; padding: 24px; text-align: center; color: var(--ink-soft); }
+body.filtering .no-results.show { display: block; }
+[hidden] { display: none !important; }
+
+footer.site { padding: 26px 0 44px; color: var(--ink-soft); font-size: .84rem; }
+
+@media (max-width: 720px) {
+  /* The toolbar wraps to two and then three rows below here, reaching 194.83px
+     at 320px wide in Chrome. This raises the *fallback* only: with scripting
+     available app.js overwrites --toolbar-h with the height this engine actually
+     rendered, so nothing on this line is load-bearing then. See the note beside
+     the base value. */
+  html { --toolbar-h: 200px; }
+  .hero h1 { font-size: 1.45rem; }
+  .roomgrid { grid-template-columns: 1fr; }
+  .resources { grid-template-columns: 1fr; }
+  .qr { text-align: left; }
+  .card-head { gap: 4px 10px; }
+}
+
+/* ---------- venue maps: one column up to 860px, on screen only ----------
+   The venue grid stacks 140px later than everything else, and the media type is
+   part of the rule rather than an afterthought.
+
+   Why 860 and not 720: crossing the two-column breakpoint *upward* used to make
+   the plans smaller, because the second track re-engages before there is room for
+   two useful columns. A plan is 639px wide at a 719px viewport and 311.5px at
+   721px, so a slightly larger tablet got a map less than half the size. 860px is
+   where the toolbar itself stops wrapping - measured, it steps from 96.14px to its
+   one-row 65.80px at exactly 860 and never gets shorter above it - which makes it
+   the width at which this layout stops being a phone layout.
+
+   Why `screen and`: **the print stylesheet renders at about 739px**, which is
+   inside the band this rule now covers. Unscoped, it would flip every printed
+   venue map from two-up to one-per-row and repaginate the whole document - and
+   larger printed maps were put to the user and declined. `screen` is the only
+   thing keeping paper out of it, so it is not optional and a check asserts it.
+
+   Still `minmax(0, 1fr)` and still not `auto-fit`: auto-fit collapses the empty
+   track and hands a lone card the whole row, which is the bug that made single
+   maps twice everyone else's width. Constrain the track, never the image. */
+@media screen and (max-width: 860px) {
+  .venue-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- print ---------- */
+@media print {
+  :root { --shadow: none; }
+  html { scroll-padding-top: 0; }
+  body { background: #fff; font-size: 10.5pt; }
+  /* The click prompt on a collapsible section is chrome, and there is nothing to
+     click on paper. It and the disclosure triangle are deliberately all that
+     print touches of a collapsible section: any rule reaching the body of one
+     would hide the content that reopening it for print is meant to guarantee,
+     and a check asserts none does. */
+  .toolbar, .jumpgrid, #lightbox, .no-results,
+  .homebtn, .printbtn, .fold-cue { display: none !important; }
+  details.fold > summary::before { display: none; }
+  .wrap { max-width: none; padding: 0 8mm; }
+  .hero {
+    background: #fff !important;
+    color: var(--cisco-blue);
+    border-bottom: 3px solid var(--cisco-accent);
+    padding: 0 0 10px;
+  }
+  .hero .sub, .hero .built { color: var(--ink-soft); }
+  .stat { background: #fff; border-color: var(--line); color: var(--ink); }
+  .panel, .person-body, .card { box-shadow: none; }
+  .person { break-before: page; page-break-before: always; margin: 0 0 12px; }
+  #toc-section .person, .person:first-of-type { break-before: auto; page-break-before: auto; }
+  .person-head { background: #fff !important; color: var(--cisco-blue); border: 1px solid var(--line); border-bottom: 0; }
+  .person-head .rolemeta { color: var(--ink-soft); }
+  details.toc-person > summary { break-inside: avoid; }
+  .card { break-inside: avoid; page-break-inside: avoid; }
+  .card-head, .kv, .callout, .roomblock, .venue-card { break-inside: avoid; page-break-inside: avoid; }
+  img { max-width: 100% !important; break-inside: avoid; page-break-inside: avoid; }
+  .diagram-wrap img { max-height: 78mm; width: auto; margin: 0 auto; }
+  /* Shrink-wrap the container to the scaled image so the percentage-positioned
+     pins keep tracking it once print constrains the height. */
+  .venue-card .map-wrap { display: inline-block; max-width: 100%; }
+  .venue-card { text-align: center; }
+  .venue-card h4, .venue-legend, .map-caveat { text-align: left; }
+  .venue-card img { max-height: 100mm; width: auto; margin: 0 auto; }
+  a { color: var(--ink); text-decoration: none; }
+  .resources .eurl a::after { content: " (" attr(href) ")"; font-size: .78em; color: var(--ink-soft); word-break: break-all; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* ---- printing one person's pack ----------------------------------------
+     Set by the Print button in their heading. Everything else is hidden for
+     the duration of the print, including the search filter's own hiding, so
+     the sheet cannot come out blank because a filter was left active. Nothing
+     above is overridden: their cards, diagrams and venue maps print exactly
+     as they do in a full run, .venue-card .map-wrap included.
+
+     The two .print-always panels - Important Links and Logistics - are the
+     exception, added 18 August: everyone needs them, so one person's own print
+     carries them too. The table of contents and the alerts panel do not carry
+     the class and are still swept away with everything else. */
+  body.printing-one > .wrap > .panel:not(.print-always) { display: none !important; }
+  body.printing-one .hero,
+  body.printing-one footer.site { display: none !important; }
+  body.printing-one .person { display: none !important; }
+  body.printing-one .person.print-target {
+    display: block !important;
+    break-before: auto;
+    page-break-before: auto;
+  }
+  body.printing-one .person.print-target[hidden] { display: block !important; }
+  body.printing-one .person.print-target .card[hidden],
+  body.printing-one .person.print-target [data-day-group][hidden] {
+    display: block !important;
+  }
+}
+
