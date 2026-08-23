@@ -47,29 +47,33 @@ Two details that are easy to get wrong and are checked:
   are what now/next and the calendar export both use, because they are when
   that person is actually on.
 
-## Publishing it
+## Distributing it
 
-`.github/workflows/pages.yml` builds the single file and deploys it to GitHub
-Pages. It is **manual-trigger only** — Actions → Publish to GitHub Pages → Run
-workflow — and will not run on a push.
+This is a staff pack, not a public page. It names 19 people and carries 88
+Webex meeting passwords and 104 join links, each also encoded in a QR code, so
+it goes to staff through an internal channel and nowhere else.
 
-That is not caution for its own sake. This is a staff pack: it names 19 people
-and carries 88 Webex meeting passwords and 104 join links, each also encoded in
-a QR code. **A Pages site is readable by anyone who has the URL even when the
-repository behind it is private** — private Pages needs access control on
-GitHub Enterprise Cloud. Making the repo private protects the git history, not
-the published site.
+The build is a single file that needs no server, no network and no install:
 
-So the workflow refuses to deploy while the built document still contains
-meeting passwords, unless it is run with `publish_credentials: yes`. It also
-checks the markup digest, so a document that has been edited away from the
-published one does not go up.
+```
+python3 build.py -o TSRM-Staff-Packages-FY27.html
+```
 
-Before it can run at all:
+Put that file where staff already sign in — the SharePoint site this document
+already links to is the obvious home — or send it directly. Opening it from a
+download folder is the case it was designed and tested for.
 
-1. The workflow has to be on the default branch — `workflow_dispatch` only
-   appears in the Actions UI for workflows on `main`.
-2. Settings → Pages → Source: **GitHub Actions**.
+**Not GitHub Pages, and not any other public host.** A Pages site is readable
+by anyone holding the URL *even when the repository behind it is private*;
+private Pages needs access control on GitHub Enterprise Cloud. There is no
+configuration of a public repository that publishes this document safely, which
+is why no deploy workflow ships here.
+
+**This repository cannot be public.** The document *is* the application - the
+credentials are in `src/index.html`, which is the first commit and every commit
+since - so there is no history to purge that leaves a working app behind. The
+repository has to be private, and anything the document carries has to be
+treated as disclosed for as long as it was not.
 
 ## Working on it
 
