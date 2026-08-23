@@ -1,6 +1,10 @@
 :root {
   --cisco-blue: #0d274d;
   --cisco-blue-mid: #1b3a63;
+  /* The same blue as ink. Identical to --cisco-blue on white, but the dark
+     theme has to darken the surface and lighten the ink, and one token
+     cannot go both ways. */
+  --cisco-blue-ink: #0d274d;
   --cisco-accent: #00bceb;
   --cisco-accent-dark: #0d5c75;
   --ink: #14181f;
@@ -84,7 +88,7 @@ body {
 }
 
 a { color: var(--cisco-accent-dark); }
-a:hover { color: var(--cisco-blue); }
+a:hover { color: var(--cisco-blue-ink); }
 
 .wrap { max-width: 1140px; margin: 0 auto; padding: 0 18px; }
 
@@ -119,7 +123,7 @@ a:hover { color: var(--cisco-blue); }
 h2.section-title {
   font-size: 1.15rem;
   margin: 26px 0 10px;
-  color: var(--cisco-blue);
+  color: var(--cisco-blue-ink);
   letter-spacing: -.01em;
 }
 .muted { color: var(--ink-soft); }
@@ -188,7 +192,7 @@ details.fold[open] > summary .fold-cue::after { content: "Click to collapse"; }
   padding: 8px 0 8px 12px;
   border-radius: 0 6px 6px 0;
 }
-.logilist .label { font-weight: 700; display: block; color: var(--cisco-blue); }
+.logilist .label { font-weight: 700; display: block; color: var(--cisco-blue-ink); }
 .logilist .logi-what { display: block; }
 .logilist .logi-where { display: block; font-size: .84rem; color: var(--ink-soft); }
 
@@ -234,7 +238,7 @@ details.fold[open] > summary .fold-cue::after { content: "Click to collapse"; }
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 5px 11px;
-  color: var(--cisco-blue);
+  color: var(--cisco-blue-ink);
   background: #fff;
 }
 .jumpgrid a:hover { background: var(--cisco-blue); color: #fff; border-color: var(--cisco-blue); }
@@ -259,7 +263,7 @@ details.toc-person > summary::before {
   width: 12px;
 }
 details.toc-person[open] > summary::before { transform: rotate(90deg); }
-.toc-name { font-weight: 700; color: var(--cisco-blue); }
+.toc-name { font-weight: 700; color: var(--cisco-blue-ink); }
 .toc-meta { font-size: .82rem; color: var(--ink-soft); }
 .toc-sessions { list-style: none; margin: 0 0 12px; padding: 0 0 0 26px; display: grid; gap: 3px; }
 .toc-sessions a { text-decoration: none; font-size: .87rem; display: block; padding: 3px 6px; border-radius: 5px; }
@@ -406,7 +410,7 @@ details.toc-person[open] > summary::before { transform: rotate(90deg); }
 h3.day-heading {
   margin: 26px 0 10px;
   font-size: 1.05rem;
-  color: var(--cisco-blue);
+  color: var(--cisco-blue-ink);
   border-bottom: 2px solid var(--cisco-accent);
   padding-bottom: 5px;
 }
@@ -511,7 +515,7 @@ h3.day-heading {
 .card-id {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-weight: 700;
-  color: var(--cisco-blue);
+  color: var(--cisco-blue-ink);
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 5px;
@@ -652,7 +656,7 @@ h3.day-heading {
 .avlist dt.av-head {
   grid-column: 1 / -1;
   font-weight: 800;
-  color: var(--cisco-blue);
+  color: var(--cisco-blue-ink);
   margin-top: 5px;
 }
 /* leaf lines that qualify the label above them, e.g. the mic breakdown */
@@ -742,6 +746,175 @@ footer.site { padding: 26px 0 44px; color: var(--ink-soft); font-size: .84rem; }
   .venue-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
+/* ---------- now / next ----------
+   Live state, so it is deliberately not a .panel: it is a strip that answers
+   one question and takes as little room as it can while doing it. Hidden
+   outright when there is nothing to say, and never printed - by the time paper
+   reaches a reader "in 25 min" is a lie. */
+.nowbar {
+  margin: 18px 0 0;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--cisco-accent);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  padding: 10px 14px;
+}
+.nowrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  margin: 0;
+}
+.nowrow + .nowrow { margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--line-soft); }
+.nowtag {
+  flex: 0 0 auto;
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: #fff;
+  background: var(--ink-soft);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+.nowrow.is-live .nowtag { background: var(--ok-line); }
+.nowrow.is-next .nowtag { background: var(--info-line); }
+.nowrow.is-soon .nowtag { background: var(--cisco-blue); }
+.nowbody { flex: 1 1 220px; font-size: .93rem; color: var(--ink); }
+.nowrow.is-who .nowbody { color: var(--ink-soft); font-size: .88rem; }
+.nowjump { flex: 0 0 auto; font-size: .82rem; font-weight: 600; }
+
+/* ---------- session state, while the event is running ----------
+   A pill on the time rather than a border: .card already spends its border on
+   whether the assignment is flagged, overlapping, reviewed or open, and those
+   matter more than whether a session happens to be running right now. */
+.card-when::after {
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin-left: 7px;
+  vertical-align: 1px;
+}
+.card.is-live .card-when::after { content: "on now"; color: #fff; background: var(--ok-line); }
+.card.is-done .card-when::after { content: "finished"; color: var(--ink-soft); background: var(--line-soft); }
+/* Faded, not hidden: a finished session is still the record of what happened,
+   and a staffer checking back on one should not have to hunt for it. */
+.card.is-done { opacity: .66; }
+.card.is-done:hover, .card.is-done:focus-within { opacity: 1; }
+
+/* ---------- the reader's own package ---------- */
+.person.is-mine .person-head { box-shadow: inset 0 0 0 2px var(--cisco-accent); }
+.mebtn, .calbtn {
+  flex: 0 0 auto;
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(255, 255, 255, .14);
+  border: 1px solid rgba(255, 255, 255, .55);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.mebtn:hover, .calbtn:hover { background: rgba(255, 255, 255, .26); }
+.mebtn:focus-visible, .calbtn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.mebtn[aria-pressed="true"] {
+  background: var(--cisco-accent);
+  border-color: var(--cisco-accent);
+  color: var(--cisco-blue-ink);
+}
+.mychip { text-decoration: none; display: inline-block; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mychip:hover { background: var(--cisco-blue); border-color: var(--cisco-blue); color: #fff; }
+.themebtn { white-space: nowrap; }
+
+/* ---------- lightbox close ----------
+   For the keyboard: a pointer closes the overlay by clicking anywhere on it,
+   which is not a gesture a keyboard has. */
+.lb-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, .55);
+  border: 1px solid rgba(255, 255, 255, .6);
+  border-radius: 999px;
+  padding: 6px 15px;
+  cursor: pointer;
+}
+.lb-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+#lightbox:not(.open) .lb-close { display: none; }
+
+/* ---------- dark theme ----------
+   Read on a phone in a darkened ballroom, where the light document is a torch
+   pointed at the reader's face. app.js resolves the effective theme - stored
+   preference first, the system setting otherwise - and stamps it on the root
+   element, so this is one block rather than one per way of asking for it. With
+   scripting unavailable no attribute is ever stamped and the document stays
+   light, exactly as it was.
+
+   Scoped to screen. Paper is white whatever the screen is doing, and a dark
+   palette reaching the print sheet would empty a toner cartridge per package. */
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --cisco-blue: #16273f;
+    --cisco-blue-mid: #1d3350;
+    /* Ink goes the other way from the surface: a heading in #0d274d on a dark
+       panel is a heading nobody can read. */
+    --cisco-blue-ink: #8fc7e8;
+    --ink: #e4eaf2;
+    --ink-soft: #9fadc0;
+    --line: #2b3644;
+    --line-soft: #232d39;
+    --paper: #161d26;
+    --canvas: #0e131a;
+    --warn-bg: #38290f;
+    --warn-ink: #f0c078;
+    --error-bg: #3a1b1b;
+    --error-ink: #f2a5a5;
+    --ok-bg: #14301f;
+    --info-bg: #12283c;
+    --ack-bg: #322a15;
+    --ack-ink: #dfc083;
+    --action-bg: #2a1b38;
+    --action-ink: #d5b0ec;
+    --ann-bg: #262521;
+    --ann-line: #6e6553;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 4px 14px rgba(0, 0, 0, .4);
+  }
+
+  /* Surfaces written as literal white, which a token swap cannot reach. */
+  :root[data-theme="dark"] .toolbar { background: rgba(22, 29, 38, .96); }
+  :root[data-theme="dark"] #q,
+  :root[data-theme="dark"] .chip,
+  :root[data-theme="dark"] .jumpgrid a,
+  :root[data-theme="dark"] .card,
+  :root[data-theme="dark"] .card-id,
+  :root[data-theme="dark"] .action-owner code,
+  :root[data-theme="dark"] .callout.action code { background: var(--paper); }
+  :root[data-theme="dark"] .jumpgrid a,
+  :root[data-theme="dark"] .card-id { color: var(--ink); }
+
+  /* Room plans, venue maps and QR codes keep their white plate. They are
+     photographs of paper, and a QR code on a dark ground is a QR code that
+     will not scan - which is the one thing on the card with a deadline. */
+  :root[data-theme="dark"] .venue-card img,
+  :root[data-theme="dark"] .diagram-wrap,
+  :root[data-theme="dark"] .qr img { background: #fff; }
+  /* The plate is for the image, not for the card around it: .venue-card also
+     holds the pin legend, and light ink on a white legend is unreadable. The
+     card itself is a surface like any other. */
+  :root[data-theme="dark"] .venue-card { background: var(--paper); }
+}
+
 /* ---------- print ---------- */
 @media print {
   :root { --shadow: none; }
@@ -753,7 +926,11 @@ footer.site { padding: 26px 0 44px; color: var(--ink-soft); font-size: .84rem; }
      would hide the content that reopening it for print is meant to guarantee,
      and a check asserts none does. */
   .toolbar, .jumpgrid, #lightbox, .no-results,
-  .homebtn, .printbtn, .fold-cue { display: none !important; }
+  .homebtn, .printbtn, .mebtn, .calbtn, .nowbar, .fold-cue { display: none !important; }
+  /* Paper has no "now". The state pills and the fade go with it, so a package
+     printed on Tuesday reads the same as one printed on Friday. */
+  .card.is-done { opacity: 1; }
+  .card-when::after { content: none !important; }
   details.fold > summary::before { display: none; }
   .wrap { max-width: none; padding: 0 8mm; }
   .hero {

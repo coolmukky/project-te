@@ -6,21 +6,97 @@
   /* ---- image hydration -------------------------------------------------
      Every base64 payload appears exactly once in ASSETS; the markup carries
      only an asset id. Without this the file would repeat each room diagram
-     on every session card. */
+     on every session card.
+
+     Assigning all 242 of them up front is the single most expensive thing this
+     document does on open: measured on a phone-sized viewport it is about 250
+     of the 870 ms before the page is interactive, because each assignment
+     creates and decodes an image resource there and then. loading="lazy" does
+     not help - it deferred a network fetch, and there is no network here; the
+     cost is in the assignment itself.
+
+     So the src is assigned as an image comes within reach of the viewport, and
+     nothing above the fold waits on the rest. Everything about this is
+     reversible: an engine without IntersectionObserver hydrates the lot
+     immediately, exactly as before, and so does any path that leads to paper -
+     see hydrateAll below, which is what beforeprint calls. A room diagram
+     missing from a printed pack would be a far worse bug than a slow open. */
+  var hydrateAll = null;
+
   function hydrateImages() {
     var assets = window.__TSRM_ASSETS__ || {};
     var nodes = document.querySelectorAll("img[data-asset]");
     var missing = 0;
-    for (var i = 0; i < nodes.length; i++) {
-      var id = nodes[i].getAttribute("data-asset");
-      if (assets[id]) {
-        nodes[i].src = assets[id];
-      } else {
+    var pending = [];
+
+    function hydrate(node) {
+      var id = node.getAttribute("data-asset");
+      if (!assets[id]) {
         missing++;
+        return;
+      }
+      node.src = assets[id];
+      // The id is left in place: it is what the markup is addressed by, and
+      // the check below is what keeps an image from being assigned twice.
+      node.setAttribute("data-hydrated", "1");
+    }
+
+    function done(node) {
+      return node.getAttribute("data-hydrated") === "1";
+    }
+
+    var watcher = null;
+    if (window.IntersectionObserver) {
+      watcher = new window.IntersectionObserver(function (seen) {
+        for (var i = 0; i < seen.length; i++) {
+          if (!seen[i].isIntersecting) continue;
+          var node = seen[i].target;
+          watcher.unobserve(node);
+          if (!done(node)) hydrate(node);
+        }
+      }, {
+        // Far enough ahead that an image is ready by the time it is scrolled
+        // to, on a fast flick as well as a slow one.
+        rootMargin: "1200px 0px"
+      });
+    }
+
+    hydrateAll = function () {
+      for (var i = 0; i < pending.length; i++) {
+        if (!done(pending[i])) hydrate(pending[i]);
+      }
+      if (watcher) watcher.disconnect();
+      pending = [];
+      if (missing) {
+        console.warn("TSRM: " + missing + " image(s) had no asset payload");
+        missing = 0;
+      }
+    };
+
+    for (var i = 0; i < nodes.length; i++) {
+      if (watcher) {
+        pending.push(nodes[i]);
+        watcher.observe(nodes[i]);
+      } else {
+        hydrate(nodes[i]);
       }
     }
-    if (missing) {
-      console.warn("TSRM: " + missing + " image(s) had no asset payload");
+
+    if (!watcher) {
+      if (missing) console.warn("TSRM: " + missing + " image(s) had no asset payload");
+      hydrateAll = function () {};
+      return;
+    }
+
+    // Paper cannot scroll, so every path to it hydrates everything first.
+    window.addEventListener("beforeprint", hydrateAll);
+    if (window.matchMedia) {
+      var toPrint = window.matchMedia("print");
+      var onChange = function (event) {
+        if (event.matches) hydrateAll();
+      };
+      if (toPrint.addEventListener) toPrint.addEventListener("change", onChange);
+      else if (toPrint.addListener) toPrint.addListener(onChange);
     }
   }
 
@@ -579,6 +655,21 @@
     var cap = box.querySelector(".lb-cap");
     var clone = null;
 
+    /* An overlay that covers the document is a dialog, and a dialog that never
+       takes focus leaves a keyboard or screen-reader user reading the page
+       behind it while the page behind it is inert. Focus moves in on open and
+       goes back to whatever opened it on close - losing it would strand the
+       reader at the top of a document 19 packages long. */
+    box.setAttribute("aria-modal", "true");
+    box.setAttribute("tabindex", "-1");
+    var opener = null;
+
+    var dismiss = document.createElement("button");
+    dismiss.type = "button";
+    dismiss.className = "lb-close";
+    dismiss.textContent = "Close";
+    box.appendChild(dismiss);
+
     function close() {
       box.classList.remove("open");
       img.removeAttribute("src");
@@ -587,6 +678,14 @@
         clone.parentNode.removeChild(clone);
         clone = null;
       }
+      if (opener && opener.focus) {
+        try {
+          opener.focus();
+        } catch (err) {
+          /* the element may be gone; the page is still usable without it */
+        }
+      }
+      opener = null;
     }
 
     function overlayFor(target) {
@@ -613,6 +712,7 @@
 
     function open(target) {
       var wrap = overlayFor(target);
+      opener = target;
       cap.textContent = target.getAttribute("alt") || "";
       if (wrap) {
         clone = wrap.cloneNode(true);
@@ -634,6 +734,7 @@
         img.src = target.currentSrc || target.src;
         box.classList.add("open");
       }
+      box.focus();
     }
 
     window.addEventListener("resize", fit);
@@ -648,7 +749,16 @@
       }
     });
     document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape" && box.classList.contains("open")) close();
+      if (!box.classList.contains("open")) return;
+      if (event.key === "Escape") {
+        close();
+      } else if (event.key === "Tab") {
+        // The overlay holds one control, so the whole cycle is that control.
+        // Without this, Tab walks off into the document underneath, which is
+        // covered and cannot be seen.
+        event.preventDefault();
+        dismiss.focus();
+      }
     });
   }
 
@@ -682,6 +792,11 @@
       current = section;
       section.classList.add("print-target");
       document.body.classList.add("printing-one");
+      // Images are hydrated on approach, and a pack being printed has almost
+      // certainly not been scrolled through. beforeprint would cover this in a
+      // browser that fires it, which is exactly the assumption this file is
+      // not allowed to make - Safari and older Chrome do not always.
+      if (hydrateAll) hydrateAll();
       // Let the class land before the browser snapshots the page.
       window.setTimeout(function () {
         window.print();
@@ -704,6 +819,718 @@
     }
   }
 
+  /* ---- remembered preferences -------------------------------------------
+     Three things are worth surviving a reload: which package is the reader's
+     own, whether they asked for the dark theme, and nothing else. Storage is
+     wrapped because it is not always there to be had - a file:// document has
+     an opaque origin in some engines, and private browsing can make the getter
+     itself throw rather than return null. A reader whose storage refuses is
+     not an error case: they get the document with nothing remembered, which is
+     what it did before any of this existed. */
+  var PREF = "tsrm.";
+
+  function readPref(name) {
+    try {
+      return window.localStorage.getItem(PREF + name);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function writePref(name, value) {
+    try {
+      if (value === null) window.localStorage.removeItem(PREF + name);
+      else window.localStorage.setItem(PREF + name, value);
+    } catch (err) {
+      /* nothing sticks this session; every caller works without it */
+    }
+  }
+
+  /* ---- event time --------------------------------------------------------
+     Every time printed in this document is Las Vegas wall clock. That is not
+     the same as the reader's clock: staff fly in from everywhere and read this
+     on the plane, and a phone that has not yet moved to Pacific would put
+     every session an hour or three out - worse than useless for a "what am I
+     on next" line, because it is confidently wrong.
+
+     So the times are resolved through the event's own zone and compared as
+     absolute instants. Intl carries the rules; the probe below refuses a
+     formatter that quietly ignores the timeZone option rather than trusting
+     one, because the failure mode of that is silent and wrong. Where there is
+     no usable zone data the times are read as the device's own clock, which is
+     exactly right for anyone actually standing in the venue. */
+  var EVENT_ZONE = "America/Los_Angeles";
+
+  var zoneClock = (function () {
+    try {
+      var format = new Intl.DateTimeFormat("en-US", {
+        timeZone: EVENT_ZONE,
+        hourCycle: "h23",
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+      });
+      // 1 July 2026 12:00 UTC is 05:00 in Las Vegas. An engine that dropped the
+      // timeZone option answers with the device's hour instead, and this is the
+      // only way to tell the two apart.
+      var parts = format.formatToParts(new Date(Date.UTC(2026, 6, 1, 12, 0, 0)));
+      for (var i = 0; i < parts.length; i++) {
+        if (parts[i].type === "hour") return parts[i].value === "05" ? format : null;
+      }
+      return null;
+    } catch (err) {
+      return null;
+    }
+  })();
+
+  /* The event zone's wall clock at an instant, as {y, mo, d, hh, mm, ss}. */
+  function zoneParts(instant) {
+    var parts = zoneClock.formatToParts(new Date(instant));
+    var got = {};
+    for (var i = 0; i < parts.length; i++) got[parts[i].type] = parts[i].value;
+    return {
+      y: +got.year, mo: +got.month, d: +got.day,
+      // h23 still answers 24 for midnight in some engines.
+      hh: +got.hour % 24, mm: +got.minute, ss: +got.second
+    };
+  }
+
+  function zoneOffset(instant) {
+    var w = zoneParts(instant);
+    return Date.UTC(w.y, w.mo - 1, w.d, w.hh, w.mm, w.ss) - instant;
+  }
+
+  /* An event-zone wall clock reading, as an absolute instant. */
+  function eventInstant(y, mo, d, hh, mm) {
+    if (!zoneClock) return new Date(y, mo - 1, d, hh, mm, 0, 0).getTime();
+    var wall = Date.UTC(y, mo - 1, d, hh, mm);
+    // The offset that applies at the answer, not at the guess. One correction
+    // settles it; the two differ only across a daylight-saving boundary, and
+    // this event sits well inside one.
+    return wall - zoneOffset(wall - zoneOffset(wall));
+  }
+
+  /* The event-zone calendar date at an instant, as YYYY-MM-DD. */
+  function eventDay(instant) {
+    var w = zoneClock ? zoneParts(instant) : null;
+    var date = w
+      ? [w.y, w.mo, w.d]
+      : (function () {
+          var local = new Date(instant);
+          return [local.getFullYear(), local.getMonth() + 1, local.getDate()];
+        })();
+    return date[0] + "-" + pad2(date[1]) + "-" + pad2(date[2]);
+  }
+
+  function pad2(n) {
+    return (n < 10 ? "0" : "") + n;
+  }
+
+  /* ---- the schedule, read back out of the rendered cards -----------------
+     The times are in the markup only as printed text - "2:00 PM – 3:30 PM" in
+     .card-when, alongside data-day. Reading them back rather than shipping a
+     second machine-readable copy keeps one source of truth: if a card says a
+     session runs to 3:30, everything here agrees with it by construction, and
+     a regenerated document needs no parallel update.
+
+     Every one of the 30 distinct time ranges in the document matches this
+     pattern; a card that does not parse is counted and skipped, so an
+     unreadable one costs its own scheduling features and nothing else. */
+  var WHEN = /^(\d{1,2}):(\d{2})\s*(AM|PM)\s*[–—-]\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i;
+
+  function minutesOfDay(hour, minute, meridiem) {
+    return ((hour % 12) + (/p/i.test(meridiem) ? 12 : 0)) * 60 + minute;
+  }
+
+  function text(node, selector) {
+    var found = node.querySelector(selector);
+    return found ? (found.textContent || "").trim() : "";
+  }
+
+  /* The value beside a label in a card's key/value grid, by label. */
+  function detailOf(card, label) {
+    var keys = card.querySelectorAll(".kv .k");
+    for (var i = 0; i < keys.length; i++) {
+      if ((keys[i].textContent || "").trim() === label) {
+        var value = keys[i].parentNode.querySelector(".v");
+        return value ? (value.textContent || "").trim() : "";
+      }
+    }
+    return "";
+  }
+
+  /* When a card prints a time range, which range it is.
+
+     Most cards print the session's own hours. Seven print the staffer's
+     instead - "Your hours: 3:00 PM – 3:30 PM" against a session that runs from
+     2:30 - because that person is only on for part of it, and the document is
+     explicit that a coverage window is what it reasons about. Their hours are
+     what a "what am I on next" line has to mean and what belongs in their
+     calendar: telling someone they are on at 2:30 when they are on at 3:00
+     is the same class of error as getting the timezone wrong. */
+  function whenOf(card) {
+    var printed = card.querySelector(".card-when");
+    if (!printed) return null;
+    var rostered = printed.querySelector(".when-time");
+    return {
+      range: ((rostered || printed).textContent || "").trim(),
+      rostered: !!rostered
+    };
+  }
+
+  function readSchedule() {
+    var cards = document.querySelectorAll(".card[data-day]");
+    var entries = [];
+    var unreadable = 0;
+
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      var day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(card.getAttribute("data-day") || "");
+      var printed = whenOf(card);
+      var when = printed && WHEN.exec(printed.range);
+      var person = card.closest ? card.closest(".person[data-person]") : null;
+      if (!day || !when || !person) {
+        unreadable++;
+        continue;
+      }
+
+      var startMin = minutesOfDay(+when[1], +when[2], when[3]);
+      var endMin = minutesOfDay(+when[4], +when[5], when[6]);
+      if (endMin <= startMin) {
+        // Would mean a session running past midnight. None does, and reading
+        // one as same-day would file it in the past the moment it began.
+        unreadable++;
+        continue;
+      }
+
+      var y = +day[1], mo = +day[2], d = +day[3];
+      entries.push({
+        card: card,
+        person: person,
+        personKey: person.getAttribute("data-person"),
+        personName: text(person, ".person-head h2"),
+        day: day[0],
+        start: eventInstant(y, mo, d, (startMin / 60) | 0, startMin % 60),
+        end: eventInstant(y, mo, d, (endMin / 60) | 0, endMin % 60),
+        id: card.id,
+        gsxid: text(card, ".card-id"),
+        title: text(card, ".card-title"),
+        room: text(card, ".card-where"),
+        when: printed.range,
+        // True where the range above is this person's hours rather than the
+        // session's, which the calendar export spells out.
+        rostered: printed.rostered,
+        sessionTime: detailOf(card, "Session time")
+      });
+    }
+
+    if (unreadable) {
+      console.warn("TSRM: " + unreadable + " card(s) had no readable time");
+    }
+    entries.sort(function (a, b) {
+      return a.start - b.start;
+    });
+    return entries;
+  }
+
+  /* ---- how long until, in words a person reads at a glance --------------- */
+  function relative(ms) {
+    var minutes = Math.round(ms / 60000);
+    if (minutes < 1) return "any moment";
+    if (minutes < 60) return "in " + minutes + " min";
+    var hours = Math.floor(minutes / 60);
+    var rest = minutes % 60;
+    if (hours < 12) return "in " + hours + " h" + (rest ? " " + rest + " min" : "");
+    var days = Math.round(minutes / 1440);
+    return days <= 1 ? "tomorrow" : "in " + days + " days";
+  }
+
+  function clockOf(entry, which) {
+    // The printed range is already in the right zone and the right format.
+    var halves = entry.when.split(/\s*[–—-]\s*/);
+    return (which === "end" ? halves[1] : halves[0]) || entry.when;
+  }
+
+  var WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  function dayLabel(entry) {
+    var parts = entry.day.split("-");
+    // Noon UTC, so the weekday cannot be dragged over a boundary by an offset.
+    var at = new Date(Date.UTC(+parts[0], +parts[1] - 1, +parts[2], 12));
+    return WEEKDAYS[at.getUTCDay()] + " " + (+parts[1]) + "/" + (+parts[2]);
+  }
+
+  /* ---- what the reader is on now, and what is next ----------------------
+     The single question this document is opened to answer once the event has
+     started, and the one thing the printed page cannot do. It is only shown
+     while today is one of the event days: on any other day every session would
+     resolve as finished, and a document read a week early would look broken
+     rather than simply not yet relevant. */
+  function initNow(schedule, whoami) {
+    if (!schedule.length) return function () {};
+
+    var days = {};
+    for (var i = 0; i < schedule.length; i++) days[schedule[i].day] = true;
+
+    var bar = document.createElement("section");
+    bar.className = "nowbar";
+    bar.id = "nowbar";
+    bar.hidden = true;
+    bar.setAttribute("aria-live", "polite");
+    var anchor = document.getElementById("global-links");
+    if (!anchor || !anchor.parentNode) return function () {};
+    anchor.parentNode.insertBefore(bar, anchor);
+
+    function line(kind, label, body, entry) {
+      var row = document.createElement("p");
+      row.className = "nowrow is-" + kind;
+      var tag = document.createElement("span");
+      tag.className = "nowtag";
+      tag.textContent = label;
+      row.appendChild(tag);
+      var said = document.createElement("span");
+      said.className = "nowbody";
+      said.textContent = body;
+      row.appendChild(said);
+      if (entry) {
+        var jump = document.createElement("a");
+        jump.className = "nowjump";
+        jump.href = "#" + entry.id;
+        jump.textContent = "Open";
+        row.appendChild(jump);
+      }
+      return row;
+    }
+
+    function paint(now) {
+      var today = eventDay(now);
+      // Keyed by session instance, not by card: one session staffed by three
+      // people is three cards, and counting those would tell the reader the
+      // event is three times busier than it is.
+      var running = {};
+      var runningCount = 0;
+      var mine = { live: null, next: null };
+      var me = whoami.key();
+
+      for (var i = 0; i < schedule.length; i++) {
+        var entry = schedule[i];
+        var live = now >= entry.start && now < entry.end;
+        var done = now >= entry.end;
+
+        // The card's own state is a property of the session, so it is stamped
+        // on every package - but only during the event, for the reason above.
+        var inEvent = today in days;
+        entry.card.classList.toggle("is-live", inEvent && live);
+        entry.card.classList.toggle("is-done", inEvent && done);
+
+        if (live && !(entry.gsxid in running)) {
+          running[entry.gsxid] = true;
+          runningCount++;
+        }
+        if (entry.personKey === me) {
+          if (live && !mine.live) mine.live = entry;
+          if (!done && !live && !mine.next) mine.next = entry;
+        }
+      }
+
+      while (bar.firstChild) bar.removeChild(bar.firstChild);
+
+      if (!(today in days)) {
+        // Before or after the event. Say which, once, and stay out of the way.
+        var first = schedule[0], last = schedule[schedule.length - 1];
+        if (now < first.start) {
+          bar.appendChild(line("soon", "Starts",
+            dayLabel(first) + ", " + clockOf(first, "start") + " · " + relative(first.start - now)));
+          bar.hidden = false;
+        } else {
+          // Between the event days, or after the last one: the card states are
+          // already cleared above and there is nothing useful left to say.
+          bar.hidden = true;
+        }
+        return;
+      }
+
+      if (mine.live) {
+        bar.appendChild(line("live", "On now",
+          mine.live.gsxid + " · " + mine.live.room + " · until " + clockOf(mine.live, "end"),
+          mine.live));
+      }
+      if (mine.next) {
+        bar.appendChild(line("next", mine.live ? "Then" : "Next",
+          dayLabel(mine.next) + ", " + clockOf(mine.next, "start") + " · " + mine.next.room
+            + " · " + relative(mine.next.start - now),
+          mine.next));
+      }
+      if (me && !mine.live && !mine.next) {
+        bar.appendChild(line("clear", "Done", "Nothing further on your schedule."));
+      }
+      if (!me) {
+        bar.appendChild(line("who", "Now",
+          (runningCount
+            ? runningCount + (runningCount === 1 ? " session is" : " sessions are") + " running now."
+            : "Nothing is running just now.")
+            + " Mark your own package to see what you are on next."));
+      }
+
+      bar.hidden = !bar.firstChild;
+    }
+
+    return paint;
+  }
+
+  /* ---- whose package this is --------------------------------------------
+     Nineteen people share one document, and each of them wants exactly one
+     package out of it. Marked once, remembered after, and it is what makes the
+     now/next line above answerable at all. */
+  function initWhoami(onChange) {
+    var sections = document.querySelectorAll(".person[data-person]");
+    if (!sections.length) return null;
+
+    var known = {};
+    var buttons = [];
+    var current = readPref("me");
+
+    var jump = document.createElement("a");
+    jump.className = "chip mychip";
+    jump.id = "mychip";
+    jump.hidden = true;
+
+    var toolbar = document.querySelector(".toolbar-inner");
+    var counter = document.getElementById("count");
+    if (toolbar) toolbar.insertBefore(jump, counter || null);
+
+    function render() {
+      for (var i = 0; i < buttons.length; i++) {
+        var button = buttons[i];
+        var isMine = button.getAttribute("data-me") === current;
+        button.setAttribute("aria-pressed", isMine ? "true" : "false");
+        button.textContent = isMine ? "★ My pack" : "This is me";
+      }
+      for (var key in known) {
+        if (Object.prototype.hasOwnProperty.call(known, key)) {
+          known[key].classList.toggle("is-mine", key === current);
+        }
+      }
+      if (current && known[current]) {
+        jump.hidden = false;
+        jump.href = "#person-" + current;
+        jump.textContent = "★ " + text(known[current], ".person-head h2");
+        jump.title = "Jump to your package";
+      } else {
+        jump.hidden = true;
+      }
+    }
+
+    for (var i = 0; i < sections.length; i++) {
+      var section = sections[i];
+      var key = section.getAttribute("data-person");
+      known[key] = section;
+
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "mebtn";
+      button.setAttribute("data-me", key);
+      button.setAttribute("aria-pressed", "false");
+      var head = section.querySelector(".person-head");
+      var print = section.querySelector(".printbtn");
+      if (head) head.insertBefore(button, print || null);
+      buttons.push(button);
+    }
+
+    // A key left over from a document that no longer carries that person.
+    if (current && !known[current]) {
+      current = null;
+      writePref("me", null);
+    }
+
+    document.addEventListener("click", function (event) {
+      var button = event.target && event.target.closest
+        ? event.target.closest("[data-me]")
+        : null;
+      if (!button) return;
+      var key = button.getAttribute("data-me");
+      current = current === key ? null : key;
+      writePref("me", current);
+      render();
+      if (onChange) onChange();
+    });
+
+    render();
+    return {
+      key: function () {
+        return current;
+      }
+    };
+  }
+
+  /* ---- calendar export ---------------------------------------------------
+     A staffer's assignments belong in the phone they are already carrying, and
+     re-keying six sessions by hand at a gate is how people end up in the wrong
+     ballroom. The file is built here rather than shipped alongside because
+     there is nothing to ship alongside: this document travels as one file.
+
+     Times go out as UTC instants, which is why eventInstant's zone handling
+     matters - it means no VTIMEZONE block has to be written or trusted, and
+     every calendar client agrees on when the session is. */
+  function icsEscape(value) {
+    return String(value)
+      .replace(/\\/g, "\\\\")
+      .replace(/;/g, "\\;")
+      .replace(/,/g, "\\,")
+      .replace(/\r?\n/g, "\\n");
+  }
+
+  function utcStamp(ms) {
+    var at = new Date(ms);
+    return at.getUTCFullYear() + pad2(at.getUTCMonth() + 1) + pad2(at.getUTCDate())
+      + "T" + pad2(at.getUTCHours()) + pad2(at.getUTCMinutes()) + pad2(at.getUTCSeconds()) + "Z";
+  }
+
+  /* RFC 5545 folds content lines at 75 octets, and the limit is octets rather
+     than characters - a session title carrying an en dash or a curly apostrophe
+     spends three bytes on it, and folding by character length would both
+     overshoot the limit and risk splitting a sequence in half. */
+  function icsFold(line) {
+    var out = "";
+    var used = 0;
+    for (var i = 0; i < line.length; i++) {
+      var code = line.charCodeAt(i);
+      var chunk = line.charAt(i);
+      if (code >= 0xd800 && code <= 0xdbff && i + 1 < line.length) {
+        chunk += line.charAt(++i);
+        code = 0x10000;
+      }
+      var octets = code < 0x80 ? 1 : code < 0x800 ? 2 : code < 0x10000 ? 3 : 4;
+      // 74 plus the leading space of a continuation line keeps every line inside 75.
+      if (used + octets > 74) {
+        out += "\r\n ";
+        used = 1;
+      }
+      out += chunk;
+      used += octets;
+    }
+    return out;
+  }
+
+  function icsCalendar(entries, name) {
+    var stamp = utcStamp(Date.now());
+    var lines = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//GSX TSRM//Tech Elevate FY27 staff packages//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "X-WR-CALNAME:" + icsEscape("Tech Elevate GSX FY27 — " + name)
+    ];
+
+    for (var i = 0; i < entries.length; i++) {
+      var entry = entries[i];
+      var detail = [entry.title, "Room: " + entry.room, "Staffer: " + entry.personName];
+      if (entry.rostered) {
+        // The event is the hours they are on. Naming the session's own hours
+        // beside them stops the shorter block reading like a mistake.
+        detail.push("Your hours: " + entry.when);
+        if (entry.sessionTime) detail.push("Session runs: " + entry.sessionTime);
+      }
+      var eurl = entry.card.querySelector(".eurl a");
+      if (eurl) detail.push("Webex: " + (eurl.textContent || "").trim());
+      var staffing = text(entry.card, ".staffing");
+      if (staffing) detail.push(staffing);
+
+      lines.push(
+        "BEGIN:VEVENT",
+        // Stable across exports, so re-importing updates rather than duplicates.
+        "UID:" + entry.id + "@tsrm-gsx-fy27",
+        "DTSTAMP:" + stamp,
+        "DTSTART:" + utcStamp(entry.start),
+        "DTEND:" + utcStamp(entry.end),
+        "SUMMARY:" + icsEscape(entry.gsxid + " · " + entry.title),
+        "LOCATION:" + icsEscape(entry.room),
+        "DESCRIPTION:" + icsEscape(detail.join("\n")),
+        "END:VEVENT"
+      );
+    }
+
+    lines.push("END:VCALENDAR");
+    var folded = [];
+    for (var j = 0; j < lines.length; j++) folded.push(icsFold(lines[j]));
+    // CRLF throughout, per the spec, and a trailing one so the last line is
+    // terminated rather than merely present.
+    return folded.join("\r\n") + "\r\n";
+  }
+
+  function offerDownload(filename, body, mime) {
+    var url = null;
+    try {
+      if (window.Blob && window.URL && window.URL.createObjectURL) {
+        url = window.URL.createObjectURL(new Blob([body], { type: mime }));
+      }
+    } catch (err) {
+      url = null;
+    }
+    var link = document.createElement("a");
+    // A data: URL is the fallback, not the default: it is capped in some
+    // engines and shows as a wall of text in others, but it beats no export.
+    link.href = url || "data:" + mime + ";charset=utf-8," + encodeURIComponent(body);
+    link.download = filename;
+    link.rel = "noopener";
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (url) {
+      // Long enough for the engine to have taken the bytes, short enough not
+      // to hold several megabytes for the rest of the session.
+      window.setTimeout(function () {
+        window.URL.revokeObjectURL(url);
+      }, 30000);
+    }
+  }
+
+  function initCalendar(schedule) {
+    if (!schedule.length) return;
+    var byPerson = {};
+    for (var i = 0; i < schedule.length; i++) {
+      var entry = schedule[i];
+      (byPerson[entry.personKey] || (byPerson[entry.personKey] = [])).push(entry);
+    }
+
+    var sections = document.querySelectorAll(".person[data-person]");
+    for (var s = 0; s < sections.length; s++) {
+      var section = sections[s];
+      var key = section.getAttribute("data-person");
+      if (!byPerson[key]) continue;
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "calbtn";
+      button.setAttribute("data-calendar", key);
+      button.textContent = "☷ Add to calendar";
+      var head = section.querySelector(".person-head");
+      var print = section.querySelector(".printbtn");
+      if (head) head.insertBefore(button, print || null);
+    }
+
+    document.addEventListener("click", function (event) {
+      var button = event.target && event.target.closest
+        ? event.target.closest("[data-calendar]")
+        : null;
+      if (!button) return;
+      var entries = byPerson[button.getAttribute("data-calendar")];
+      if (!entries || !entries.length) return;
+      var who = entries[0].personName;
+      offerDownload(
+        "tech-elevate-" + button.getAttribute("data-calendar") + ".ics",
+        icsCalendar(entries, who),
+        "text/calendar"
+      );
+    });
+  }
+
+  /* ---- theme -------------------------------------------------------------
+     A ballroom during a session is dark, and this document is read in one on a
+     phone at full brightness. The palette is a set of custom properties, so a
+     dark one is a second set of the same names and nothing else changes.
+
+     The effective theme is resolved here and stamped on the root element, so
+     the stylesheet carries one dark block rather than one per way of asking
+     for it. Without scripting the document stays exactly as it was: light, and
+     the same as it prints. */
+  function initTheme() {
+    var root = document.documentElement;
+    var media = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+    var chosen = readPref("theme");
+    if (chosen !== "dark" && chosen !== "light") chosen = null;
+
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "chip themebtn";
+    button.id = "themebtn";
+
+    function effective() {
+      if (chosen) return chosen;
+      return media && media.matches ? "dark" : "light";
+    }
+
+    function render() {
+      var theme = effective();
+      root.setAttribute("data-theme", theme);
+      button.setAttribute("aria-pressed", theme === "dark" ? "true" : "false");
+      button.textContent = theme === "dark" ? "☼ Light" : "☾ Dark";
+      button.title = theme === "dark" ? "Switch to the light theme" : "Switch to the dark theme";
+    }
+
+    button.addEventListener("click", function () {
+      chosen = effective() === "dark" ? "light" : "dark";
+      writePref("theme", chosen);
+      render();
+    });
+
+    if (media) {
+      var followSystem = function () {
+        // Only while the reader has not overridden it themselves.
+        if (!chosen) render();
+      };
+      if (media.addEventListener) media.addEventListener("change", followSystem);
+      else if (media.addListener) media.addListener(followSystem);
+    }
+
+    var toolbar = document.querySelector(".toolbar-inner");
+    if (toolbar) toolbar.insertBefore(button, document.getElementById("count") || null);
+    render();
+  }
+
+  /* ---- keyboard and assistive access ------------------------------------
+     Three gaps, all of them in things the mouse already reaches. The zoomable
+     diagrams were bound on click alone, which left the lightbox - the only way
+     to read a room plan at a usable size - unreachable without a pointer. The
+     lightbox took focus nowhere and gave it back nowhere. And the result count
+     changed silently, so a filter that just emptied the document announced
+     nothing at all. */
+  function initAccess() {
+    var counter = document.getElementById("count");
+    if (counter) {
+      counter.setAttribute("role", "status");
+      counter.setAttribute("aria-live", "polite");
+    }
+
+    var zoomable = document.querySelectorAll("img[data-zoom]");
+    for (var i = 0; i < zoomable.length; i++) {
+      var image = zoomable[i];
+      image.setAttribute("tabindex", "0");
+      image.setAttribute("role", "button");
+      var label = image.getAttribute("alt");
+      image.setAttribute("aria-label", label ? "Enlarge: " + label : "Enlarge image");
+    }
+
+    document.addEventListener("keydown", function (event) {
+      var target = event.target;
+      if (!target || !target.matches || !target.matches("img[data-zoom]")) return;
+      if (event.key !== "Enter" && event.key !== " " && event.key !== "Spacebar") return;
+      // Space scrolls the page otherwise, which is the opposite of opening it.
+      event.preventDefault();
+      target.click();
+    });
+
+    var search = document.getElementById("q");
+    document.addEventListener("keydown", function (event) {
+      if (event.metaKey || event.ctrlKey || event.altKey) return;
+      var target = event.target;
+      var typing = target && target.matches
+        && target.matches("input, textarea, select, [contenteditable]");
+      if (event.key === "/" && !typing && search) {
+        event.preventDefault();
+        search.focus();
+        search.select();
+      } else if (event.key === "Escape" && target === search && search.value) {
+        // Escape inside a type=search already clears in some engines and does
+        // nothing in others; making it consistent costs one line.
+        search.value = "";
+        var fired = document.createEvent("Event");
+        fired.initEvent("input", true, false);
+        search.dispatchEvent(fired);
+      }
+    });
+  }
+
   hydrateImages();
   initAnchorScroll(initToolbarMetrics());
   initFilter();
@@ -711,5 +1538,33 @@
   initFoldouts();
   initLightbox();
   initPersonPrint();
+  initTheme();
+  initAccess();
+
+  /* The scheduling features share one reading of the cards. whoami and the
+     now/next line need each other - marking a package has to repaint the line
+     at once - so the repainter is held in a variable the handler closes over
+     rather than passed round in a circle. */
+  var schedule = readSchedule();
+  var repaint = function () {};
+  var whoami = initWhoami(function () {
+    repaint(Date.now());
+  }) || { key: function () { return null; } };
+  repaint = initNow(schedule, whoami);
+  initCalendar(schedule);
+
+  function tick() {
+    repaint(Date.now());
+  }
+
+  tick();
+  // Half a minute is finer than any countdown this shows, and costs nothing.
+  window.setInterval(tick, 30000);
+  // A phone that has been in a pocket has not been running the interval, and
+  // comes back to a stale line unless waking is itself a reason to recompute.
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) tick();
+  });
+  window.addEventListener("focus", tick);
 })();
 
