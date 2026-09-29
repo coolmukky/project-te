@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Frameplan — shot planner</title>
+    <meta name="description" content="Plan shots visually: depth of field, lens choice and lighting across multiple scenes." />
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.8" />
+          <path d="M12 2 L15 10 M22 12 L14 15 M12 22 L9 14 M2 12 L10 9" stroke="currentColor" stroke-width="1.6" fill="none" />
+        </svg>
+        <span>Frameplan</span>
+        <small>shot planner</small>
+      </div>
+      <div class="seg" id="viewToggle" role="tablist" aria-label="View">
+        <button data-view="plan" class="active">Plan</button>
+        <button data-view="board">Storyboard</button>
+      </div>
+      <div class="spacer"></div>
+      <div class="seg" id="unitToggle" aria-label="Units">
+        <button data-units="m">m</button>
+        <button data-units="ft">ft</button>
+      </div>
+      <button id="importBtn" class="btn">Import</button>
+      <input id="importFile" type="file" accept=".json,application/json" hidden />
+      <button id="exportBtn" class="btn">Export</button>
+      <button id="printBtn" class="btn">Print board</button>
+      <button id="resetBtn" class="btn ghost" title="Replace all scenes with the sample set">Reset</button>
+    </header>
+
+    <div class="layout">
+      <aside class="scenes">
+        <div class="panel-head">
+          <h2>Scenes</h2>
+          <button id="addScene" class="btn small">+ New</button>
+        </div>
+        <ol id="sceneList" class="scene-list"></ol>
+      </aside>
+
+      <main id="workspace" class="workspace">
+        <section class="views">
+          <div class="card preview-card">
+            <div class="card-head">
+              <h3>Camera view</h3>
+              <div class="toggles">
+                <label><input type="checkbox" id="optDof" checked /> DOF zone</label>
+                <label><input type="checkbox" id="optThirds" /> Thirds</label>
+              </div>
+            </div>
+            <div class="preview-wrap" id="previewWrap">
+              <canvas id="preview" aria-label="Simulated camera view"></canvas>
+              <div class="hud" id="hud"></div>
+            </div>
+          </div>
+
+          <div class="card plan-card">
+            <div class="card-head">
+              <h3>Floor plan</h3>
+              <div class="toggles">
+                <button id="addSubjectQuick" class="btn small">+ Subject</button>
+                <button id="addLightQuick" class="btn small">+ Light</button>
+                <button id="fitPlan" class="btn small">Fit</button>
+              </div>
+            </div>
+            <div class="plan-wrap">
+              <canvas id="plan" aria-label="Top-down floor plan"></canvas>
+              <div class="plan-hint">Drag items · drag <b class="dot focus"></b> focus, <b class="dot bg"></b> backdrop, <b class="dot aim"></b> aim · Shift snaps · scroll zooms</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="stats" id="stats"></section>
+
+        <section class="card chart-card">
+          <div class="card-head">
+            <h3>Depth of field &amp; blur</h3>
+            <span class="muted">Blur circle as % of frame width vs. distance. Green band = acceptably sharp.</span>
+          </div>
+          <div class="chart-wrap"><canvas id="dofChart"></canvas></div>
+        </section>
+
+        <section class="card sweep-card">
+          <div class="card-head">
+            <h3>Lens sweep</h3>
+            <div class="toggles">
+              <label title="Move the camera so the primary subject stays the same size (shows perspective compression)">
+                <input type="checkbox" id="sweepMatch" /> Keep subject size
+              </label>
+            </div>
+          </div>
+          <div id="sweep" class="sweep"></div>
+        </section>
+      </main>
+
+      <main id="board" class="board" hidden>
+        <div class="board-head">
+          <h2 id="boardTitle">Storyboard</h2>
+          <span class="muted">Click a frame to edit it.</span>
+        </div>
+        <div id="boardGrid" class="board-grid"></div>
+      </main>
+
+      <aside class="inspector">
+        <nav class="tabs" id="tabs">
+          <button data-tab="camera">Camera</button>
+          <button data-tab="subjects">Subjects</button>
+          <button data-tab="lights">Lights</button>
+          <button data-tab="scene">Scene</button>
+        </nav>
+        <div id="inspector" class="inspector-body"></div>
+      </aside>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="js/optics.js"></script>
+    <script src="js/lighting.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/preview.js"></script>
+    <script src="js/plan.js"></script>
+    <script src="js/dofchart.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
