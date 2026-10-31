@@ -1,0 +1,1163 @@
+<title>Prisma SASE Interview Runbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a runbook. Left rail lists the hops (steps) in order; the main pane holds learn, then validate, then the result. */
+:root{
+  --bg:#eef2f5; --surface:#ffffff; --sunk:#e3e9ee; --ink:#13202c; --muted:#566878; --line:#cfd8e0;
+  --accent:#0a5a9c; --accent-ink:#ffffff; --accent-soft:#dbe9f6; --signal:#a85f00;
+  --good:#1b7444; --good-soft:#dcefe3; --warn:#9a5c00; --warn-soft:#f6ead6; --bad:#b0281d; --bad-soft:#f7dfdc;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e141a; --surface:#161f28; --sunk:#1d2833; --ink:#e4ebf1; --muted:#93a5b5; --line:#2b3a47;
+  --accent:#62aef0; --accent-ink:#06121d; --accent-soft:#17324a; --signal:#e3a347;
+  --good:#52c58c; --good-soft:#143326; --warn:#e3a347; --warn-soft:#3a2b14; --bad:#f2786d; --bad-soft:#3d1c19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e141a; --surface:#161f28; --sunk:#1d2833; --ink:#e4ebf1; --muted:#93a5b5; --line:#2b3a47;
+  --accent:#62aef0; --accent-ink:#06121d; --accent-soft:#17324a; --signal:#e3a347;
+  --good:#52c58c; --good-soft:#143326; --warn:#e3a347; --warn-soft:#3a2b14; --bad:#f2786d; --bad-soft:#3d1c19; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:700;letter-spacing:.01em;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:1.5rem}
+h2{font-size:2.1rem}
+h3{font-size:1.35rem}
+.mono{font-family:var(--mono)}
+.label{font-family:var(--mono);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--line);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px}
+.top-in{max-width:1240px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px}
+.brand{display:flex;flex-direction:column;gap:0;min-width:0}
+.brand small{font-family:var(--mono);font-size:.7rem;color:var(--muted);letter-spacing:.04em}
+.meters{display:flex;gap:18px;margin-left:auto;align-items:center;flex-wrap:wrap}
+.meter{display:flex;flex-direction:column;gap:3px;min-width:120px}
+.meter .bar{height:6px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.meter .bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .4s}
+.meter b{font-family:var(--mono);font-size:.9rem;font-weight:500}
+.sync{font-family:var(--mono);font-size:.68rem;color:var(--muted)}
+
+/* shell */
+.shell{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:290px minmax(0,1fr);gap:28px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 64px}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 78px);align-self:start;max-height:calc(100vh - 100px);overflow:auto}
+.rail summary{display:none}
+.rail nav{display:flex;flex-direction:column;gap:14px}
+.daygrp{display:flex;flex-direction:column;gap:2px}
+.daygrp > .label{padding:0 8px 4px}
+.step{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 8px;border-radius:6px;
+  color:var(--ink);text-decoration:none;border:1px solid transparent}
+.step:hover{background:var(--surface)}
+.step[aria-current="page"]{background:var(--surface);border-color:var(--line)}
+.step .n{font-family:var(--mono);font-size:.75rem;color:var(--muted)}
+.step .t{font-size:.88rem;line-height:1.25;min-width:0}
+.step .t small{display:block;font-family:var(--mono);font-size:.68rem;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--sunk);border:1px solid var(--line)}
+.dot.ready{background:var(--good);border-color:var(--good)}
+.dot.dev{background:var(--warn);border-color:var(--warn)}
+.dot.need{background:var(--bad);border-color:var(--bad)}
+.dot.prog{background:var(--accent-soft);border-color:var(--accent)}
+
+main{min-width:0;display:flex;flex-direction:column;gap:22px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px}
+.panel > * + *{margin-top:12px}
+.eyebrow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.72rem;padding:2px 8px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.chip.p0{color:var(--bad);border-color:var(--bad)}
+.chip.p1{color:var(--warn);border-color:var(--warn)}
+.chip.p2{color:var(--muted)}
+.status{font-family:var(--mono);font-size:.74rem;padding:3px 9px;border-radius:4px;font-weight:500}
+.status.ready{background:var(--good-soft);color:var(--good)}
+.status.dev{background:var(--warn-soft);color:var(--warn)}
+.status.need{background:var(--bad-soft);color:var(--bad)}
+.status.none,.status.prog{background:var(--sunk);color:var(--muted)}
+.objective{font-size:1.05rem;max-width:68ch}
+
+.learn{max-width:72ch}
+.learn ul{padding-left:1.15rem;margin:.4rem 0}
+.learn li{margin:.3rem 0}
+.learn h4{font-family:var(--display);font-size:1.12rem;margin:1.1rem 0 .3rem;letter-spacing:.02em}
+.learn code,.mono-inline{font-family:var(--mono);font-size:.86em;background:var(--sunk);padding:1px 5px;border-radius:3px}
+.learn .flow{font-family:var(--mono);font-size:.8rem;background:var(--sunk);border-radius:6px;padding:10px 12px;overflow-x:auto;white-space:pre;line-height:1.5}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.86rem}
+th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+th{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.v{font-family:var(--mono);font-size:.68rem;padding:0 5px;border-radius:3px;background:var(--warn-soft);color:var(--warn);white-space:nowrap}
+
+.res{display:flex;flex-direction:column;gap:8px;padding:0;margin:0;list-style:none}
+.res li{display:grid;grid-template-columns:minmax(0,1fr);gap:1px;padding:8px 10px;border:1px solid var(--line);border-radius:6px}
+.res li span{font-size:.8rem;color:var(--muted)}
+
+.sectionhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+fieldset{border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:0}
+fieldset + fieldset{margin-top:10px}
+legend{font-weight:600;padding:0 4px;font-size:.95rem}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:6px 8px;border-radius:5px;cursor:pointer}
+.opt:hover{background:var(--sunk)}
+.opt input{margin-top:4px;accent-color:var(--accent)}
+.opt.right{background:var(--good-soft)}
+.opt.wrong{background:var(--bad-soft)}
+.explain{font-size:.86rem;color:var(--muted);border-left:3px solid var(--line);padding-left:10px;margin-top:6px}
+.explain.ok{border-color:var(--good)}
+.explain.no{border-color:var(--bad)}
+
+textarea{width:100%;min-height:170px;font:inherit;font-size:.95rem;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);resize:vertical}
+.btns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:inherit;font-size:.9rem;font-weight:600;padding:8px 16px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+button.ghost{background:transparent;color:var(--accent)}
+button:disabled{opacity:.55;cursor:default}
+.note{font-size:.84rem;color:var(--muted)}
+.err{color:var(--bad);font-size:.86rem}
+
+.scorecard{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.sc{border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.sc b{font-family:var(--mono);font-size:1.25rem;font-weight:500}
+.cat{display:grid;grid-template-columns:minmax(110px,150px) minmax(0,1fr) 32px;gap:10px;align-items:center;font-size:.85rem}
+.cat .bar{height:8px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.cat .bar i{display:block;height:100%;background:var(--accent)}
+.feedback ul{padding-left:1.1rem;margin:.3rem 0}
+.improved{background:var(--sunk);border-radius:8px;padding:12px 14px;font-size:.92rem;white-space:pre-wrap}
+.checks{display:flex;flex-direction:column;gap:4px}
+
+/* overview */
+.hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:22px;align-items:start}
+.gauge{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.gauge .big{font-family:var(--display);font-size:4.4rem;line-height:.9;font-weight:700}
+.gauge .big small{font-size:1.6rem;color:var(--muted)}
+.domains{display:flex;flex-direction:column;gap:8px}
+.plan{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.plan .day{border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.plan .day ol{margin:.4rem 0 0;padding-left:1.2rem;font-size:.88rem}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+
+/* mock */
+.chat{display:flex;flex-direction:column;gap:14px}
+.turn{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.qbub{font-weight:600;max-width:72ch}
+.abub{background:var(--sunk);border-radius:8px;padding:10px 12px;white-space:pre-wrap;max-width:72ch;font-size:.92rem}
+
+.revision{columns:2 320px;column-gap:28px}
+.revision section{break-inside:avoid;margin-bottom:14px}
+.revision h4{font-family:var(--display);font-size:1.1rem;margin:0 0 4px}
+.revision ul{padding-left:1.1rem;margin:0;font-size:.88rem}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:16px;padding-block:14px 48px}
+  .rail{position:static;max-height:none;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px}
+  .rail summary{display:flex;justify-content:space-between;cursor:pointer;padding:6px 8px;font-weight:600}
+  .rail nav{padding-top:8px}
+  .hero{grid-template-columns:minmax(0,1fr)}
+  h2{font-size:1.8rem}
+  .panel{padding:16px}
+  .meters{margin-left:0;width:100%;gap:12px}
+  .top{position:static}
+  .meter{min-width:100px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand">
+      <h1>Prisma SASE Interview Runbook</h1>
+      <small>Palo Alto Networks · Technical Enablement Architect, NetSec &amp; SASE · JR-017228</small>
+    </div>
+    <div class="meters">
+      <div class="meter"><span class="label">Readiness</span><b id="hdr-ready" class="tnum">0 / 100</b><div class="bar"><i id="hdr-ready-bar"></i></div></div>
+      <div class="meter"><span class="label">Coverage</span><b id="hdr-cov" class="tnum">0 of 13</b><div class="bar"><i id="hdr-cov-bar"></i></div></div>
+      <div class="meter"><span class="label">Interview</span><b id="hdr-count" class="tnum">Mon, Nov 2</b><span class="sync" id="sync">Progress saved in this browser</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <details class="rail" id="rail" open>
+    <summary><span>Steps</span><span id="rail-sum" class="mono"></span></summary>
+    <nav id="nav" aria-label="Preparation steps"></nav>
+  </details>
+  <main id="view" aria-live="polite"></main>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------------------------------------------------------------- content */
+const V = '<span class="v">verify</span>';
+const BG = "Candidate background: Technical Enablement Architect at Cisco Systems supporting security enablement (global SE readiness, a Zero Trust Architecture Design Clinic prototype, collaboration with Product, GTM, SMEs, learning design). Previously at Juniper Networks in customer-facing Systems Engineering, technical enablement and technical instruction. Technical: enterprise routing and switching, Juniper SRX, Cisco Firepower / Secure Firewall, Cisco ISE, Zero Trust and identity-based segmentation, Cisco and Juniper SD-WAN, Juniper EX and Mist, EVPN/VXLAN, Apstra, Python, Ansible, lab environments. MS in Information Systems Technology and an MBA. Limited hands-on Prisma SASE experience.";
+
+const MODULES = [
+{ id:"m1", day:1, title:"SASE, SSE and the Prisma SASE portfolio", time:"40 min", prio:"P0", weight:3,
+  objective:"Explain SASE vs. SSE and draw the Prisma SASE stack from memory, including what makes it architecturally different.",
+  learn:`
+<h4>Definitions you must say cleanly</h4>
+<ul>
+<li><b>SSE</b> (Security Service Edge) is cloud-delivered security for users and traffic: SWG, CASB and ZTNA, usually with FWaaS and DLP.</li>
+<li><b>SASE</b> is SSE plus the WAN edge (SD-WAN), converged under one policy, management and telemetry model.</li>
+<li><b>Prisma SASE</b> = <b>Prisma Access</b> (the SSE) + <b>Prisma SD-WAN</b> (ION devices), managed in <b>Strata Cloud Manager</b>, with <b>ADEM</b> for experience, <b>Cloud Identity Engine</b> for identity and <b>Strata Logging Service</b> for logs.</li>
+</ul>
+<h4>The architectural claim</h4>
+<ul>
+<li>Prisma Access security processing nodes (SPNs) run <b>PAN-OS</b>. App-ID, User-ID, Content-ID and the security policy model behave the same as on an on-prem NGFW, on all ports and protocols, not only HTTP/S.</li>
+<li>For enablement this means SE firewall skills transfer to SASE, so a shared core curriculum is possible.</li>
+<li>For customers it means Prisma Access is operated like a firewall (rules, zones, commits), which suits network security teams and is heavier for proxy-only web teams.</li>
+</ul>
+<h4>Single-vendor vs. dual-vendor tradeoff</h4>
+<ul>
+<li>Single vendor: one policy and data model, integrated troubleshooting (for example ADEM across SD-WAN and SSE). Cost: dependency on the weakest component, lock-in.</li>
+<li>Dual vendor: best-of-breed choice, more integration work (tunnels, identity, correlating telemetry).</li>
+<li>Prisma Access accepts IPsec from any vendor's CPE, so SSE-first is a valid path when the WAN isn't the problem.</li>
+</ul>
+<div class="flow">Users ── GlobalProtect / Agent / Explicit Proxy / Browser ──► Mobile User SPN ─┐
+Branch ── ION or any IPsec CPE ───────────────────────► Remote Network SPN ┼─► Internet / SaaS
+                                                                           └─► DC via Service Connection
+                                                                               or ZTNA Connector
+Management: Strata Cloud Manager · Logs: Strata Logging Service · Identity: Cloud Identity Engine</div>`,
+  resources:[
+    ["Prisma SASE overview (official)","https://www.paloaltonetworks.com/sase","Product framing and terminology"],
+    ["Prisma Access TechDocs","https://docs.paloaltonetworks.com/prisma-access","Search: Prisma Access Overview"],
+    ["Strata Cloud Manager TechDocs","https://docs.paloaltonetworks.com/strata-cloud-manager","Skim the getting-started page"],
+    ["Repo notes: 00-START-HERE.md §4 and 02-technology-mapping.md §2–3","https://github.com/coolmukky/project-te/tree/claude/zealous-cannon-6vv5py/sase-interview-prep","Your written study pack"]
+  ],
+  quiz:[
+    {q:"Which combination best describes SSE?", o:["SD-WAN + FWaaS","SWG + CASB + ZTNA, usually with FWaaS and DLP","NGFW + NAC","SD-WAN + ZTNA + NAC"], a:1, e:"SSE is the security half of SASE. SD-WAN is what turns SSE into SASE."},
+    {q:"What is Palo Alto's main architectural argument for Prisma Access against proxy-centric SSE?", o:["It has more PoPs than anyone","Its security nodes run PAN-OS, so App-ID and Content-ID apply to all ports and protocols","It doesn't need an agent","It only inspects DNS"], a:1, e:"Policy parity with the NGFW and full L3–L7 inspection beyond HTTP/S is the core claim. PoP counts change and aren't an architectural argument."},
+    {q:"A customer deployed another vendor's SD-WAN last year. Their pain is remote users and SaaS security. What do you recommend first?", o:["Rip and replace with Prisma SD-WAN now","Prisma Access (SSE), onboarding branches as remote networks over IPsec from the existing CPE, and revisit SD-WAN at refresh","Keep backhauling to the DC","Deploy NGFWs at every branch"], a:1, e:"Prisma Access takes IPsec from third-party CPE. Lead with the problem the customer actually has."},
+    {q:"Which component supplies directory groups and cloud authentication for Prisma Access policy?", o:["Strata Logging Service","Cloud Identity Engine","ADEM","Panorama"], a:1, e:"CIE syncs users and groups (Entra ID, AD, Okta and others) and provides SAML authentication."},
+    {q:"Where do Prisma Access logs land by default?", o:["A syslog server you host","Strata Logging Service","Panorama local disk only","The ION device"], a:1, e:"Strata Logging Service (formerly Cortex Data Lake). It can forward to a SIEM."}
+  ],
+  open:{prompt:"In about 90 seconds, explain Prisma SASE to a Cisco-trained SE joining Palo Alto. Cover what it is, what is architecturally different, and one real tradeoff.",
+    keys:["Defines SSE vs. SASE correctly","Names Prisma Access, Prisma SD-WAN, SCM, CIE, Strata Logging Service, ADEM","States that SPNs run PAN-OS, giving App-ID and Content-ID on all ports and protocols","Describes the onboarding paths (mobile users, remote networks, service connections or ZTNA Connector)","Gives an honest tradeoff (lock-in, firewall-style operations, or migration effort)","Maps at least one piece to the Cisco equivalent (for example Secure Access)"]}
+},
+{ id:"m2", day:1, title:"Prisma Access building blocks", time:"1 h 45", prio:"P0", weight:3,
+  objective:"Explain mobile users, remote networks, service connections, ZTNA Connector, locations vs. compute locations, and the infrastructure subnet, with the reason each exists.",
+  learn:`
+<div class="tbl"><table>
+<tr><th>Construct</th><th>What it is</th><th>Why it exists</th></tr>
+<tr><td>Mobile Users</td><td>GlobalProtect (portal and gateways hosted in Prisma Access), Prisma Access Agent ${V}, Explicit Proxy (PAC file), Prisma Access Browser</td><td>Secure remote users. Tunnel mode captures all traffic. Explicit proxy covers web only.</td></tr>
+<tr><td>Remote Networks</td><td>IPsec from branch CPE to an RN location, static or BGP</td><td>Secure a site's users and give them internet egress</td></tr>
+<tr><td>Service Connection</td><td>IPsec + BGP to a DC, HQ or cloud VPC</td><td>Gives Prisma Access routes to private apps and gives apps a return path. It isn't general internet egress (Traffic Steering is the exception for chosen traffic).</td></tr>
+<tr><td>ZTNA Connector</td><td>VM near the apps, deployed in connector groups, building <b>outbound</b> tunnels</td><td>App-level access by FQDN, wildcard or IP. No routing changes, no inbound ports, overlapping IPs tolerated.</td></tr>
+<tr><td>Infrastructure subnet</td><td>RFC 1918 block you supply</td><td>Internal Prisma Access routing. It must not overlap anything you use.</td></tr>
+<tr><td>Mobile user IP pools</td><td>Per-region RFC 1918 pools</td><td>Client addresses. The DC must route them back via the SC.</td></tr>
+<tr><td>Location vs. compute location</td><td>Where users connect vs. the cloud region running the nodes</td><td>Drives latency, egress IP geography and RN bandwidth allocation ${V}</td></tr>
+</table></div>
+<h4>Service connection vs. ZTNA Connector: when you still need the SC</h4>
+<ul>
+<li>Servers start connections toward users or branches (SCCM push, VoIP callbacks, remote help).</li>
+<li>Branches on remote networks need DC reachability through Prisma Access.</li>
+<li>You need dynamic routing with the DC, or Traffic Steering egress via on-prem.</li>
+<li>Typical answer: both. An SC for the core DC, connectors for cloud VPCs, M&amp;A and app enclaves.</li>
+</ul>
+<h4>Management choice</h4>
+<ul><li>Prisma Access is cloud-managed (SCM) or Panorama-managed. Greenfield usually means SCM. ${V} Check feature parity notes.</li></ul>`,
+  resources:[
+    ["Prisma Access TechDocs","https://docs.paloaltonetworks.com/prisma-access","Search: Service Connections, Remote Networks, Mobile Users, ZTNA Connector, Prisma Access Locations, Infrastructure Subnet"],
+    ["Cloud Identity Engine TechDocs","https://docs.paloaltonetworks.com/cloud-identity","Directory sync and SAML authentication"],
+    ["GlobalProtect TechDocs","https://docs.paloaltonetworks.com/globalprotect","Portal, gateways, HIP"],
+    ["Repo notes: 03-prisma-sase-architecture.md §2–5","https://github.com/coolmukky/project-te/blob/claude/zealous-cannon-6vv5py/sase-interview-prep/03-prisma-sase-architecture.md","Architecture walkthrough"]
+  ],
+  quiz:[
+    {q:"What is the primary purpose of a service connection?", o:["General internet egress for branches","Give Prisma Access routes to private apps and give those apps a return path","Terminate GlobalProtect users","Host the GlobalProtect portal"], a:1, e:"SCs onboard resources. Internet egress happens at the location, not through the SC by default."},
+    {q:"What distinguishes a remote network from a service connection?", o:["RN uses SSL, SC uses IPsec","RN onboards a site's users so their traffic is secured. SC onboards resources such as DC apps.","RN is only for AWS","There is no difference"], a:1, e:"Both are IPsec. The difference is the role: users vs. resources."},
+    {q:"A compute location is…", o:["The customer's data center","The cloud region where the Prisma Access processing nodes actually run, which can serve several locations","The ISP PoP nearest the user","A Panorama object"], a:1, e:"Several Prisma Access locations can map to one compute location, which affects latency and egress IPs."},
+    {q:"What must be true of the infrastructure subnet?", o:["It must be a public range","It must be RFC 1918 and must not overlap the customer's networks","It must match the MU pool","It must be /30"], a:1, e:"Prisma Access uses it internally. Overlap breaks routing."},
+    {q:"Which statement about ZTNA Connector is correct?", o:["It needs inbound IPsec from the internet to the DC","It builds outbound tunnels and grants app-level access by FQDN, wildcard or IP, without route exchange","It replaces GlobalProtect","It requires BGP with the DC"], a:1, e:"Outbound-only and app-targeted is the point."},
+    {q:"When do you still need a service connection rather than only connectors?", o:["When users use Windows","When servers start connections to users (for example SCCM push or callbacks)","When the app uses HTTPS","Never"], a:1, e:"Connector access is user-initiated toward app targets. Server-initiated flows need routed reachability."}
+  ],
+  open:{prompt:"A company has two DCs and just acquired a subsidiary whose network overlaps 10.0.0.0/8. Remote users need access to apps in both. Design private app access and defend your choice of service connections vs. ZTNA Connector.",
+    keys:["Service connections (IPsec + BGP) for the two core DCs, with HA and attention to BGP preference","ZTNA Connectors for the acquired subsidiary because overlapping IPs and no routing integration are needed","Mentions return routing of mobile user pools to the SC","Mentions internal DNS for both domains","Names a connector limitation (server-initiated flows, NAT, app target maintenance)","Talks about phasing or migration"]}
+},
+{ id:"m3", day:1, title:"PAN-OS core: App-ID, User-ID, Content-ID", time:"1 h 45", prio:"P0", weight:3,
+  objective:"Explain how App-ID classifies traffic, where User-ID gets identities, how Content-ID profiles apply, and the policy evaluation rules that trip up SRX and Firepower engineers.",
+  learn:`
+<h4>App-ID</h4>
+<ul>
+<li>Pipeline: IP and port select the initial decoder, then <b>signatures</b>, then <b>decryption</b> if policy says so, then <b>protocol decoders</b> for tunneled apps, then <b>heuristics</b> for evasive apps.</li>
+<li>Identification continues through the session. The app can shift (<code>ssl</code> → <code>web-browsing</code> → <code>facebook-base</code>) and policy is re-checked.</li>
+<li>Values to know: <code>incomplete</code> (no completed handshake), <code>insufficient-data</code>, <code>unknown-tcp</code>, <code>not-applicable</code>.</li>
+<li><code>service: application-default</code> allows the app only on its standard ports. It's best practice over <code>any</code>.</li>
+<li><b>Application override</b> forces an identity and skips L7 inspection, so use it rarely. Write <b>custom App-IDs</b> for in-house protocols.</li>
+<li><b>Policy Optimizer</b> shows the apps seen on port-based rules and helps convert them to App-ID rules.</li>
+</ul>
+<h4>User-ID</h4>
+<ul>
+<li>IP-to-user sources: AD security event logs (Windows agent or agentless), GlobalProtect, Authentication Portal, Terminal Server agent, syslog (for example from Cisco ISE or ClearPass), XML API, XFF.</li>
+<li>Group mapping comes from LDAP or Cloud Identity Engine. Dynamic User Groups change policy by tag, with no commit needed.</li>
+<li>ISE is the NAC and authentication authority. User-ID <i>consumes</i> identity for enforcement.</li>
+</ul>
+<h4>Content-ID</h4>
+<ul>
+<li>Profiles attach to <b>allow</b> rules: Antivirus, Anti-Spyware (with DNS Security), Vulnerability Protection, URL Filtering, File Blocking, WildFire, Data Filtering. Group them and make the group the default.</li>
+<li>The Advanced subscriptions add inline ML for unknown C2, exploits and phishing. Single-pass architecture.</li>
+</ul>
+<h4>Policy gotchas</h4>
+<ul>
+<li>NAT policy is evaluated first. Security rules use the <b>pre-NAT IP</b> and the <b>post-NAT zone</b>.</li>
+<li>Intrazone traffic is allowed and interzone denied by default. Override the defaults to get logging.</li>
+<li>Decryption: SSL Forward Proxy (outbound), SSL Inbound Inspection (your servers), SSH Proxy. Exclude pinned apps and privacy categories.</li>
+</ul>`,
+  resources:[
+    ["PAN-OS TechDocs","https://docs.paloaltonetworks.com/pan-os","Admin Guide sections: App-ID, User-ID, Security Profiles, Decryption, Policy Optimizer"],
+    ["Best Practices","https://docs.paloaltonetworks.com/best-practices","Internet gateway and decryption best practices"],
+    ["Beacon learning platform","https://beacon.paloaltonetworks.com","Search for free Firewall Essentials / PAN-OS courses"],
+    ["Repo notes: 02-technology-mapping.md §5–6","https://github.com/coolmukky/project-te/blob/claude/zealous-cannon-6vv5py/sase-interview-prep/02-technology-mapping.md","Deep dive with interview Q&A"]
+  ],
+  quiz:[
+    {q:"Which order matches how App-ID classifies traffic?", o:["Heuristics → signatures → port","IP/port → signatures → decryption (if policy) → protocol decoders → heuristics","Decryption → port → heuristics","URL category → signatures → port"], a:1, e:"Port gives the starting point, signatures identify, decryption exposes the inner app, decoders find tunneled apps, heuristics catch evasive ones."},
+    {q:"What does service <code>application-default</code> enforce?", o:["Any port is allowed","The app is allowed only on its standard default ports","Only TCP/443","Only the ports listed in a service object"], a:1, e:"It stops apps running on non-standard ports, a classic evasion technique."},
+    {q:"What is the main risk of application override?", o:["It increases CPU","It forces an app identity and skips L7 inspection, so Content-ID threat inspection isn't applied","It breaks NAT","It disables logging"], a:1, e:"Prefer a custom App-ID, which keeps inspection."},
+    {q:"With destination NAT, a security rule matches on…", o:["Post-NAT IP and post-NAT zone","Pre-NAT IP and post-NAT zone","Pre-NAT IP and pre-NAT zone","Post-NAT IP and pre-NAT zone"], a:1, e:"This is the classic PAN-OS gotcha for SRX and Firepower engineers."},
+    {q:"Security profiles should be attached to…", o:["Deny rules","Allow rules","NAT rules","Decryption rules only"], a:1, e:"Denied traffic is dropped. The risk lives in what you allow."},
+    {q:"Which is NOT a User-ID mapping source?", o:["GlobalProtect","Syslog from Cisco ISE","Server monitoring of AD event logs","BGP communities"], a:3, e:"BGP carries routes, not identities."},
+    {q:"Which tool converts legacy port-based rules into App-ID rules?", o:["Policy Optimizer","ADEM","Expedition only","Command Center"], a:0, e:"Policy Optimizer shows the apps seen on port-based rules and helps you write App-ID rules above them."}
+  ],
+  open:{prompt:"A customer migrating from SRX has the rule 'any → DC servers, tcp/443, permit'. Rewrite it into best-practice PAN-OS policy, and explain what App-ID can and can't see in TLS traffic before and after decryption.",
+    keys:["Splits into App-ID based rules per app with user/group (User-ID) sources","Uses application-default instead of a port","Attaches a security profile group (threat, AV, vulnerability, WildFire, file blocking)","Uses Policy Optimizer or log data to discover the apps actually in use","Explains that before decryption App-ID sees handshake data such as SNI and certificates","Explains SSL Inbound Inspection for the company's own servers to enable full App-ID and Content-ID","Mentions decryption exclusions or TLS 1.3 / ECH limits"]}
+},
+{ id:"m4", day:1, title:"ZTNA 2.0, GlobalProtect and HIP", time:"45 min", prio:"P1", weight:2,
+  objective:"Explain ZTNA 2.0 through configuration you could actually show, and describe GlobalProtect portal, gateway and HIP behavior.",
+  learn:`
+<h4>Palo Alto's five ZTNA 2.0 principles, mapped to configuration</h4>
+<div class="tbl"><table>
+<tr><th>Principle</th><th>What it looks like in Prisma Access</th></tr>
+<tr><td>Least-privileged access</td><td>Rules matching App-ID (Layer 7) and user group, not IP and port grants</td></tr>
+<tr><td>Continuous trust verification</td><td>HIP posture re-evaluated during the session. Access is removed when posture or behavior changes.</td></tr>
+<tr><td>Continuous security inspection</td><td>Content-ID profiles on the allow rules for private app traffic, not just internet traffic</td></tr>
+<tr><td>Protect all data</td><td>Enterprise DLP across private apps, SaaS and web</td></tr>
+<tr><td>Secure all apps</td><td>Service connections and connectors for private apps, SaaS controls, Prisma Access Browser for unmanaged devices</td></tr>
+</table></div>
+<ul>
+<li>The ZTNA 1.0 critique is "allow and ignore": the broker grants an IP:port tunnel, then stops looking.</li>
+<li>Don't overclaim. Several competitors now re-check posture. The lasting difference is inline L7 inspection on all ports and protocols.</li>
+</ul>
+<h4>GlobalProtect</h4>
+<ul>
+<li>The <b>portal</b> authenticates the user and delivers configuration plus the gateway list. The <b>gateway</b> terminates the tunnel (IPsec with SSL fallback).</li>
+<li>Modes: always-on (user-logon or pre-logon), on-demand. Split tunnel by domain, app or IP.</li>
+<li><b>HIP</b> (Host Information Profile) reports OS and patch level, disk encryption and EDR status. HIP objects and profiles are match criteria in rules, and HIP notifications tell users what to fix.</li>
+<li>The Prisma Access Agent is the newer agent managed in SCM ${V}. Check the current guidance for new deployments.</li>
+</ul>`,
+  resources:[
+    ["ZTNA 2.0 overview (official)","https://www.paloaltonetworks.com/sase/ztna","Palo Alto's framing of the principles"],
+    ["GlobalProtect TechDocs","https://docs.paloaltonetworks.com/globalprotect","Search: Host Information Profile, split tunnel"],
+    ["Prisma Access TechDocs","https://docs.paloaltonetworks.com/prisma-access","Search: Prisma Access Agent"]
+  ],
+  quiz:[
+    {q:"Which is NOT one of Palo Alto's ZTNA 2.0 principles?", o:["Least-privileged access","Continuous trust verification","Trust a session once the user has authenticated","Continuous security inspection"], a:2, e:"Trusting once is exactly the 'allow and ignore' behavior ZTNA 2.0 criticizes."},
+    {q:"What is HIP in GlobalProtect?", o:["A routing protocol","Endpoint posture reported by the agent and used as a policy match criterion","A sandbox verdict","An IPsec cipher"], a:1, e:"HIP objects and profiles feed security rules."},
+    {q:"GlobalProtect portal vs. gateway?", o:["Portal terminates tunnels, gateway gives config","Portal authenticates and delivers config plus the gateway list. Gateway terminates the tunnel.","They are the same","Gateway runs only on-prem"], a:1, e:"In Prisma Access both are hosted by Palo Alto."},
+    {q:"A contractor must use an unmanaged laptop for two web apps. What fits best?", o:["Full-tunnel GlobalProtect with no HIP","Prisma Access Browser with data controls","Give them a site-to-site VPN","Open the apps to the internet"], a:1, e:"The enterprise browser extends policy and data controls to unmanaged devices."},
+    {q:"Which configuration best shows 'continuous security inspection'?", o:["MFA at login","Threat and DLP profiles on the allow rules for private app traffic","A longer session timeout","Split tunneling"], a:1, e:"Inspection must continue on allowed traffic."}
+  ],
+  open:{prompt:"An interviewer asks: 'What's actually technically different about ZTNA 2.0, or is it marketing?' Answer with configuration you could show, and say what you'd tell SEs not to overclaim.",
+    keys:["App-ID based rules instead of IP/port grants","HIP posture re-evaluated during the session, not only at connect","Content-ID and DLP applied to private app traffic","Example of what ZTNA 1.0 misses (a compromised authorized user exploiting the app)","Balanced view: competitors have closed some gaps; L7 inspection on all ports and protocols is the durable difference","Links it to enablement (teach SEs to show the config, not the slogan)"]}
+},
+{ id:"m5", day:1, title:"Traffic flows, DNS and routing", time:"1 h", prio:"P0", weight:3,
+  objective:"Trace internet, SaaS, private app and branch flows end to end, and point to where DNS and the return path break.",
+  learn:`
+<div class="flow">MU → Internet    Laptop → GP tunnel → MU-SPN [decrypt? App-ID User-ID URL Threat DNS DLP] → location egress IP
+MU → private app Laptop → GP → MU-SPN (user, App-ID, HIP, profiles) → backbone → SC → IPsec → DC edge → app
+   return        app → DC routing MUST send the MU pool to the SC → SC → backbone → MU-SPN → laptop
+MU → connector   Laptop → GP → MU-SPN (policy on app target) → connector tunnel → connector (NAT) → app
+Branch → DC      LAN → ION path policy → IPsec → RN-SPN → backbone → SC → DC
+   or            LAN → ION secure fabric → DC ION → DC NGFW inspects</div>
+<h4>DNS</h4>
+<ul>
+<li>Configure <b>internal DNS domains</b> and internal DNS servers in Prisma Access. The SPN proxies those names to servers reached via the SC.</li>
+<li>"Works by IP, fails by name" almost always means a split DNS or internal domain gap.</li>
+</ul>
+<h4>Routing</h4>
+<ul>
+<li>The SC runs BGP. Prisma Access advertises MU pools and RN subnets, and the DC advertises app prefixes.</li>
+<li>Asymmetric return is the top failure: the DC sends the MU pool via an old VPN concentrator or the internet edge, and a stateful firewall drops it.</li>
+<li>Two DCs: control preference with BGP attributes and the Prisma Access backbone routing settings ${V}.</li>
+<li>SaaS source-IP allow-listing uses the published Prisma Access egress IPs, or dedicated egress / Traffic Steering ${V}.</li>
+</ul>
+<h4>Branch-to-DC inspection decision</h4>
+<ul><li>Via Prisma Access (RN→SC): one policy and log plane, plus a cloud hop. Via the SD-WAN fabric to the DC NGFW: lower latency, two policy points. Decide per app class.</li></ul>`,
+  resources:[
+    ["Prisma Access TechDocs","https://docs.paloaltonetworks.com/prisma-access","Search: Routing for Service Connections, Internal DNS / DNS Proxy, Traffic Steering, Egress IP"],
+    ["Repo notes: 03-prisma-sase-architecture.md §6","https://github.com/coolmukky/project-te/blob/claude/zealous-cannon-6vv5py/sase-interview-prep/03-prisma-sase-architecture.md","All six flows"]
+  ],
+  quiz:[
+    {q:"Users reach an internal app by IP but not by name. Most likely cause?", o:["App-ID mismatch","Internal DNS domain or servers not configured in Prisma Access, or a split DNS problem","Expired license","MTU"], a:1, e:"Name-only failure points at DNS."},
+    {q:"Traffic logs show 'allow' with application <code>incomplete</code>. What does this suggest?", o:["The app was blocked by a profile","The TCP handshake never completed, which points to routing or the return path","The user isn't in the group","URL filtering"], a:1, e:"incomplete = no complete handshake. Look at the path to the server and back."},
+    {q:"The DC routes the mobile user pool to a legacy VPN concentrator. Result?", o:["Nothing changes","Asymmetric return; stateful devices drop sessions. Fix routing so the MU pool goes back via the SC.","Higher throughput","DNS fails"], a:1, e:"The return path must come back through the SC."},
+    {q:"A SaaS app only accepts logins from known source IPs. What do you use?", o:["The MU IP pool","Prisma Access egress IPs (published via API) or dedicated egress","The infrastructure subnet","The connector IP"], a:1, e:"The SaaS sees the egress IP of the location, not internal pools."},
+    {q:"Which is a fair statement about inspecting branch-to-DC traffic in Prisma Access vs. at the DC NGFW?", o:["Prisma Access is always lower latency","Via Prisma Access gives one policy and log plane at the cost of a cloud hop. The SD-WAN fabric to the DC NGFW is lower latency with two policy points.","There is no difference","DC NGFW can't inspect"], a:1, e:"Decide per app class and say why."}
+  ],
+  open:{prompt:"Trace a mobile user reaching jira.corp.local through a service connection, hop by hop, including DNS and the return path. Name three places it can fail and the evidence you'd check for each.",
+    keys:["Agent/GlobalProtect tunnel to MU-SPN with an IP from the MU pool","DNS resolution of the internal domain via Prisma Access internal DNS to DC DNS servers","Policy lookup at the SPN (user, App-ID, HIP, profiles)","Backbone to the SC, IPsec and BGP route for the app prefix","Return path: DC must route the MU pool back to the SC","Names concrete evidence: traffic logs, SC tunnel/BGP status, DC firewall logs, client routing table"]}
+},
+{ id:"m6", day:1, title:"Troubleshooting: authenticated but no access", time:"1 h", prio:"P0", weight:3,
+  objective:"Run a structured, evidence-led troubleshooting workflow for Scenario B and turn it into an enablement lab.",
+  learn:`
+<h4>Order of operations</h4>
+<ul>
+<li><b>Scope:</b> one user or many, one app or all, by FQDN and by IP, since when, what changed, and the exact error (DNS failure, timeout, reset, 403).</li>
+<li><b>Client and tunnel:</b> which gateway or location, MU pool IP assigned, <b>split-tunnel exclusions</b>, HIP report submitted.</li>
+<li><b>DNS:</b> resolves to the internal IP? Internal domain listed? Client using tunnel DNS?</li>
+<li><b>Logs:</b> no log = traffic never reached the SPN. Deny = which rule (group sync, HIP profile, App-ID or <code>application-default</code> mismatch, wrong address object). Allow + <code>incomplete</code> = path problem. Also check threat, URL and decryption logs.</li>
+<li><b>Routing:</b> SC tunnel up, BGP established, app prefix learned, MU pool routed back, DC firewall allowing the MU pool, no overlap. For connectors: group health, tunnels, app target status, connector reach to the app.</li>
+<li><b>Application:</b> server ACL still pinned to the old VPN pool, server-initiated flows, MTU/MSS (small responses work, large ones stall).</li>
+<li><b>Prevent:</b> runbook entry, pre-change check, and a lab exercise.</li>
+</ul>
+<h4>The enablement move</h4>
+<ul><li>Build a fault-injection lab (split-tunnel exclusion, missing DNS domain, return route, HIP mismatch, App-ID mismatch). Score SEs on time to root cause and on the evidence they used.</li></ul>`,
+  resources:[
+    ["Prisma Access TechDocs","https://docs.paloaltonetworks.com/prisma-access","Search: troubleshooting, Monitor / Activity, Service Connection status"],
+    ["Strata Cloud Manager TechDocs","https://docs.paloaltonetworks.com/strata-cloud-manager","Log Viewer and Activity Insights"],
+    ["Repo notes: 04-scenarios.md, Scenario B","https://github.com/coolmukky/project-te/blob/claude/zealous-cannon-6vv5py/sase-interview-prep/04-scenarios.md","Full workflow and follow-ups"]
+  ],
+  quiz:[
+    {q:"What should you do first?", o:["Reboot the SC","Scope the problem: who, which apps, FQDN vs. IP, since when, what changed","Open a TAC case","Disable decryption"], a:1, e:"Scoping takes two minutes and decides where to look."},
+    {q:"There is no traffic log for the user's session at all. Where do you look?", o:["DC firewall","The client side: split-tunnel exclusions, endpoint routing, DNS sending traffic elsewhere","BGP","Content-ID"], a:1, e:"If the SPN never saw it, the traffic didn't enter the tunnel."},
+    {q:"The log shows a deny on a rule that requires HIP profile 'Corp-Managed'. Likely cause?", o:["MTU","The device fails posture (for example EDR not running) or the HIP report wasn't submitted","Wrong DNS","BGP down"], a:1, e:"Authentication can succeed while posture fails."},
+    {q:"Small pages load but large downloads stall after the session starts. Suspect?", o:["Group mapping","MTU/MSS over IPsec","URL category","HIP"], a:1, e:"IPsec overhead plus blocked fragmentation is the classic cause."},
+    {q:"It works for everyone except users connecting in Singapore. Best next step?", o:["Rewrite all policy","Check the location: which gateway and compute region, SC reachability and routing from that region, and regional DNS","Reinstall the agent everywhere","Turn off App-ID"], a:1, e:"A location-scoped symptom points to a location-scoped cause."}
+  ],
+  open:{prompt:"A remote employee authenticates to Prisma Access successfully but can't reach a private application. Walk the interviewer through your full troubleshooting workflow, then say how you'd use this scenario in SE enablement.",
+    keys:["Scopes first (who, which apps, FQDN vs. IP, what changed)","Checks client, tunnel and split-tunnel configuration","Checks DNS (internal domains)","Interprets logs: no log vs. deny vs. allow-incomplete, and names the deny causes (group, HIP, App-ID)","Checks SC or connector health, BGP and the return route for the MU pool","Checks application-side ACLs and MTU","Ends with prevention and a fault-injection lab assessed on time to root cause"]}
+},
+{ id:"m7", day:1, title:"Prisma SD-WAN and management plane", time:"1 h", prio:"P1", weight:2,
+  objective:"Explain app-defined path selection on ION devices, tell Prisma SD-WAN apart from PAN-OS SD-WAN, and recommend SCM or Panorama.",
+  learn:`
+<h4>Prisma SD-WAN (CloudGenix heritage)</h4>
+<ul>
+<li>ION devices identify the application per session and measure <b>per-application</b> performance (latency, jitter, loss and app response) on every path ${V} for current first-packet wording.</li>
+<li>Policies: path (active, backup, L3 failure path per app), performance thresholds, QoS, NAT, zone-based firewall.</li>
+<li>Sites build an auto-created secure fabric and run BGP/OSPF toward the LAN and DC.</li>
+<li><b>Native Prisma Access integration</b> auto-provisions IPsec from ION to remote networks. Remote Site ADEM runs from the ION.</li>
+</ul>
+<div class="tbl"><table>
+<tr><th></th><th>Prisma SD-WAN</th><th>Catalyst SD-WAN</th><th>Juniper SSR</th></tr>
+<tr><td>Model</td><td>App and session first, IPsec overlay</td><td>Overlay first (OMP, TLOCs)</td><td>Session-based, tunnel-free (secure vector routing)</td></tr>
+<tr><td>Path health</td><td>Per-app measured performance</td><td>BFD probes per tunnel vs. SLA classes</td><td>Per-session, service-based policy</td></tr>
+</table></div>
+<ul><li><b>Prisma SD-WAN ≠ PAN-OS SD-WAN.</b> PAN-OS SD-WAN is a Panorama plugin on NGFWs, for customers who want one box at the branch with simpler SD-WAN needs.</li></ul>
+<h4>Strata Cloud Manager vs. Panorama</h4>
+<ul>
+<li>SCM: folders (inheritance), snippets (reusable config), unified NGFW + Prisma Access + SD-WAN, Command Center, AIOps best-practice checks, Policy Analyzer, an AI assistant ${V}.</li>
+<li>Panorama: device groups and templates, on-prem or virtual. It can still manage Prisma Access.</li>
+<li>Greenfield deployments usually go to SCM. A large mature Panorama estate means coexistence plus a migration plan. Check feature parity ${V}.</li>
+</ul>`,
+  resources:[
+    ["Prisma SD-WAN TechDocs","https://docs.paloaltonetworks.com/prisma-sd-wan","Search: Path Policy, Performance Policy, Prisma Access integration"],
+    ["Strata Cloud Manager TechDocs","https://docs.paloaltonetworks.com/strata-cloud-manager","Search: Folders, Snippets, Command Center, AIOps"],
+    ["Repo notes: 02-technology-mapping.md §10, §13","https://github.com/coolmukky/project-te/blob/claude/zealous-cannon-6vv5py/sase-interview-prep/02-technology-mapping.md","SD-WAN and SCM deep dives"]
+  ],
+  quiz:[
+    {q:"How does Prisma SD-WAN path selection differ from probe-based SD-WAN?", o:["It uses only MPLS","It identifies the app per session and measures that app's performance on each path, rather than only tunnel probes against SLA classes","It doesn't support failover","It uses OMP"], a:1, e:"It can catch an app degrading while link probes look healthy."},
+    {q:"Prisma SD-WAN vs. PAN-OS SD-WAN?", o:["Same product","Prisma SD-WAN runs on ION devices as the SASE edge. PAN-OS SD-WAN is a Panorama-managed plugin on NGFWs.","PAN-OS SD-WAN is only for AWS","Prisma SD-WAN needs Panorama"], a:1, e:"Interviewers like to check that you don't mix them up."},
+    {q:"How does an ION connect to Prisma Access?", o:["Manual GRE only","Native integration auto-provisions IPsec tunnels to remote networks","Through GlobalProtect","It can't"], a:1, e:"Zero-touch tunnels are part of the single-vendor argument."},
+    {q:"What are SCM snippets?", o:["Log excerpts","Reusable configuration blocks applied across folders","ADEM tests","Firmware images"], a:1, e:"Folders give inheritance. Snippets give reuse."},
+    {q:"What distinguishes Juniper SSR?", o:["BFD per tunnel","Session-based, tunnel-free routing with first-packet metadata","It is a proxy","OMP control plane"], a:1, e:"Useful for your competitive comparisons."}
+  ],
+  open:{prompt:"Explain to a Catalyst SD-WAN engineer how Prisma SD-WAN chooses a path for an application, and when you'd recommend PAN-OS SD-WAN on an NGFW instead.",
+    keys:["Contrasts BFD probes / SLA classes with per-app session measurement","Describes path policy with active, backup and failover paths plus performance thresholds","Gives an example where app-level measurement catches what probes miss","Mentions native Prisma Access integration","Gives a sensible case for PAN-OS SD-WAN (one box, existing NGFW branch, simpler needs, Panorama shop)","Notes a tradeoff (dependence on app identification accuracy)"]}
+},
+{ id:"m8", day:1, title:"CASB, DLP, ADEM and Prisma Access Browser", time:"45 min", prio:"P2", weight:1,
+  objective:"Place SaaS Security, Enterprise DLP, ADEM and the enterprise browser correctly in a design.",
+  learn:`
+<ul>
+<li><b>SaaS Security</b>: <i>Inline</i> (App-ID, SaaS risk catalog, activity control such as upload, download, post), <i>API</i> (out-of-band scan of sanctioned SaaS: data at rest, sharing, malware, including activity from unmanaged devices) and <i>SSPM</i> (configuration posture). AI Access Security covers GenAI apps ${V}.</li>
+<li><b>Tenant restrictions</b>: header insertion blocks personal Microsoft 365 or Google tenants. It requires decryption of that traffic.</li>
+<li><b>Enterprise DLP</b>: one cloud detection engine shared by NGFW, Prisma Access and SaaS Security. Data patterns, EDM (exact data matching), document fingerprinting, ML classifiers, OCR. Start in alert mode to tune false positives.</li>
+<li><b>ADEM</b>: synthetic tests from the endpoint agent and from ION sites. It splits the path into device, Wi-Fi/LAN, ISP, Prisma Access and app segments, and produces experience scores. Licensed add-on. The closest Cisco equivalent is ThousandEyes (broader, partial overlap). Juniper Marvis is network-side (partial).</li>
+<li><b>Prisma Access Browser</b> (from the Talon acquisition): enterprise browser for unmanaged and BYOD devices, with copy, paste, download, print and screenshot controls. It can't cover thick-client apps.</li>
+</ul>`,
+  resources:[
+    ["SaaS Security TechDocs","https://docs.paloaltonetworks.com/saas-security","Inline vs. API vs. SSPM"],
+    ["Enterprise DLP TechDocs","https://docs.paloaltonetworks.com/enterprise-dlp","Data patterns, EDM"],
+    ["Autonomous DEM TechDocs","https://docs.paloaltonetworks.com/autonomous-dem","Synthetic tests, segments"]
+  ],
+  quiz:[
+    {q:"What does API-based CASB catch that inline can miss?", o:["Live uploads from managed laptops","Data at rest and sharing in sanctioned SaaS, including activity from unmanaged devices","DNS tunneling","Port scans"], a:1, e:"API sees inside the tenant regardless of where the user connected from."},
+    {q:"How do you block personal Microsoft 365 tenants while allowing the corporate one?", o:["URL category block","Tenant restriction header insertion, which needs decryption of that traffic","Block all of Office 365","HIP check"], a:1, e:"Header insertion only works on decrypted traffic."},
+    {q:"What is EDM in Enterprise DLP?", o:["Endpoint device management","Exact Data Matching against hashed records from a real dataset","Email delivery module","An ML classifier"], a:1, e:"EDM gives high accuracy for structured sensitive data."},
+    {q:"What does ADEM show that security logs don't?", o:["Threat verdicts","Segment-by-segment experience: device, Wi-Fi, ISP, Prisma Access, application","Rule hit counts","HIP state"], a:1, e:"It speeds up proving innocence and lets L1 support triage."},
+    {q:"Closest Cisco equivalent to ADEM?", o:["Umbrella","ThousandEyes (partial overlap, broader scope)","ISE","Duo"], a:1, e:"Say 'partial', not 'equivalent'."}
+  ],
+  open:{prompt:"After a Prisma Access migration, remote users complain that Teams calls are poor. How do you diagnose it with ADEM, and which design choices could cause or fix it?",
+    keys:["Uses ADEM segments to isolate device, Wi-Fi, ISP, Prisma Access or app","Checks for patterns (same ISP or city, same location)","Considers split tunnel / local breakout for Teams media per current guidance","Considers decryption exclusions for real-time media","Considers the location and compute region mapping and latency","Turns findings into a runbook or SE talking point"]}
+},
+{ id:"m9", day:2, title:"Cisco, Juniper and Palo Alto mapping", time:"45 min", prio:"P1", weight:2,
+  objective:"Map each Palo Alto component to Cisco and Juniper, and say whether it's direct, partial or a functional peer.",
+  learn:`
+<div class="tbl"><table>
+<tr><th>Palo Alto</th><th>Cisco</th><th>Juniper</th><th>Type</th></tr>
+<tr><td>Prisma Access</td><td>Secure Access (Umbrella heritage)</td><td>Secure Edge</td><td>Functional peer</td></tr>
+<tr><td>GlobalProtect / Prisma Access Agent</td><td>Secure Client</td><td>Secure Connect</td><td>Direct</td></tr>
+<tr><td>ZTNA Connector</td><td>Secure Access Resource Connector</td><td>IPsec on-ramps</td><td>Close / partial</td></tr>
+<tr><td>Service Connection</td><td>Network tunnel to DC</td><td>IPsec to Secure Edge</td><td>Partial</td></tr>
+<tr><td>App-ID</td><td>NBAR2 / OpenAppID</td><td>AppSecure AppID</td><td>Direct concept</td></tr>
+<tr><td>User-ID + CIE</td><td>ISE + pxGrid, Passive Identity</td><td>JIMS, user firewall</td><td>Direct (consumer, not NAC)</td></tr>
+<tr><td>Content-ID / WildFire</td><td>Snort 3, Secure Malware Analytics</td><td>IDP, ATP Cloud</td><td>Direct</td></tr>
+<tr><td>Advanced DNS Security</td><td>Umbrella DNS</td><td>SecIntel</td><td>Direct</td></tr>
+<tr><td>Prisma SD-WAN</td><td>Catalyst SD-WAN, Meraki</td><td>SSR, Mist WAN Assurance</td><td>Functional peer</td></tr>
+<tr><td>Panorama</td><td>FMC</td><td>Security Director</td><td>Direct</td></tr>
+<tr><td>Strata Cloud Manager</td><td>Security Cloud Control, SD-WAN Manager</td><td>Security Director Cloud, Mist</td><td>Functional peer</td></tr>
+<tr><td>ADEM</td><td>ThousandEyes</td><td>Marvis / SLEs</td><td>Partial</td></tr>
+<tr><td>Prisma Access Browser</td><td>Clientless ZTNA (reverse proxy)</td><td>None</td><td>No clean equivalent</td></tr>
+</table></div>
+<ul>
+<li>Use comparisons on purpose, as evidence you can build competitive enablement. Don't think in Cisco terms first.</li>
+<li>Competitor names change (Cisco renames, HPE now owns Juniper) ${V}.</li>
+</ul>`,
+  resources:[
+    ["Repo notes: 02-technology-mapping.md §1","https://github.com/coolmukky/project-te/blob/claude/zealous-cannon-6vv5py/sase-interview-prep/02-technology-mapping.md","Full table with notes"],
+    ["Prisma SASE overview (official)","https://www.paloaltonetworks.com/sase","Check how Palo Alto names each piece today"]
+  ],
+  quiz:[
+    {q:"Cisco Secure Client maps most directly to…", o:["Panorama","GlobalProtect / Prisma Access Agent","ADEM","ZTNA Connector"], a:1, e:"Both are the endpoint agent."},
+    {q:"Cisco Secure Access Resource Connector maps closest to…", o:["Service Connection","ZTNA Connector","Remote Network","ION"], a:1, e:"Both are outbound app connectors."},
+    {q:"What is the right way to describe ISE relative to User-ID?", o:["They are equivalent products","ISE is the NAC and authentication authority. User-ID consumes identity (for example via syslog or pxGrid integration) for enforcement.","User-ID replaces ISE","ISE does App-ID"], a:1, e:"Palo Alto isn't a NAC vendor. It consumes NAC context."},
+    {q:"Juniper SRX AppSecure maps to…", o:["Content-ID","App-ID","User-ID","WildFire"], a:1, e:"Application identification."},
+    {q:"Mist Marvis vs. ADEM: equivalence type?", o:["Direct","Partial","None","Identical"], a:1, e:"Marvis is network-side AIOps. ADEM is SASE path experience."},
+    {q:"Cisco FMC maps directly to…", o:["Strata Cloud Manager","Panorama","Strata Logging Service","CIE"], a:1, e:"Both are on-prem firewall managers."}
+  ],
+  open:{prompt:"A Cisco customer has ISE and TrustSec on campus and is moving remote users to Prisma Access. How do you keep identity-based segmentation consistent across campus and remote?",
+    keys:["ISE stays the campus NAC and policy source","Shares campus identity to PAN-OS User-ID (syslog, pxGrid-based integration, verify current options)","Remote users use CIE + IdP + GlobalProtect/agent + HIP","Insists on one group taxonomy across both to avoid policy drift","Mentions SGT-to-tag or Dynamic User/Address Group approaches as options to verify","Uses the candidate's ISE background credibly"]}
+},
+{ id:"m10", day:2, title:"Design scenarios: SASE transformation and NGFW segmentation", time:"1 h 30", prio:"P0", weight:3,
+  objective:"Present Scenario A (20 branches, 500 remote users, M365, DC apps) and Scenario C (three-tier app segmentation) and defend the tradeoffs.",
+  learn:`
+<h4>Scenario A outline</h4>
+<ul>
+<li><b>Discovery first:</b> app inventory (protocols, server-initiated flows, IP-allow-listed SaaS), IdP and MDM and EDR, WAN contracts, compliance and decryption limits, ops ownership, real-time app volume.</li>
+<li><b>Target:</b> ION at branches with native tunnels to remote networks. GlobalProtect/agent with CIE + Entra ID SAML and HIP. Two SCs with eBGP and a correct return path. Connectors for cloud apps. App-ID rules, profile groups, decryption with documented exclusions, DLP and tenant restrictions for M365. SCM, Strata Logging Service to SIEM, ADEM.</li>
+<li><b>Phases:</b> foundation (identity, SCs, logging, policy baseline) → remote user pilot with the VPN as rollback → 2-branch pilot with MPLS kept → waves → optimize.</li>
+<li><b>Metrics:</b> % internet no longer backhauled, M365 experience scores, DC bandwidth drop, % rules App-ID based, % decrypted, ticket volume, time to onboard a branch.</li>
+</ul>
+<h4>Scenario C outline</h4>
+<ul>
+<li>Zones per tier (web, app, DB, mgmt, user zones, contractors) so tier-to-tier traffic is interzone and inspected. Dynamic Address Groups for workloads.</li>
+<li>Rules by group and App-ID with <code>application-default</code>. Finance write vs. employee read. Contractors with HIP or the browser. Admin ssh/ms-rdp for IT-Admins with HIP and MFA (authentication policy). Explicit deny + log.</li>
+<li>Strict vulnerability profile on server-facing rules, DNS Security, WildFire, file blocking on uploads. SSL Inbound Inspection on the web tier.</li>
+<li>Migration with Policy Optimizer: App-ID rules above the port rules, watch hit counts, then disable the old rules.</li>
+</ul>`,
+  resources:[
+    ["Repo notes: 04-scenarios.md","https://github.com/coolmukky/project-te/blob/claude/zealous-cannon-6vv5py/sase-interview-prep/04-scenarios.md","Scenarios A and C with follow-ups"],
+    ["Best Practices","https://docs.paloaltonetworks.com/best-practices","Data center and internet gateway best practices"]
+  ],
+  quiz:[
+    {q:"In Scenario A, what do you do first?", o:["Order ION devices","Discovery: apps and flows, identity, WAN contracts, compliance, ops model","Turn on decryption for everything","Cancel MPLS"], a:1, e:"Discovery answers change the design."},
+    {q:"What is the rollback point in the remote user pilot?", o:["None needed","Keep the legacy VPN concentrator running until the waves are proven","Restore from backup","Use explicit proxy"], a:1, e:"Phases need exit criteria and a safe way back."},
+    {q:"Why separate zones per application tier?", o:["Licensing","Tier-to-tier traffic becomes interzone, so it's subject to policy and inspection","It improves routing","It is required for NAT"], a:1, e:"Intrazone traffic is allowed by default."},
+    {q:"Best control for admin RDP to servers?", o:["Allow tcp/3389 from any","App-ID ms-rdp, IT-Admins group, HIP, MFA via authentication policy, application-default","Application override","Block all RDP forever"], a:1, e:"Identity, posture and MFA together."},
+    {q:"How do you inspect TLS to your own web tier?", o:["SSL Forward Proxy","SSL Inbound Inspection using the server's certificate and key","SSH Proxy","Not possible"], a:1, e:"You own the key, so inbound inspection is possible."}
+  ],
+  open:{prompt:"Pitch your Scenario A design in about two minutes: 20 branches, 500 remote users, Microsoft 365 and private DC apps, with the goal of removing backhaul and improving Zero Trust access. Include phasing and how you'd measure success.",
+    keys:["Starts with discovery questions","Branch design with ION and native tunnels (or third-party CPE) to remote networks","Remote user design with agent, CIE/IdP, HIP","DC access via service connections with return routing, plus connectors where useful","Policy approach: App-ID, profiles, decryption with exclusions, M365 tenant restrictions/DLP","Phased rollout with pilots and rollback","Concrete success metrics","States a real tradeoff (for example branch-to-DC inspection location)"]}
+},
+{ id:"m11", day:2, title:"Enablement strategy and the 90-day launch", time:"1 h 30", prio:"P0", weight:3,
+  objective:"Present a 90-day readiness strategy for 1,000 SEs with tiers, phases and exit criteria, validation and metrics, and answer the measurement, influence and AI questions.",
+  learn:`
+<h4>Scenario D skeleton</h4>
+<ul>
+<li><b>Principles:</b> readiness is a field outcome, not completion. Tier the audience. Build from engineering truth. Practice beats presentation.</li>
+<li><b>Tiers:</b> Champions (~50, expert, beta access), Core SEs (~600, practitioner: position, design, demo, run a guided POV), Broad SEs and partners (foundational: qualify and explain).</li>
+<li><b>Phases:</b> Define (−90 to −60: use cases, competency model, metric baseline, lab design reviewed by Engineering) → Build + Champions (−60 to −30: lab-as-code, modular path, demo script, POV guide) → Launch waves (−30 to GA: regional workshops, labs, AI role-play simulations, validation) → Reinforce (GA and after: office hours, partner path, feedback to PM).</li>
+<li><b>Validation:</b> hands-on lab with an automated checker that reads configuration state via API, plus a scenario design defense scored on a rubric.</li>
+<li><b>Metrics ladder:</b> reach → learning (lab pass rate) → behavior (demos or POVs run, POV technical win rate, escalations per opportunity) → results (pipeline with the capability, attach rate, time to first deal). Compare validated vs. not-yet-validated cohorts, and say it's correlation.</li>
+<li><b>Risks:</b> product slips (modular content, known-limitations page), lab scale (load test with champions), SE time (micro-learning, manager sponsorship), AI accuracy (grounding and SME review).</li>
+</ul>
+<h4>AI in enablement, safely</h4>
+<ul><li>Uses: customer role-play simulations, adaptive lab hints, assessment drafting, detecting stale content from release notes, a field Q&amp;A assistant. Guardrails: retrieval grounded on approved, versioned sources; citations required; SME review; an evaluation set per release; human escalation; monitor wrong-answer rates.</li></ul>
+<h4>Influencing PM and Engineering</h4>
+<ul><li>Frame the ask in their goals (adoption, launch quality, fewer escalations). Bring field evidence. Offer reciprocity: champions as structured beta testers and a feedback loop.</li></ul>`,
+  resources:[
+    ["Job description","https://jobs.paloaltonetworks.com/en/job/santa-clara/technical-enablement-architect-network-security-and-sase/47263/96174876336","Re-read the nine responsibilities"],
+    ["Palo Alto certifications","https://www.paloaltonetworks.com/services/education/certification","Check the current certification portfolio before mentioning it"],
+    ["Repo notes: 04-scenarios.md, Scenario D","https://github.com/coolmukky/project-te/blob/claude/zealous-cannon-6vv5py/sase-interview-prep/04-scenarios.md","Full plan, metrics, follow-ups"]
+  ],
+  quiz:[
+    {q:"Which is the strongest leading indicator that enablement is working?", o:["Course completion rate","POV technical win rate and escalations per opportunity among validated SEs","Number of slides produced","Webinar attendance"], a:1, e:"Behavior in the field beats activity metrics."},
+    {q:"How do you handle 1,000 SEs with different needs?", o:["Same course for everyone","Tier them (champions, core, broad) with different proficiency targets and paths","Only train champions","Only partners"], a:1, e:"Tiering puts depth where it pays off."},
+    {q:"PM says the feature won't be stable until two weeks before GA. What do you do?", o:["Delay all enablement until GA","Give champions beta access, build modular content with a known-limitations page, and move part of the validation into a post-GA wave with adjusted exit criteria","Ship content based on the roadmap slides","Cancel the labs"], a:1, e:"Decouple what's stable from what isn't, and say what changes in the exit criteria."},
+    {q:"What is the most important guardrail for an AI enablement assistant?", o:["A friendly tone","Grounding on approved, versioned sources with citations, SME review and evaluation sets per release","Bigger models","Hide its answers from managers"], a:1, e:"Accuracy is the risk, so ground, cite and evaluate."},
+    {q:"How do you make an impact claim credible six months later?", o:["Report completions","Compare cohorts (validated vs. not yet validated) on field metrics and say it's correlation, not causation","Survey happiness only","Count logins"], a:1, e:"Honest attribution builds credibility with leadership."},
+    {q:"Best way to validate practitioner competency?", o:["Multiple-choice only","Hands-on lab with an automated checker plus a scenario design defense on a rubric","Self-assessment","Attendance"], a:1, e:"Observable performance, not recall."}
+  ],
+  open:{prompt:"Palo Alto launches a new SASE security capability in 90 days. In about three minutes, present your technical readiness strategy for 1,000 global SEs: audiences, phases with exit criteria, labs, validation, metrics and top risks.",
+    keys:["Tiers the audience with different proficiency targets","Phases with clear exit criteria tied to GA","Engineering/PM/TME involvement and a champion network","Hands-on labs at scale (lab-as-code, reliability)","Competency validation beyond quizzes (lab checker, design defense)","Metrics ladder from reach to field outcomes with honest attribution","Risks and mitigations including product slip and AI accuracy","Draws on the candidate's Cisco/Juniper enablement experience"]}
+},
+{ id:"m12", day:2, title:"Behavioral stories and motivation", time:"1 h 30", prio:"P0", weight:3,
+  objective:"Deliver STAR stories in about two minutes, built only on real experience, and answer why cybersecurity, why Palo Alto and why this role.",
+  learn:`
+<h4>STAR rules for this interview</h4>
+<ul>
+<li>Situation + Task ≤ 25%, Action ~50%, Result + Lesson ~25%. Always end with the lesson <b>and where you applied it later</b>.</li>
+<li>Never invent metrics. If you don't have a number, use verifiable qualitative evidence ("the SE leader made it part of onboarding").</li>
+<li>Say "I", not "we", for your actions.</li>
+</ul>
+<h4>Your five stories (fill details in 06-behavioral-and-strategy.md)</h4>
+<ul>
+<li><b>Zero Trust Architecture Design Clinic</b>: innovation, scenario-based learning, technical depth. Be honest that it's a prototype.</li>
+<li><b>Global SE readiness at Cisco</b>: owning a program end to end, measurement, scale.</li>
+<li><b>Juniper SE technical problem</b>: troubleshooting method, customer trust, and turning it into a lab.</li>
+<li><b>Influencing PM or Engineering without authority</b>: framing in their goals, field evidence, reciprocity.</li>
+<li><b>Inclusive design for global audiences</b>: tiers, time zones, async labs, regional SMEs.</li>
+</ul>
+<h4>Motivation</h4>
+<ul>
+<li><b>Why Palo Alto:</b> one PAN-OS policy model from DC to SASE makes skills compound. Platform consolidation makes enablement harder and more important. The role is architecture and strategy with technical ownership. Avoid slogans.</li>
+<li><b>Why this role:</b> you already do the core of it at Cisco and were the SE on the receiving end at Juniper. This is the larger scope, accountable for field outcomes.</li>
+</ul>`,
+  resources:[
+    ["Repo notes: 06-behavioral-and-strategy.md","https://github.com/coolmukky/project-te/blob/claude/zealous-cannon-6vv5py/sase-interview-prep/06-behavioral-and-strategy.md","Story templates with placeholders and the hiring manager questions"]
+  ],
+  quiz:[
+    {q:"Where should most of a STAR answer's time go?", o:["Situation","Task","Action","Thanking the panel"], a:2, e:"Roughly half on what you did and why."},
+    {q:"You can't remember the exact percentage improvement. What do you do?", o:["Estimate a plausible number","Use verifiable qualitative evidence and say you don't have the exact figure","Skip the result","Use a team-wide number as your own"], a:1, e:"Invented numbers fall apart under follow-up."},
+    {q:"How should every story end, given the recruiter's guidance?", o:["With the result","With the lesson learned and where you applied it later","With a question","With your title"], a:1, e:"The recruiter flagged 'how lessons were applied'."},
+    {q:"Which is the weakest 'Why Palo Alto?' answer?", o:["Linking PAN-OS policy consistency to how SE skills compound","Repeating marketing slogans about being the leader","Connecting platform consolidation to enablement difficulty","Linking role scope to your career direction"], a:1, e:"Specific reasoning beats slogans."},
+    {q:"Best structure for influencing without authority?", o:["Escalate early","Frame in their goals, bring field evidence, offer reciprocity, escalate only as a last resort with a documented tradeoff","Wait for them to come to you","Go around them"], a:1, e:"Show how you earn agreement."}
+  ],
+  open:{prompt:"Tell me about a time you influenced Product Management or Engineering without direct authority. Use STAR, about two minutes. Use only real experience; put [brackets] around any detail you still need to confirm.",
+    keys:["Clear STAR structure with most time on actions","Specific stakeholder and ask, framed in the stakeholder's goals","Uses field evidence or data","Shows reciprocity or a compromise","Result stated honestly without invented metrics","Ends with a lesson and where it was applied later","Relevant to Palo Alto launch readiness"]}
+}
+];
+
+const MOCK = { id:"m13", day:2, title:"Mock interview", time:"1 h 30", prio:"P0", weight:3, kind:"mock" };
+const ALL = [...MODULES, MOCK];
+const INTERVIEW = new Date(2026, 10, 2, 9, 0, 0);
+
+/* ---------------------------------------------------------------- state */
+const KEY = "panw-sase-runbook-v1";
+let S = { quiz:{}, open:{}, mock:{ turns:[], current:null, debrief:null }, updatedAt:0 };
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
+if (!S.mock) S.mock = { turns:[], current:null, debrief:null };
+
+let dbRef = null, dbTimer = null, dbBusy = false, dbDirty = false;
+function save() {
+  S.updatedAt = Date.now();
+  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  if (dbRef) { clearTimeout(dbTimer); dbTimer = setTimeout(pushDb, 1500); }
+  renderHeader(); renderNav();
+}
+async function pushDb() {
+  if (!dbRef) return;
+  if (dbBusy) { dbDirty = true; return; }
+  dbBusy = true;
+  try { await dbRef.set({ state: JSON.stringify(S), updatedAt: S.updatedAt }); setSync("Progress synced to your account"); }
+  catch (e) { setSync("Saved in this browser (account sync unavailable)"); }
+  dbBusy = false;
+  if (dbDirty) { dbDirty = false; pushDb(); }
+}
+function setSync(t) { const el = document.getElementById("sync"); if (el) el.textContent = t; }
+(async () => {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]);
+    if (!db || !user) return;
+    const id = await user.id();
+    if (!id) return;
+    dbRef = db.collection("data/users/" + id).doc("progress");
+    const snap = await dbRef.get();
+    if (snap.exists) {
+      const d = snap.data() || {};
+      if (d.state && (d.updatedAt || 0) > (S.updatedAt || 0)) {
+        S = Object.assign(S, JSON.parse(d.state));
+        try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+        route();
+      }
+    } else if (S.updatedAt) { pushDb(); }
+    setSync("Progress synced to your account");
+  } catch (e) { /* stay on local storage */ }
+})();
+
+let samplePromise = null;
+function getSample() {
+  if (!samplePromise) samplePromise = (window.claude && window.claude.use) ? window.claude.use("sample").catch(() => null) : Promise.resolve(null);
+  return samplePromise;
+}
+
+/* ---------------------------------------------------------------- scoring */
+function quizPct(m) { const r = S.quiz[m.id]; return r ? r.best : null; }
+function openPct(m) { const r = S.open[m.id]; return r && typeof r.score === "number" ? r.score : null; }
+function mockScore() {
+  const t = S.mock.turns.filter(x => x.eval && x.eval.pct != null);
+  if (!t.length) return null;
+  return Math.round(t.reduce((s, x) => s + x.eval.pct, 0) / t.length);
+}
+function modScore(m) {
+  if (m.kind === "mock") return mockScore();
+  const q = quizPct(m), o = openPct(m);
+  if (q == null && o == null) return null;
+  return Math.round((q || 0) * 0.6 + (o || 0) * 0.4);
+}
+function complete(m) {
+  if (m.kind === "mock") return S.mock.turns.filter(x => x.eval).length >= 5;
+  return quizPct(m) != null && openPct(m) != null;
+}
+function status(m) {
+  const s = modScore(m);
+  if (s == null) return { cls:"none", label:"Not started", log:"no log" };
+  if (!complete(m)) return { cls:"prog", label:"In progress", log:"session open" };
+  if (s >= 80) return { cls:"ready", label:"Ready", log:"allow" };
+  if (s >= 60) return { cls:"dev", label:"Developing", log:"incomplete" };
+  return { cls:"need", label:"Needs work", log:"deny" };
+}
+function readiness() {
+  let w = 0, t = 0;
+  ALL.forEach(m => { w += m.weight; t += m.weight * (modScore(m) || 0); });
+  return Math.round(t / w);
+}
+function coverage() { return ALL.filter(complete).length; }
+function nextStep() {
+  const firstOpen = ALL.find(m => !complete(m));
+  if (firstOpen) return firstOpen;
+  const weak = ALL.filter(m => modScore(m) < 80).sort((a, b) => modScore(a) - modScore(b))[0];
+  return weak || null;
+}
+
+/* ---------------------------------------------------------------- helpers */
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const $ = id => document.getElementById(id);
+const CATS = [["accuracy","Technical accuracy"],["depth","Architecture depth"],["problem_solving","Problem-solving"],["communication","Communication"],["strategy","Strategic judgment"],["relevance","Role relevance"]];
+function catBars(scores) {
+  return CATS.map(([k, label]) => {
+    const v = Math.max(0, Math.min(5, Number(scores && scores[k]) || 0));
+    return `<div class="cat"><span>${label}</span><div class="bar"><i style="width:${v * 20}%"></i></div><b class="mono tnum">${v}/5</b></div>`;
+  }).join("");
+}
+function sampleErr(e) {
+  const c = e && e.code;
+  if (c === "not_granted") return "Claude grading isn't allowed for this page. Use the self-check below instead.";
+  if (c === "rate_limited") return "Too many grading requests right now. Wait a minute, then try again.";
+  if (c === "invalid_json") return "The grader's reply couldn't be read. Try again.";
+  return "Grading didn't complete" + (e && e.message ? " (" + esc(e.message) + ")" : "") + ". Try again, or use the self-check below.";
+}
+
+/* ---------------------------------------------------------------- header + nav */
+function renderHeader() {
+  const r = readiness(), c = coverage();
+  $("hdr-ready").textContent = r + " / 100";
+  $("hdr-ready-bar").style.width = r + "%";
+  $("hdr-cov").textContent = c + " of " + ALL.length;
+  $("hdr-cov-bar").style.width = (c / ALL.length * 100) + "%";
+  const ms = INTERVIEW - Date.now();
+  $("hdr-count").textContent = ms > 0 ? Math.floor(ms / 3600000) + " h to Mon 9:00" : "Interview day";
+  $("rail-sum").textContent = c + "/" + ALL.length + " complete";
+}
+function renderNav() {
+  const cur = (location.hash || "#overview").slice(1);
+  const row = (id, n, title, sub, cls) =>
+    `<a class="step" href="#${id}" ${cur === id ? 'aria-current="page"' : ""}><span class="n">${n}</span><span class="t">${esc(title)}<small>${esc(sub)}</small></span><span class="dot ${cls}" title="${cls}"></span></a>`;
+  const grp = (label, items) => `<div class="daygrp"><span class="label">${label}</span>${items.join("")}</div>`;
+  const items = d => ALL.filter(m => m.day === d).map(m => {
+    const st = status(m), i = ALL.indexOf(m) + 1, sc = modScore(m);
+    return row(m.id, String(i).padStart(2, "0"), m.title, m.prio + " · " + m.time + (sc != null ? " · " + sc : ""), st.cls);
+  });
+  $("nav").innerHTML =
+    grp("Start", [row("overview", "··", "Readiness overview", "Score, plan, next step", "")]) +
+    grp("Day 1 · Sat Oct 31 · Technical", items(1)) +
+    grp("Day 2 · Sun Nov 1 · Design, strategy, mock", items(2)) +
+    grp("Mon Nov 2 · Morning", [row("monday", "✓", "Revision sheet", "15 min, nothing new", "")]);
+}
+
+/* ---------------------------------------------------------------- overview */
+function viewOverview() {
+  const r = readiness(), nx = nextStep();
+  const st = r >= 80 ? "ready" : r >= 60 ? "dev" : r > 0 ? "need" : "none";
+  const verdict = r >= 80 ? "Interview ready. Keep it warm with one more mock and the revision sheet."
+    : r >= 60 ? "Close. Work the weakest steps below, then run the mock interview again."
+    : r > 0 ? "Not ready yet. Follow the steps in order and retake anything under 80."
+    : "Start with step 01. Each step ends with a quiz and an answer graded like the interview.";
+  const weak = ALL.filter(m => modScore(m) != null).sort((a, b) => modScore(a) - modScore(b)).slice(0, 3);
+  const doms = [
+    ["Prisma Access & SASE architecture", ["m1","m2","m5"]],
+    ["NGFW / PAN-OS & ZTNA", ["m3","m4"]],
+    ["Troubleshooting", ["m6"]],
+    ["SD-WAN, management & adjacent services", ["m7","m8"]],
+    ["Competitive mapping & design", ["m9","m10"]],
+    ["Enablement strategy", ["m11"]],
+    ["Behavioral & motivation", ["m12"]],
+    ["Mock interview", ["m13"]]
+  ].map(([n, ids]) => {
+    const ms = ids.map(i => ALL.find(m => m.id === i));
+    const v = Math.round(ms.reduce((s, m) => s + (modScore(m) || 0), 0) / ms.length);
+    return `<div class="cat"><span>${n}</span><div class="bar"><i style="width:${v}%"></i></div><b class="mono tnum">${v}</b></div>`;
+  }).join("");
+  const dayList = d => ALL.filter(m => m.day === d).map(m => `<li><a href="#${m.id}">${esc(m.title)}</a> <span class="note">${m.time}</span></li>`).join("");
+  return `
+<section class="panel">
+  <div class="hero">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span class="label">Readiness overview</span>
+      <h2>Two days, thirteen steps, one interview</h2>
+      <p class="objective">Each step teaches the Palo Alto version of something you already know from Cisco and Juniper, then checks it twice: a scored knowledge check and an interview-style answer that Claude grades on the six interview categories. Steps count toward readiness only when both checks are done.</p>
+      <div class="btns">${nx ? `<button type="button" data-go="${nx.id}">${complete(nx) ? "Improve" : "Continue"}: ${esc(nx.title)}</button>` : `<button type="button" data-go="monday">Open the revision sheet</button>`}
+      <button type="button" class="ghost" data-go="m13">Go to mock interview</button></div>
+    </div>
+    <div class="gauge">
+      <span class="label">Interview readiness</span>
+      <span class="big tnum">${r}<small>/100</small></span>
+      <span class="status ${st}">${esc(verdict)}</span>
+      <span class="note">Weighted: P0 steps count 3×, P1 2×, P2 1×. Step score = 60% quiz + 40% graded answer.</span>
+    </div>
+  </div>
+</section>
+<section class="panel">
+  <div class="sectionhead"><h3>Score by interview area</h3><span class="label">0–100</span></div>
+  <div class="domains">${doms}</div>
+  <div class="legend">
+    <span><i class="dot ready"></i>Ready ≥ 80 (allow)</span><span><i class="dot dev"></i>Developing 60–79 (incomplete)</span>
+    <span><i class="dot need"></i>Needs work &lt; 60 (deny)</span><span><i class="dot prog"></i>In progress</span><span><i class="dot"></i>Not started (no log)</span>
+  </div>
+  ${weak.length ? `<p class="note">Weakest so far: ${weak.map(m => `<a href="#${m.id}">${esc(m.title)}</a> (${modScore(m)})`).join(" · ")}</p>` : ""}
+</section>
+<section class="panel">
+  <h3>The plan</h3>
+  <div class="plan">
+    <div class="day"><span class="label">Saturday Oct 31 · about 8.5 h</span><ol>${dayList(1)}</ol></div>
+    <div class="day"><span class="label">Sunday Nov 1 · about 6.5 h</span><ol start="9">${dayList(2)}</ol></div>
+    <div class="day"><span class="label">Monday Nov 2 · 15 min</span><ol start="14"><li><a href="#monday">Revision sheet</a></li></ol>
+      <p class="note">Learn nothing new on Monday. Read the sheet, review your weakest step's feedback, go.</p></div>
+  </div>
+  <p class="note">Items marked <span class="v">verify</span> changed during 2024–2026. Check them in the current TechDocs and say "as of the current release, my understanding is…" in the interview.</p>
+</section>`;
+}
+
+/* ---------------------------------------------------------------- module view */
+function viewModule(m) {
+  const i = ALL.indexOf(m), st = status(m), sc = modScore(m);
+  const qr = S.quiz[m.id], or = S.open[m.id];
+  const quizHtml = m.quiz.map((q, qi) => {
+    const chosen = qr && qr.answers ? qr.answers[qi] : null, graded = qr && qr.graded;
+    const opts = order(m.id + qi, q.o.length).map(oi => { const o = q.o[oi];
+      let cls = "";
+      if (graded) { if (oi === q.a) cls = "right"; else if (oi === chosen) cls = "wrong"; }
+      return `<label class="opt ${cls}"><input type="radio" name="q-${m.id}-${qi}" id="q-${m.id}-${qi}-${oi}" value="${oi}" ${chosen === oi ? "checked" : ""}><span>${o}</span></label>`;
+    }).join("");
+    const ex = graded ? `<div class="explain ${chosen === q.a ? "ok" : "no"}">${chosen === q.a ? "Correct. " : "Answer: " + q.o[q.a] + ". "}${q.e}</div>` : "";
+    return `<fieldset><legend>${qi + 1}. ${q.q}</legend>${opts}${ex}</fieldset>`;
+  }).join("");
+  const missed = qr && qr.graded ? m.quiz.filter((q, qi) => qr.answers[qi] !== q.a) : [];
+  const prev = ALL[i - 1], next = ALL[i + 1];
+  return `
+<section class="panel">
+  <div class="eyebrow"><span class="label">Day ${m.day} · Step ${String(i + 1).padStart(2, "0")} of ${ALL.length}</span>
+    <span class="chip ${m.prio.toLowerCase()}">${m.prio}</span><span class="chip">${m.time}</span>
+    <span class="status ${st.cls}">${st.label}${sc != null ? " · " + sc : ""}</span></div>
+  <h2>${esc(m.title)}</h2>
+  <p class="objective">${esc(m.objective)}</p>
+</section>
+<section class="panel">
+  <div class="sectionhead"><h3>Learn</h3><span class="label">Read, then check the official source</span></div>
+  <div class="learn">${m.learn}</div>
+</section>
+<section class="panel">
+  <div class="sectionhead"><h3>Resources</h3><span class="label">Official first</span></div>
+  <ul class="res">${m.resources.map(r => `<li><a href="${r[1]}" target="_blank" rel="noopener">${esc(r[0])}</a><span>${esc(r[2])}</span></li>`).join("")}</ul>
+</section>
+<section class="panel" id="quiz-panel">
+  <div class="sectionhead"><h3>Checkpoint 1 · Knowledge check</h3>
+    <span class="label">${qr ? "Last " + qr.last + "% · Best " + qr.best + "%" : m.quiz.length + " questions · pass at 80%"}</span></div>
+  <form id="quiz-form">${quizHtml}
+    <div class="btns" style="margin-top:12px"><button type="submit">${qr && qr.graded ? "Re-grade my answers" : "Grade my answers"}</button>
+    ${qr && qr.graded ? `<button type="button" class="ghost" id="quiz-reset">Clear and retake</button>` : ""}</div>
+  </form>
+  ${qr && qr.graded ? `<p class="${qr.last >= 80 ? "note" : "err"}">${qr.last >= 80 ? "Passed. Move to checkpoint 2." : "Below 80%. Re-read: " + missed.map(q => q.q.replace(/<[^>]+>/g, "")).map(esc).join(" · ") + ". Then retake."}</p>` : ""}
+</section>
+<section class="panel" id="open-panel">
+  <div class="sectionhead"><h3>Checkpoint 2 · Answer it like the interview</h3>
+    <span class="label">${or && typeof or.score === "number" ? "Score " + or.score + (or.self ? " (self-check)" : "") : "Graded on 6 categories"}</span></div>
+  <p><b>${esc(m.open.prompt)}</b></p>
+  <label class="label" for="open-${m.id}">Your answer (type it as you'd say it)</label>
+  <textarea id="open-${m.id}">${esc(or ? or.text : "")}</textarea>
+  <div class="btns"><button type="button" id="grade-open">Grade with Claude</button>
+    <button type="button" class="ghost" id="show-self">Self-check against key points</button>
+    <span class="note" id="open-msg"></span></div>
+  <div id="open-result">${or && or.result ? resultHtml(or.result) : ""}</div>
+  <div id="self-box" ${or && or.self ? "" : "hidden"}>${selfHtml(m, or)}</div>
+</section>
+<section class="panel">
+  <div class="sectionhead"><h3>Step result</h3><span class="status ${st.cls}">${st.label} · ${st.log}</span></div>
+  ${guidance(m)}
+  <div class="btns">${prev ? `<button type="button" class="ghost" data-go="${prev.id}">← ${esc(prev.title)}</button>` : `<button type="button" class="ghost" data-go="overview">← Overview</button>`}
+  ${next ? `<button type="button" data-go="${next.id}">Next: ${esc(next.title)} →</button>` : ""}</div>
+</section>`;
+}
+function order(seed, n) {
+  let h = 2166136261;
+  for (const c of seed) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0;
+  const a = [...Array(n).keys()];
+  for (let i = n - 1; i > 0; i--) { h = Math.imul(h ^ (h >>> 13), 1103515245) + 12345 >>> 0; const j = h % (i + 1); [a[i], a[j]] = [a[j], a[i]]; }
+  return a;
+}
+function resultHtml(r) {
+  return `<div class="feedback" style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+    <div class="scorecard"><div class="sc"><span class="label">Overall</span><b class="tnum">${esc(r.overall)}/100</b></div></div>
+    <div>${catBars(r.scores)}</div>
+    ${r.covered && r.covered.length ? `<div><span class="label">You covered</span><ul>${r.covered.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+    ${r.missing && r.missing.length ? `<div><span class="label">Missing or weak</span><ul>${r.missing.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+    ${r.followup ? `<div><span class="label">Interviewer follow-up to practice</span><p>${esc(r.followup)}</p></div>` : ""}
+    ${r.improved ? `<div><span class="label">Stronger version, from your own experience</span><div class="improved">${esc(r.improved)}</div></div>` : ""}
+  </div>`;
+}
+function selfHtml(m, or) {
+  const checked = (or && or.checks) || [];
+  return `<div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+    <span class="label">Tick each point your answer clearly covered</span>
+    <div class="checks">${m.open.keys.map((k, ki) => `<label class="opt"><input type="checkbox" id="chk-${m.id}-${ki}" ${checked[ki] ? "checked" : ""}><span>${esc(k)}</span></label>`).join("")}</div>
+    <div class="btns"><button type="button" id="save-self">Score my self-check</button></div></div>`;
+}
+function guidance(m) {
+  const q = quizPct(m), o = openPct(m), or = S.open[m.id];
+  const out = [];
+  if (q == null) out.push("Take checkpoint 1.");
+  else if (q < 80) out.push(`Knowledge check at ${q}%. Re-read the Learn section and retake until you reach 80%.`);
+  if (o == null) out.push("Write and grade the checkpoint 2 answer. It's the part that predicts how you'll sound in the room.");
+  else if (o < 80) out.push(`Interview answer at ${o}. ${or && or.result && or.result.missing && or.result.missing.length ? "Work on: " + or.result.missing.slice(0, 3).map(esc).join("; ") + "." : "Add the key points you didn't tick."} Rewrite and grade again.`);
+  if (!out.length) out.push("This step is ready. Revisit it only if the mock interview exposes a gap.");
+  return `<ul>${out.map(x => `<li>${x}</li>`).join("")}</ul>`;
+}
+function bindModule(m) {
+  $("quiz-form").addEventListener("submit", ev => {
+    ev.preventDefault();
+    const answers = m.quiz.map((q, qi) => { const c = document.querySelector(`input[name="q-${m.id}-${qi}"]:checked`); return c ? Number(c.value) : null; });
+    if (answers.some(a => a === null)) { alert0("Answer every question before grading."); return; }
+    const pct = Math.round(answers.filter((a, qi) => a === m.quiz[qi].a).length / m.quiz.length * 100);
+    const prev = S.quiz[m.id];
+    S.quiz[m.id] = { answers, graded:true, last:pct, best:Math.max(pct, prev ? prev.best : 0) };
+    save(); rerender("quiz-panel");
+  });
+  const rs = $("quiz-reset");
+  if (rs) rs.addEventListener("click", () => { S.quiz[m.id] = Object.assign({}, S.quiz[m.id], { answers:[], graded:false }); save(); rerender("quiz-panel"); });
+  const ta = $("open-" + m.id);
+  ta.addEventListener("input", () => { S.open[m.id] = Object.assign({}, S.open[m.id], { text: ta.value }); try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} });
+  ta.addEventListener("change", save);
+  $("show-self").addEventListener("click", () => { $("self-box").hidden = false; });
+  $("self-box").addEventListener("click", ev => {
+    if (ev.target.id !== "save-self") return;
+    const checks = m.open.keys.map((k, ki) => $("chk-" + m.id + "-" + ki).checked);
+    const score = Math.round(checks.filter(Boolean).length / checks.length * 100);
+    const cur = S.open[m.id] || {};
+    S.open[m.id] = Object.assign({}, cur, { text: ta.value, checks, self: !cur.result, score: cur.result ? cur.score : score });
+    if (cur.result) $("open-msg").textContent = "Self-check saved. Your Claude-graded score stays as the step score.";
+    save(); route();
+  });
+  $("grade-open").addEventListener("click", async () => {
+    const text = ta.value.trim(), msg = $("open-msg"), btn = $("grade-open");
+    if (text.length < 60) { msg.textContent = "Write at least a few sentences first."; return; }
+    const sample = await getSample();
+    if (!sample) { msg.textContent = "Claude grading isn't available in this view. Use the self-check instead."; $("self-box").hidden = false; return; }
+    btn.disabled = true; msg.textContent = "Grading like a Palo Alto panel…";
+    const prompt = `You are a demanding but constructive Palo Alto Networks interviewer grading a practice answer for the role Technical Enablement Architect, Network Security & SASE (JR-017228). The role owns multi-quarter technical readiness strategy, SE learning journeys, labs, competency models and launch readiness for Prisma SASE and NGFW.
+${BG}
+Judge technical accuracy against current Palo Alto terminology. If the candidate states a product detail that changes between releases, say it should be verified instead of marking it wrong. Penalize vagueness and marketing language. Reward mechanisms, tradeoffs, failure modes and links to field enablement.
+
+Interview question: ${m.open.prompt}
+Key points a strong answer covers:
+${m.open.keys.map(k => "- " + k).join("\n")}
+
+Candidate answer:
+"""${text}"""
+
+Reply with only JSON in this shape:
+{"scores":{"accuracy":1,"depth":1,"problem_solving":1,"communication":1,"strategy":1,"relevance":1},"overall":0,"covered":["..."],"missing":["..."],"followup":"one probing follow-up question","improved":"..."}
+Each score is an integer 1-5. "overall" is 0-100 and should reflect the key-point coverage and the scores. "improved" is a stronger answer of 120-220 words written in first person that uses only experience listed in the candidate background; never invent metrics, employers, deployments or accomplishments, and use [placeholder] where a personal detail is needed.`;
+    try {
+      const r = await sample.json(prompt, { modelTier:"default" });
+      if (!r || typeof r !== "object" || !r.scores) throw { code:"invalid_json" };
+      r.overall = Math.max(0, Math.min(100, Math.round(Number(r.overall) || 0)));
+      const cur = S.open[m.id] || {};
+      S.open[m.id] = Object.assign({}, cur, { text, result:r, score:r.overall, self:false });
+      save(); route();
+    } catch (e) { msg.innerHTML = sampleErr(e); btn.disabled = false; $("self-box").hidden = false; }
+  });
+}
+function alert0(t) { const el = $("open-msg") || $("mock-msg"); if (el) el.textContent = t; const qp = $("quiz-panel"); if (qp) { let n = qp.querySelector(".qwarn"); if (!n) { n = document.createElement("p"); n.className = "err qwarn"; qp.appendChild(n); } n.textContent = t; } }
+function rerender(anchorId) { const y = $(anchorId) ? $(anchorId).getBoundingClientRect().top : 0; route(); const el = $(anchorId); if (el) window.scrollBy(0, el.getBoundingClientRect().top - y); }
+
+/* ---------------------------------------------------------------- mock interview */
+function weakSummary() {
+  return MODULES.filter(m => modScore(m) != null && modScore(m) < 80).map(m => m.title + " (" + modScore(m) + ")").join("; ") || "none recorded yet";
+}
+function transcript() {
+  return S.mock.turns.map((t, i) => `Q${i + 1} [${t.cat}]: ${t.q}\nA${i + 1}: ${t.a || "(no answer yet)"}`).join("\n\n");
+}
+const MOCK_SYS = () => `You are a demanding but constructive Palo Alto Networks interviewer for Technical Enablement Architect, Network Security & SASE (JR-017228). The loop covers: technical (Prisma Access, Prisma SD-WAN, NGFW App-ID/User-ID/Content-ID, ZTNA 2.0, SCM, ADEM), troubleshooting, architecture design, enablement strategy (readiness programs, competency models, metrics, AI in enablement, influencing PM/Engineering), behavioral (collaboration, inclusive thinking, disruptive innovation, lessons applied) and career motivation.
+${BG}
+Steps the candidate scored below 80 in self-study: ${weakSummary()}. Probe those harder.
+Ask one question at a time. Vary categories across the loop. Challenge vague answers with realistic follow-ups, at most one follow-up per topic before moving on.`;
+function viewMock() {
+  const turns = S.mock.turns, ms = mockScore(), st = status(MOCK);
+  const answered = turns.filter(t => t.eval).length;
+  const turnHtml = turns.map((t, i) => `<div class="turn">
+      <span class="label">Q${i + 1} · ${esc(t.cat || "question")}${t.followup ? " · follow-up" : ""}</span>
+      <div class="qbub">${esc(t.q)}</div>
+      ${t.a ? `<div class="abub">${esc(t.a)}</div>` : ""}
+      ${t.eval ? `<div class="feedback" style="display:flex;flex-direction:column;gap:8px">
+        <div>${catBars(t.eval.scores)}</div>
+        ${t.eval.missing && t.eval.missing.length ? `<div><span class="label">What was missing</span><ul>${t.eval.missing.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+        ${t.eval.improved ? `<details><summary class="label" style="cursor:pointer">Improved answer</summary><div class="improved">${esc(t.eval.improved)}</div></details>` : ""}
+      </div>` : ""}
+    </div>`).join("");
+  const cur = turns.length && !turns[turns.length - 1].a;
+  const d = S.mock.debrief;
+  return `
+<section class="panel">
+  <div class="eyebrow"><span class="label">Day 2 · Step 13 of 13</span><span class="chip p0">P0</span><span class="chip">1 h 30</span>
+    <span class="status ${st.cls}">${st.label}${ms != null ? " · " + ms : ""}</span></div>
+  <h2>Mock interview</h2>
+  <p class="objective">One question at a time, as the panel would ask it. Each answer is scored 1–5 on the six categories, with what was missing and a stronger version grounded in your real experience. Answer at least five questions to complete the step, then ask for the debrief.</p>
+  <div class="btns">
+    ${!turns.length ? `<button type="button" id="mock-start">Start the interview</button>` : ""}
+    ${turns.length ? `<button type="button" class="ghost" id="mock-debrief" ${answered < 3 ? "disabled" : ""}>End and debrief</button>
+    <button type="button" class="ghost" id="mock-reset">Start over</button>` : ""}
+    <span class="note" id="mock-msg">${answered} answered${answered < 5 ? " · " + (5 - answered) + " more to complete the step" : ""}</span>
+  </div>
+</section>
+${turns.length ? `<section class="panel"><div class="chat">${turnHtml}</div>
+  ${cur ? `<div style="margin-top:14px;display:flex;flex-direction:column;gap:8px"><label class="label" for="mock-answer">Your answer</label>
+    <textarea id="mock-answer">${esc(S.mock.draft || "")}</textarea>
+    <div class="btns"><button type="button" id="mock-send">Submit answer</button><button type="button" class="ghost" id="mock-skip">Skip question</button></div></div>` : ""}
+</section>` : ""}
+${d ? `<section class="panel"><div class="sectionhead"><h3>Debrief</h3><span class="status ${d.overall >= 80 ? "ready" : d.overall >= 60 ? "dev" : "need"}">${esc(d.overall)}/100</span></div>
+  <p>${esc(d.verdict)}</p>
+  <div class="feedback"><span class="label">Strengths</span><ul>${(d.strengths || []).map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+  <span class="label">Top fixes before Monday</span><ul>${(d.fixes || []).map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+  <span class="label">Do next</span><ul>${(d.next_steps || []).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div></section>` : ""}`;
+}
+async function askNext(followup) {
+  const msg = $("mock-msg"), sample = await getSample();
+  if (!sample) { msg.textContent = "The mock interview needs Claude, which isn't available in this view. Open the page on claude.ai while signed in."; return false; }
+  msg.textContent = "Interviewer is thinking…";
+  const prompt = `${MOCK_SYS()}
+
+Transcript so far:
+${transcript() || "(none)"}
+
+${followup ? "Ask the follow-up question you planned." : "Ask the next question."} Reply with only JSON: {"question":"...","category":"technical|troubleshooting|design|strategy|behavioral|motivation"}`;
+  try {
+    const r = await sample.json(prompt, { modelTier:"default", cache:false });
+    if (!r || !r.question) throw { code:"invalid_json" };
+    S.mock.turns.push({ q:String(r.question), cat:String(r.category || "question"), followup:!!followup });
+    save(); route(); return true;
+  } catch (e) { msg.innerHTML = sampleErr(e); return false; }
+}
+function bindMock() {
+  const st = $("mock-start"); if (st) st.addEventListener("click", () => { st.disabled = true; askNext(false).then(ok => { if (!ok) st.disabled = false; }); });
+  const rs = $("mock-reset"); if (rs) rs.addEventListener("click", () => {
+    if (rs.dataset.armed) { S.mock = { turns:[], current:null, debrief:null }; save(); route(); }
+    else { rs.dataset.armed = "1"; rs.textContent = "Click again to erase this interview"; }
+  });
+  const ta = $("mock-answer");
+  if (ta) ta.addEventListener("input", () => { S.mock.draft = ta.value; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} });
+  const sk = $("mock-skip"); if (sk) sk.addEventListener("click", () => { S.mock.turns.pop(); save(); askNext(false); });
+  const sd = $("mock-send");
+  if (sd) sd.addEventListener("click", async () => {
+    const a = ta.value.trim(), msg = $("mock-msg");
+    if (a.length < 40) { msg.textContent = "Give a full answer, as you would in the room."; return; }
+    const sample = await getSample();
+    if (!sample) { msg.textContent = "Claude isn't available in this view."; return; }
+    sd.disabled = true; msg.textContent = "Scoring your answer…";
+    const t = S.mock.turns[S.mock.turns.length - 1];
+    t.a = a; S.mock.draft = "";
+    const prompt = `${MOCK_SYS()}
+
+Transcript so far:
+${transcript()}
+
+Evaluate the candidate's latest answer (A${S.mock.turns.length}). Then decide whether a realistic follow-up is needed (vague or incomplete answer, and no follow-up has been asked on this topic yet) or whether to move to a new topic.
+Reply with only JSON:
+{"scores":{"accuracy":1,"depth":1,"problem_solving":1,"communication":1,"strategy":1,"relevance":1},"missing":["specific gaps"],"improved":"a stronger first-person answer of 120-200 words using only the candidate's real background; never invent metrics or accomplishments; use [placeholder] for details to confirm","next":{"type":"followup|new","category":"technical|troubleshooting|design|strategy|behavioral|motivation","question":"..."}}
+Scores are integers 1-5.`;
+    try {
+      const r = await sample.json(prompt, { modelTier:"default", cache:false });
+      if (!r || !r.scores) throw { code:"invalid_json" };
+      const vals = CATS.map(([k]) => Math.max(1, Math.min(5, Number(r.scores[k]) || 1)));
+      t.eval = { scores:r.scores, missing:r.missing || [], improved:r.improved || "", pct:Math.round(vals.reduce((s, v) => s + v, 0) / vals.length * 20) };
+      if (r.next && r.next.question) S.mock.turns.push({ q:String(r.next.question), cat:String(r.next.category || "question"), followup:r.next.type === "followup" });
+      save(); route();
+    } catch (e) { t.a = null; S.mock.draft = a; msg.innerHTML = sampleErr(e); sd.disabled = false; }
+  });
+  const db = $("mock-debrief");
+  if (db) db.addEventListener("click", async () => {
+    const sample = await getSample(), msg = $("mock-msg");
+    if (!sample) { msg.textContent = "Claude isn't available in this view."; return; }
+    db.disabled = true; msg.textContent = "Writing your debrief…";
+    const prompt = `${MOCK_SYS()}
+
+Full transcript with per-answer scores:
+${S.mock.turns.filter(t => t.eval).map((t, i) => `Q${i + 1} [${t.cat}]: ${t.q}\nA: ${t.a}\nScores: ${JSON.stringify(t.eval.scores)}`).join("\n\n")}
+
+The interview is Monday Nov 2, 2026. Write a hiring-panel style debrief. Reply with only JSON:
+{"overall":0,"verdict":"two sentences: would this candidate advance, and why","strengths":["..."],"fixes":["the 3 most important, specific fixes"],"next_steps":["concrete study or practice actions for the remaining time"]}
+overall is 0-100.`;
+    try {
+      const r = await sample.json(prompt, { modelTier:"default", cache:false });
+      if (!r || r.overall == null) throw { code:"invalid_json" };
+      r.overall = Math.max(0, Math.min(100, Math.round(Number(r.overall) || 0)));
+      S.mock.debrief = r; save(); route();
+    } catch (e) { msg.innerHTML = sampleErr(e); db.disabled = false; }
+  });
+}
+
+/* ---------------------------------------------------------------- monday */
+function viewMonday() {
+  const r = readiness();
+  const weak = ALL.filter(m => modScore(m) != null && modScore(m) < 80);
+  return `
+<section class="panel">
+  <span class="label">Monday Nov 2 · 15 minutes</span>
+  <h2>Revision sheet</h2>
+  <p class="objective">Positioning: "I'm a security enablement architect who has been both the SE and the enabler. I build field readiness from the packet flow up to the business metric."</p>
+  <p class="note">Readiness ${r}/100. ${weak.length ? "Re-read the feedback for: " + weak.map(m => `<a href="#${m.id}">${esc(m.title)}</a>`).join(", ") + "." : "No weak steps recorded."}</p>
+</section>
+<section class="panel"><div class="revision">
+  <section><h4>Prisma SASE in 30 seconds</h4><ul><li>Prisma Access (SSE, PAN-OS in the cloud) + Prisma SD-WAN (ION) + SCM + ADEM + CIE + Strata Logging Service</li></ul></section>
+  <section><h4>Building blocks</h4><ul><li>MU: GP / Agent / Explicit Proxy / Browser</li><li>RN: branch IPsec, ION auto-tunnels</li><li>SC: IPsec + BGP to DC, return path, not egress</li><li>ZTNA Connector: outbound, app targets, no routing, overlap OK, no server-initiated</li><li>Infrastructure subnet, MU pools, location vs. compute</li></ul></section>
+  <section><h4>PAN-OS core</h4><ul><li>App-ID: port → signatures → decrypt → decoders → heuristics; application-default; Policy Optimizer</li><li>User-ID: AD logs, GP, Auth Portal, TS agent, syslog (ISE), XML API; groups via LDAP/CIE</li><li>Content-ID profiles on every allow rule</li><li>Pre-NAT IP, post-NAT zone</li></ul></section>
+  <section><h4>ZTNA 2.0 → config</h4><ul><li>App-ID rules · HIP re-eval · profiles on private app rules · DLP · SC + connector + browser</li><li>Don't overclaim</li></ul></section>
+  <section><h4>SD-WAN</h4><ul><li>Per-app session performance vs. BFD probes (Catalyst) vs. tunnel-free sessions (SSR)</li><li>Prisma SD-WAN ≠ PAN-OS SD-WAN</li></ul></section>
+  <section><h4>Troubleshooting order</h4><ul><li>Scope → client/split tunnel → DNS → logs (none / deny / incomplete) → SC, BGP, MU pool return / connector → app ACL, MTU → prevent + lab</li></ul></section>
+  <section><h4>90-day launch</h4><ul><li>Tiers: champions / core / broad</li><li>Define −90 → Build −60 → Launch −30 → Reinforce GA+</li><li>Lab checker + design defense</li><li>Reach → learning → behavior → results; cohort comparison</li></ul></section>
+  <section><h4>Behavioral</h4><ul><li>STAR, 2 min, action-heavy</li><li>End with the lesson and where you applied it</li><li>No invented metrics</li></ul></section>
+  <section><h4>When unsure</h4><ul><li>"As of the current release, my understanding is X. I'd verify Y in the docs before committing it to a design."</li></ul></section>
+  <section><h4>Ask the hiring manager</h4><ul><li>How is field readiness measured today, and what shows this role succeeded in a year?</li><li>How early does enablement get PM/Eng access before GA?</li><li>Biggest Prisma SASE readiness gap in the field today?</li></ul></section>
+</div></section>`;
+}
+
+/* ---------------------------------------------------------------- router */
+function route() {
+  const id = (location.hash || "#overview").slice(1);
+  const m = MODULES.find(x => x.id === id);
+  const v = $("view");
+  if (m) { v.innerHTML = viewModule(m); bindModule(m); }
+  else if (id === "m13") { v.innerHTML = viewMock(); bindMock(); }
+  else if (id === "monday") { v.innerHTML = viewMonday(); }
+  else { v.innerHTML = viewOverview(); }
+  renderHeader(); renderNav();
+}
+document.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-go]");
+  if (!b) return;
+  const target = "#" + b.dataset.go;
+  if (location.hash === target) route(); else location.hash = target;
+  window.scrollTo(0, 0);
+});
+window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); if (window.matchMedia("(max-width:860px)").matches) $("rail").open = false; });
+$("rail").open = !window.matchMedia("(max-width:860px)").matches || !location.hash;
+setInterval(renderHeader, 60000);
+route();
+})();
+</script>
