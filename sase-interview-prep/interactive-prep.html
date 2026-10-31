@@ -194,16 +194,13 @@ code{font-family:var(--mono);font-size:.86em;background:var(--sunk);padding:1px 
 .select{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
 .hcard{border:2px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
 .hcard.on{border-color:var(--ember);box-shadow:0 0 0 3px var(--ember-soft)}
-.hcard .art{display:grid;place-items:center;background:var(--sunk);border-radius:8px;padding:10px}
-.hcard .art img{width:108px;height:126px}
+.hcard .art{display:grid;place-items:center}
 .hcard h4{font-size:1.3rem}
 .hcard ul{margin:0;padding-left:1.1rem;font-size:.92rem}
 .hcard .cry{font-style:italic;color:var(--ember)}
 input[type=text]{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:min(320px,100%)}
 
 .gkcard{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
-.gkcard .portrait{background:var(--sunk);border:2px solid var(--ink);border-radius:8px;padding:8px}
-.gkcard .portrait img{width:90px;height:105px;display:block}
 .comic{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;background:var(--ink);padding:10px;border-radius:6px}
 .cpanel{position:relative;background:#000;border:3px solid #f7f3e8;overflow:hidden;display:flex;flex-direction:column}
 .cpanel img{width:100%;aspect-ratio:64/40;height:auto;display:block}
@@ -222,11 +219,23 @@ input[type=text]{font:inherit;padding:9px 12px;border:1px solid var(--line);bord
 .pack .emp{font-size:.85rem;color:var(--muted)}
 .scrollbadge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:2px 10px 2px 4px;font-size:.82rem;text-decoration:none;color:var(--ink)}
 .scrollbadge img{width:22px;height:22px}
-.award{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.award{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
 .award img{width:72px;height:72px}
 @media (prefers-reduced-motion:no-preference){.award img{animation:glow 1.6s ease-in-out 3}}
 @keyframes glow{50%{transform:scale(1.12) rotate(-6deg)}}
 .map image{image-rendering:pixelated}
+.portrait-svg{display:block;width:100%;height:auto}
+.gkcard .portrait{position:relative;width:150px;padding:0;border:0;background:none}
+.gkcard .portrait .badge16{position:absolute;right:-10px;bottom:-8px;width:40px;height:47px}
+.hcard .art{position:relative;padding:0;background:none}
+.hcard .art .hport{width:100%;max-width:220px}
+.hcard .art .badge16{position:absolute;right:6px;bottom:-6px;width:46px;height:54px}
+.pshot{position:relative;aspect-ratio:64/40}
+.pshot img{position:absolute;inset:0;width:100%;height:100%}
+.pover{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:100%;aspect-ratio:200/240}
+.pover .portrait-svg{height:100%;width:auto}
+.mini{width:52px;flex:none}
+.mini.lg{width:96px}
 @media (max-width:820px){.comic{grid-template-columns:minmax(0,1fr)}.gkcard{grid-template-columns:minmax(0,1fr)}}
 .map .heroname{font-family:var(--mono);font-size:11px;fill:var(--ember);text-anchor:middle;font-weight:500}
 @media (max-width:820px){
@@ -758,8 +767,8 @@ const hex = a => "#" + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toSt
 const mix = (a, b, t) => { const A = rgb(a), B = rgb(b); return hex(A.map((v, i) => v + (B[i] - v) * t)); };
 const lighten = (c, t) => mix(c, "#fff6e0", t), darken = (c, t) => mix(c, "#120c1e", t);
 const S16 = {};
-function sprite16(sp) {
-  const key = JSON.stringify(sp); if (S16[key]) return S16[key];
+function sprite16(sp, frame) {
+  frame = frame || 0; const key = JSON.stringify(sp) + "|" + frame; if (S16[key]) return S16[key];
   const b = sprite(sp, true), W = 36, H = 42, g = new Array(W * H).fill(null);
   for (let j = 0; j < b.h; j++) for (let i = 0; i < b.w; i++) { const c = b.px[j * b.w + i]; if (!c) continue; for (let dj = 0; dj < 2; dj++) for (let di = 0; di < 2; di++) g[(j * 2 + dj) * W + i * 2 + di] = c; }
   const at = (i, j) => (i < 0 || j < 0 || i >= W || j >= H) ? null : g[j * W + i];
@@ -772,6 +781,12 @@ function sprite16(sp) {
     else if (at(i, j + 1) !== c || at(i + 1, j) !== c) sh[j * W + i] = darken(c, .28);
     else if (at(i + 2, j) !== c && at(i + 2, j) !== undefined && (i + j) % 2 === 0) sh[j * W + i] = darken(c, .12);
   }
+  // extra detail: hair strands, boot soles, cloth fold, belt glint
+  const hairC = sp.hair || "#3b2a20";
+  for (let j = 8; j < 14; j++) for (let i = 10; i < 26; i++) if (g[j * W + i] === hairC && (i + (j >> 1)) % 3 === 0) sh[j * W + i] = darken(hairC, .32);
+  for (let i = 0; i < W; i++) if (g[37 * W + i] === "#3a2a22") sh[37 * W + i] = "#24180f";
+  for (let j = 24; j < 30; j++) if (g[j * W + 17] === sp.prim && sp.body !== "armor") sh[j * W + 17] = darken(sp.prim, .2);
+  if (g[28 * W + 17] === sp.acc) sh[28 * W + 17] = lighten(sp.acc, .5);
   // eyes: dark pupil with a white glint, mouth thinner, blush on the cheeks
   const P = (i, j, c) => { if (i >= 0 && j >= 0 && i < W && j < H) sh[j * W + i] = c; };
   if (b.px[7 * 18 + 7] === eye) { P(14, 14, eye); P(15, 14, "#ffffff"); P(14, 15, eye); P(15, 15, eye); }
@@ -789,12 +804,17 @@ function sprite16(sp) {
   }
   // soft ground shadow
   [[38, 9, 26], [39, 8, 27], [40, 11, 24]].forEach(([j, a, z]) => { for (let i = a; i <= z; i++) if (!out[j * W + i]) out[j * W + i] = "rgba(10,8,20,0.22)"; });
-  return (S16[key] = { w:W, h:H, px:out });
+  // animation frames: 1 = breathe (upper body sinks a pixel), 2 and 3 = walk (one leg lifts)
+  let fr = out;
+  if (frame === 1) { fr = out.slice(); for (let j = 27; j >= 1; j--) for (let i = 0; i < W; i++) fr[j * W + i] = out[(j - 1) * W + i]; for (let i = 0; i < W; i++) fr[i] = null; }
+  if (frame === 2 || frame === 3) { fr = out.slice(); const a = frame === 2 ? 9 : 18, z = frame === 2 ? 18 : 27;
+    for (let j = 31; j <= 38; j++) for (let i = a; i < z; i++) fr[(j - 1) * W + i] = out[j * W + i]; for (let i = a; i < z; i++) fr[38 * W + i] = out[39 * W + i]; }
+  return (S16[key] = { w:W, h:H, px:fr });
 }
 const URLS = {};
-function spriteURL(key, spec) {
-  if (URLS[key]) return URLS[key];
-  const s = sprite16(spec), c = document.createElement("canvas"); c.width = s.w * 3; c.height = s.h * 3;
+function spriteURL(key, spec, frame) {
+  key += "|" + (frame || 0); if (URLS[key]) return URLS[key];
+  const s = sprite16(spec, frame), c = document.createElement("canvas"); c.width = s.w * 3; c.height = s.h * 3;
   drawSprite(c.getContext("2d"), s, 0, 0, 3);
   return (URLS[key] = c.toDataURL());
 }
@@ -883,6 +903,133 @@ const BRIEF = { o11:"Explain Prisma SASE to a Cisco-trained SE in 90 seconds, an
   o101:"Present a 90-day readiness campaign for 1,000 SEs.", o102:"Prove enablement worked, and choose the skills that matter.", o103:"Use AI safely and win early access from Product.",
   o111:"Tell a true story of influencing without authority.", o112:"Tell the story of the innovation you built.", o113:"Say why you're on this road: cybersecurity, Palo Alto, this role." };
 
+/* ================================================================ anime-fantasy portraits (vector, cel-shaded) */
+let PID = 0, TICK = 0, WALKING = false;
+const IRIS = { knight:"#3a7bd5", mage:"#e9c46a", ranger:"#6a994e", artificer:"#f4a261" };
+function portrait(sp, o) {
+  o = o || {}; const id = "pt" + (++PID);
+  const skin = sp.skin, ss = darken(skin, .2), hair = sp.hair || "#3b2a20", hs = darken(hair, .32), hh = lighten(hair, .38);
+  const prim = sp.prim, ps = darken(prim, .32), sec = sp.sec || ps, acc = sp.acc || "#e0b130", metal = sp.metal || "#b7c0cc";
+  const iris = o.iris || sp.iris || mix(acc, "#3a86ff", .35), expr = o.expr || "neutral", bgc = o.bg || lighten(prim, .3);
+  const hat = sp.hat, face = sp.face || [], robot = hat === "robot", hc = sp.hatC || prim;
+  const hst = sp.hairStyle === "none" ? "none" : (sp.hairStyle || "short");
+  const ink = "#1d1520", wood = "#7a5230", gold = "#e0b130";
+  const p = [];
+  p.push(`<defs>
+    <radialGradient id="${id}b" cx="50%" cy="38%" r="78%"><stop offset="0" stop-color="${lighten(bgc, .45)}"/><stop offset="1" stop-color="${darken(bgc, .4)}"/></radialGradient>
+    <pattern id="${id}d" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.3" fill="${darken(bgc, .55)}"/></pattern>
+    <linearGradient id="${id}m" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${lighten(metal, .5)}"/><stop offset=".5" stop-color="${metal}"/><stop offset="1" stop-color="${darken(metal, .4)}"/></linearGradient>
+    <linearGradient id="${id}i" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${darken(iris, .55)}"/><stop offset=".55" stop-color="${iris}"/><stop offset="1" stop-color="${lighten(iris, .55)}"/></linearGradient>
+    <linearGradient id="${id}h" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${hh}"/><stop offset=".45" stop-color="${hair}"/><stop offset="1" stop-color="${hs}"/></linearGradient>
+    <clipPath id="${id}eL"><ellipse cx="84" cy="112" rx="11" ry="${expr === "stern" ? 7.5 : 9}"/></clipPath>
+    <clipPath id="${id}eR"><ellipse cx="116" cy="112" rx="11" ry="${expr === "stern" ? 7.5 : 9}"/></clipPath>
+  </defs>`);
+  // background: gradient, manga halftone and speed lines
+  p.push(`<rect width="200" height="240" fill="url(#${id}b)"/><rect width="200" height="240" fill="url(#${id}d)" opacity=".18"/>`);
+  p.push(`<g stroke="${lighten(bgc, .6)}" stroke-width="2" opacity=".35">${[0, 1, 2, 3, 4, 5].map(i => `<line x1="${200 - i * 14}" y1="0" x2="${150 - i * 30}" y2="${60 + i * 6}"/>`).join("")}</g>`);
+  // behind the body
+  if (sp.cape) p.push(`<path d="M2 240 C8 198 40 180 70 178 L130 178 C160 180 192 198 198 240Z" fill="${sp.cape}"/><path d="M100 178 L130 178 C160 180 192 198 198 240 L100 240Z" fill="${darken(sp.cape, .3)}" opacity=".6"/>`);
+  if (hat === "hood") p.push(`<path d="M46 240 L48 120 C44 62 72 30 100 30 C128 30 156 62 152 120 L154 240Z" fill="${hc}"/><path d="M100 30 C128 30 156 62 152 120 L154 240 L118 240 C134 180 140 110 100 30Z" fill="${darken(hc, .3)}" opacity=".55"/>`);
+  if (hst === "long" && !robot) p.push(`<path d="M54 100 C48 150 54 206 64 224 L136 224 C146 206 152 150 146 100 C142 68 124 44 100 42 C76 44 58 68 54 100Z" fill="url(#${id}h)"/>`);
+  // torso and outfit
+  const T = "M10 240 C14 206 46 188 84 184 L116 184 C154 188 186 206 190 240Z";
+  p.push(`<path d="${T}" fill="${prim}" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/><path d="M118 184 C154 188 186 206 190 240 L132 240 C136 214 132 196 118 184Z" fill="${ps}" opacity=".55"/>`);
+  switch (sp.body) {
+    case "armor": p.push(`<path d="M68 196 Q100 188 132 196 L128 240 L72 240Z" fill="url(#${id}m)"/><path d="M100 192 L100 240" stroke="${darken(metal, .45)}" stroke-width="2"/>
+      <ellipse cx="50" cy="206" rx="32" ry="20" fill="url(#${id}m)"/><ellipse cx="150" cy="206" rx="32" ry="20" fill="url(#${id}m)"/>
+      <path d="M100 196 L100 226" stroke="${acc}" stroke-width="7"/>${[[40,200],[60,198],[140,198],[160,200]].map(([a, b]) => `<circle cx="${a}" cy="${b}" r="2.4" fill="${lighten(metal, .7)}"/>`).join("")}`); break;
+    case "robe": p.push(`<path d="M80 184 L100 222 L120 184" fill="none" stroke="${sec}" stroke-width="9"/><path d="M80 184 L100 222 L120 184" fill="none" stroke="${acc}" stroke-width="2"/><path d="M100 222 L100 240" stroke="${sec}" stroke-width="6"/>`); break;
+    case "apron": p.push(`<path d="M68 202 L132 202 L140 240 L60 240Z" fill="#7a4b2a"/><path d="M68 202 L84 186 M132 202 L116 186" stroke="#5a3520" stroke-width="5"/><circle cx="100" cy="222" r="5" fill="${acc}"/>`); break;
+    case "coat": p.push(`<path d="M84 184 L100 226 L116 184Z" fill="#f4f4f4"/><path d="M96 196 L104 196 L107 228 L100 238 L93 228Z" fill="${acc}"/><path d="M84 184 L100 226 L74 204Z" fill="${ps}"/><path d="M116 184 L100 226 L126 204Z" fill="${ps}"/>`); break;
+    case "split": p.push(`<path d="M100 184 L116 184 C154 188 186 206 190 240 L100 240Z" fill="${sec}"/><circle cx="100" cy="214" r="8" fill="${acc}"/>`); break;
+    case "tabard": p.push(`<path d="M78 188 L122 188 L126 240 L74 240Z" fill="${sec}"/><path d="M100 200 L108 214 L100 228 L92 214Z" fill="${acc}"/>`); break;
+    default: p.push(`<path d="M84 188 Q100 202 116 188" fill="none" stroke="${sec}" stroke-width="6"/><path d="M58 200 L136 240" stroke="#6b4a2a" stroke-width="9"/><circle cx="96" cy="220" r="4" fill="${acc}"/>`);
+  }
+  if (sp.cape) p.push(`<circle cx="76" cy="192" r="6" fill="${acc}"/><circle cx="124" cy="192" r="6" fill="${acc}"/>`);
+  // neck
+  p.push(`<path d="M86 156 L114 156 L116 190 Q100 198 84 190Z" fill="${skin}" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/><path d="M86 160 Q100 174 114 160 L115 172 Q100 182 85 172Z" fill="${ss}"/>`);
+  if (robot) {
+    p.push(`<line x1="100" y1="44" x2="100" y2="18" stroke="#6b7280" stroke-width="4"/><circle cx="100" cy="16" r="7" fill="${acc}"/>
+      <rect x="60" y="42" width="80" height="112" rx="28" fill="url(#${id}m)"/><rect x="66" y="94" width="68" height="24" rx="12" fill="${ink}"/>
+      <rect x="72" y="100" width="56" height="12" rx="6" fill="${acc}"/><rect x="74" y="101" width="22" height="4" rx="2" fill="#ffffff" opacity=".7"/>
+      <g stroke="${darken(metal, .45)}" stroke-width="3">${[86, 96, 106, 116].map(x => `<line x1="${x}" y1="132" x2="${x}" y2="144"/>`).join("")}</g>
+      <circle cx="58" cy="108" r="7" fill="${darken(metal, .3)}"/><circle cx="142" cy="108" r="7" fill="${darken(metal, .3)}"/>`);
+  } else {
+    // hair volume behind the face
+    if (hst === "short" && hat !== "hood") p.push(`<path d="M58 104 C52 60 76 36 100 36 C124 36 148 60 142 104 C140 92 136 84 132 80 L68 80 C64 84 60 92 58 104Z" fill="url(#${id}h)"/>`);
+    if (hst === "spiky" && hat !== "hood") p.push(`<path d="M56 104 L46 72 L64 76 L58 46 L80 58 L86 30 L100 50 L114 28 L120 56 L142 44 L136 76 L154 72 L144 104Z" fill="url(#${id}h)"/>`);
+    // ears, face, cel shading, blush
+    p.push(`<ellipse cx="62" cy="112" rx="6" ry="10" fill="${skin}"/><ellipse cx="138" cy="112" rx="6" ry="10" fill="${ss}"/>
+      <path d="M62 98 C62 70 80 52 100 52 C120 52 138 70 138 98 C138 124 128 142 112 154 Q100 162 88 154 C72 142 62 124 62 98Z" fill="${skin}" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/>
+      <path d="M138 98 C138 124 128 142 112 154 Q100 162 88 154 C106 150 122 132 126 106 C128 92 130 80 133 74 C137 82 138 90 138 98Z" fill="${ss}" opacity=".85"/>
+      <ellipse cx="76" cy="128" rx="8" ry="4" fill="#ff7b8a" opacity=".32"/><ellipse cx="124" cy="128" rx="8" ry="4" fill="#ff7b8a" opacity=".28"/>`);
+    if (hst !== "none" && hat !== "hood") p.push(`<path d="M64 92 Q100 106 136 92 L136 100 Q100 114 64 100Z" fill="${ss}" opacity=".45"/>`);
+    // eyes
+    const eye = (cx, side) => {
+      const ry = expr === "stern" ? 7.5 : 9, dir = side === "L" ? 1 : -1;
+      return `<ellipse cx="${cx}" cy="112" rx="11" ry="${ry}" fill="#ffffff"/>
+        <g clip-path="url(#${id}e${side})"><ellipse cx="${cx + dir}" cy="113" rx="7.2" ry="9" fill="url(#${id}i)"/><ellipse cx="${cx + dir}" cy="114" rx="3.4" ry="4.8" fill="${darken(iris, .75)}"/>
+        <rect x="${cx - 12}" y="${112 - ry}" width="24" height="3" fill="${ink}" opacity=".25"/></g>
+        <circle cx="${cx + dir - 2.6}" cy="109" r="2.6" fill="#ffffff"/><circle cx="${cx + dir + 3}" cy="117" r="1.3" fill="#ffffff"/>
+        <path d="M${cx - 12 * dir} ${110} Q${cx} ${98 + (expr === "stern" ? 4 : 0)} ${cx + 12 * dir} ${106}" fill="none" stroke="${ink}" stroke-width="3.4" stroke-linecap="round"/>
+        <path d="M${cx + 12 * dir} ${106} l${4 * dir} -3" stroke="${ink}" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M${cx - 8} ${121 - (expr === "pleased" ? 2 : 0)} Q${cx} ${124 - (expr === "pleased" ? 4 : 0)} ${cx + 8} ${121 - (expr === "pleased" ? 2 : 0)}" fill="none" stroke="${ss}" stroke-width="1.4"/>`;
+    };
+    p.push(eye(84, "L"), eye(116, "R"));
+    const bc = hst === "none" ? darken(skin, .5) : hs;
+    const brow = { neutral:["M72 98 Q84 92 96 96","M128 98 Q116 92 104 96"], stern:["M72 93 Q84 94 96 100","M128 93 Q116 94 104 100"], pleased:["M72 96 Q84 88 96 93","M128 96 Q116 88 104 93"] }[expr];
+    p.push(`<path d="${brow[0]}" fill="none" stroke="${bc}" stroke-width="3.6" stroke-linecap="round"/><path d="${brow[1]}" fill="none" stroke="${bc}" stroke-width="3.6" stroke-linecap="round"/>`);
+    p.push(`<path d="M101 121 Q104 128 99 129" fill="none" stroke="${darken(skin, .35)}" stroke-width="1.8" stroke-linecap="round"/>`);
+    p.push(expr === "pleased" ? `<path d="M90 137 Q100 148 110 137 Q100 141 90 137Z" fill="#8a2c36" stroke="${darken(skin, .5)}" stroke-width="1.5"/>`
+      : expr === "stern" ? `<path d="M92 141 Q100 137 108 141" fill="none" stroke="${darken(skin, .5)}" stroke-width="2.2" stroke-linecap="round"/>`
+      : `<path d="M93 139 Q100 142 107 139" fill="none" stroke="${darken(skin, .5)}" stroke-width="2.2" stroke-linecap="round"/>`);
+    // facial hair and accessories
+    if (face.includes("beard")) p.push(`<path d="M64 110 C66 152 86 178 100 180 C114 178 134 152 136 110 C130 134 118 148 100 148 C82 148 70 134 64 110Z" fill="url(#${id}h)"/><path d="M86 136 C92 130 98 132 100 135 C102 132 108 130 114 136 C108 136 104 138 100 138 C96 138 92 136 86 136Z" fill="${hair}"/>`);
+    if (face.includes("longbeard")) p.push(`<path d="M64 110 C62 172 86 214 100 220 C114 214 138 172 136 110 C130 134 118 148 100 148 C82 148 70 134 64 110Z" fill="url(#${id}h)"/><path d="M86 136 C92 130 98 132 100 135 C102 132 108 130 114 136 C108 136 104 138 100 138 C96 138 92 136 86 136Z" fill="${hair}"/><path d="M92 170 Q100 196 108 170" fill="none" stroke="${hs}" stroke-width="2"/>`);
+    if (face.includes("mustache") && !face.includes("beard")) p.push(`<path d="M84 134 C92 126 98 129 100 133 C102 129 108 126 116 134 C108 135 104 137 100 137 C96 137 92 135 84 134Z" fill="${hair}"/>`);
+    if (face.includes("mask")) p.push(`<path d="M62 116 Q100 110 138 116 L136 138 C128 156 114 164 100 164 C86 164 72 156 64 138Z" fill="${sec}"/><path d="M100 112 Q122 112 138 116 L136 138 C128 156 114 164 100 164Z" fill="${darken(sec, .3)}" opacity=".5"/>`);
+    if (face.includes("glasses")) p.push(`<g fill="#ffffff" fill-opacity=".14" stroke="#2b2b2b" stroke-width="2.6"><rect x="70" y="101" width="28" height="22" rx="8"/><rect x="102" y="101" width="28" height="22" rx="8"/></g><path d="M98 110 L102 110" stroke="#2b2b2b" stroke-width="2.6"/>`);
+    if (face.includes("eyepatch")) p.push(`<path d="M60 96 L140 84" stroke="#111" stroke-width="3"/><ellipse cx="84" cy="112" rx="13" ry="11" fill="#141414"/><ellipse cx="80" cy="108" rx="4" ry="2" fill="#555"/>`);
+    if (face.includes("nosering")) p.push(`<circle cx="100" cy="132" r="4.5" fill="none" stroke="${gold}" stroke-width="2"/>`);
+    if (face.includes("goggles")) p.push(`<g stroke="#5a4a3a" stroke-width="4"><circle cx="84" cy="112" r="13" fill="#7fd8e8" fill-opacity=".5"/><circle cx="116" cy="112" r="13" fill="#7fd8e8" fill-opacity=".5"/></g>`);
+    // bangs
+    if (hst === "short" && hat !== "hood") p.push(`<path d="M62 100 C60 70 76 52 100 50 C124 52 140 70 138 100 L130 86 L124 100 L116 80 L108 98 L100 78 L92 98 L84 80 L76 100 L70 86Z" fill="url(#${id}h)" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/><path d="M78 62 Q100 50 122 62 Q100 58 78 68Z" fill="${hh}" opacity=".8"/>`);
+    if (hst === "spiky" && hat !== "hood") p.push(`<path d="M62 100 C60 68 78 50 100 50 C122 50 140 68 138 100 L128 80 L120 98 L110 74 L100 94 L90 72 L82 98 L72 80Z" fill="url(#${id}h)" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/><path d="M80 60 Q100 52 120 60 Q100 58 80 66Z" fill="${hh}"/>`);
+    if (hst === "long" && hat !== "hood") p.push(`<path d="M60 112 C56 72 74 50 100 48 C126 50 144 72 140 112 L134 92 C126 76 112 68 100 66 C86 68 72 78 66 94Z" fill="url(#${id}h)" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/><path d="M80 58 Q100 50 120 58 Q100 56 80 64Z" fill="${hh}"/>`);
+    if (hst === "none") p.push(`<ellipse cx="86" cy="66" rx="12" ry="6" fill="#ffffff" opacity=".35"/>`);
+    if (hat === "hood") p.push(`<path d="M58 122 C56 76 76 48 100 48 C124 48 144 76 142 122 C146 74 126 38 100 38 C74 38 54 74 58 122Z" fill="${darken(hc, .35)}"/><path d="M70 92 L82 72 L92 90 L100 70 L108 90 L118 72 L130 92 C126 70 114 58 100 58 C86 58 74 70 70 92Z" fill="url(#${id}h)"/>`);
+    // headgear
+    if (hat === "helmet") { p.push(`<path d="M54 104 C52 54 76 28 100 28 C124 28 148 54 146 104 L134 104 L134 86 Q100 72 66 86 L66 104Z" fill="url(#${id}m)" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/><path d="M100 30 L100 82" stroke="${darken(metal, .4)}" stroke-width="3"/><rect x="96" y="80" width="8" height="34" rx="3" fill="url(#${id}m)"/>${[60, 140].map(x => `<circle cx="${x}" cy="96" r="2.5" fill="${lighten(metal, .7)}"/>`).join("")}`);
+      if (sp.plume) p.push(`<path d="M100 32 C94 10 112 -4 140 0 C124 6 116 18 114 34Z" fill="${sp.plume}"/><path d="M104 28 C104 12 118 4 132 4" fill="none" stroke="${lighten(sp.plume, .4)}" stroke-width="2"/>`); }
+    if (hat === "wizard") p.push(`<path d="M62 74 C74 52 86 22 116 -4 C110 22 126 46 138 74Z" fill="${hc}" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/><path d="M116 -4 C110 22 126 46 138 74 L112 74 C112 46 110 22 116 -4Z" fill="${darken(hc, .3)}" opacity=".6"/>
+      <ellipse cx="100" cy="76" rx="62" ry="13" fill="${hc}" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/><ellipse cx="100" cy="80" rx="62" ry="9" fill="${darken(hc, .35)}" opacity=".5"/><path d="M66 70 Q100 80 134 70 L134 76 Q100 86 66 76Z" fill="${acc}"/><path d="M98 40 l3 6 6 1 -5 4 1 6 -5 -3 -5 3 1 -6 -5 -4 6 -1z" fill="${acc}"/>`);
+    if (hat === "crown") p.push(`<path d="M68 70 L72 42 L86 58 L100 34 L114 58 L128 42 L132 70 Q100 78 68 70Z" fill="${gold}"/><path d="M68 70 Q100 78 132 70 L132 64 Q100 72 68 64Z" fill="${darken(gold, .3)}"/><circle cx="100" cy="58" r="5" fill="#c0392b"/><circle cx="78" cy="62" r="3" fill="#2b6cb0"/><circle cx="122" cy="62" r="3" fill="#2b6cb0"/>`);
+    if (hat === "mortar") p.push(`<path d="M66 74 Q100 60 134 74 L134 86 Q100 74 66 86Z" fill="#222831"/><path d="M100 36 L164 54 L100 72 L36 54Z" fill="#2d3340"/><path d="M100 36 L164 54 L100 58 L36 54Z" fill="#3d4454"/><path d="M100 54 L152 60 L154 92" fill="none" stroke="${gold}" stroke-width="3"/><circle cx="154" cy="96" r="5" fill="${gold}"/>`);
+    if (hat === "hardhat") p.push(`<path d="M60 80 C60 48 78 32 100 32 C122 32 140 48 140 80Z" fill="#f2c230"/><path d="M100 32 C122 32 140 48 140 80 L118 80 C120 56 112 40 100 32Z" fill="#d79a0c"/><path d="M50 82 Q100 70 150 82 L150 90 Q100 80 50 90Z" fill="#f2c230"/><path d="M96 34 L104 34 L104 78 L96 78Z" fill="#ffd95a"/>`);
+    if (hat === "pirate") p.push(`<path d="M38 76 C56 40 144 40 162 76 C140 66 120 64 100 66 C80 64 60 66 38 76Z" fill="#1e1e24"/><path d="M64 68 C66 34 134 34 136 68Z" fill="#2a2a33"/><path d="M64 68 Q100 60 136 68" stroke="${gold}" stroke-width="3" fill="none"/><circle cx="100" cy="50" r="7" fill="#f4f4f4"/><path d="M92 60 L108 66 M108 60 L92 66" stroke="#f4f4f4" stroke-width="2.5"/>`);
+    if (hat === "feather") p.push(`<path d="M56 78 C54 52 82 38 108 40 C136 42 150 58 142 78 Q100 66 56 78Z" fill="${hc}"/><path d="M108 40 C136 42 150 58 142 78 Q124 72 112 72 C120 60 118 48 108 40Z" fill="${darken(hc, .3)}" opacity=".6"/><path d="M128 52 C146 30 166 14 186 6 C176 22 160 40 136 58Z" fill="${acc}"/><path d="M132 54 C150 36 166 22 182 10" stroke="${darken(acc, .3)}" stroke-width="1.5" fill="none"/>`);
+    if (hat === "horns") p.push(`<path d="M70 66 C54 54 40 32 46 8 C54 30 68 42 82 52Z" fill="#efe3c2"/><path d="M130 66 C146 54 160 32 154 8 C146 30 132 42 118 52Z" fill="#d8cba6"/><g stroke="#b8a77e" stroke-width="2">${[[56, 40, 64, 34], [52, 28, 58, 22], [144, 40, 136, 34], [148, 28, 142, 22]].map(([a, b, c, d]) => `<line x1="${a}" y1="${b}" x2="${c}" y2="${d}"/>`).join("")}</g>`);
+    if (hat === "headband") p.push(`<path d="M60 80 Q100 70 140 80 L140 90 Q100 80 60 90Z" fill="${sec}"/><g stroke="#8a6a3a" stroke-width="4"><circle cx="84" cy="74" r="11" fill="#7fd8e8"/><circle cx="116" cy="74" r="11" fill="#7fd8e8"/></g><circle cx="80" cy="70" r="3" fill="#ffffff"/><circle cx="112" cy="70" r="3" fill="#ffffff"/>`);
+  }
+  // held items and shields
+  const it = sp.item;
+  if (it === "staff") p.push(`<line x1="172" y1="44" x2="172" y2="240" stroke="${wood}" stroke-width="8"/><circle cx="172" cy="34" r="14" fill="${sp.orb || acc}"/><circle cx="167" cy="29" r="5" fill="#ffffff" opacity=".8"/><circle cx="172" cy="34" r="20" fill="${sp.orb || acc}" opacity=".25"/>`);
+  if (it === "sword") p.push(`<path d="M166 196 L166 64 L172 48 L178 64 L178 196Z" fill="url(#${id}m)"/><path d="M172 52 L172 196" stroke="#ffffff" stroke-width="1.5" opacity=".7"/><rect x="152" y="196" width="40" height="8" rx="3" fill="${acc}"/><rect x="168" y="204" width="8" height="30" fill="#5a3a22"/><circle cx="172" cy="236" r="6" fill="${acc}"/>`);
+  if (it === "hammer") p.push(`<line x1="172" y1="240" x2="172" y2="110" stroke="${wood}" stroke-width="9"/><rect x="146" y="88" width="52" height="30" rx="5" fill="url(#${id}m)"/><rect x="146" y="88" width="52" height="8" rx="4" fill="#ffffff" opacity=".3"/>`);
+  if (it === "lantern") p.push(`<circle cx="172" cy="150" r="30" fill="#ffd166" opacity=".25"/><path d="M164 130 Q172 118 180 130" fill="none" stroke="#333" stroke-width="3"/><rect x="156" y="130" width="32" height="44" rx="7" fill="#3b2f2f"/><rect x="162" y="136" width="20" height="32" rx="5" fill="#ffd166"/><rect x="166" y="140" width="6" height="14" rx="3" fill="#fff3b0"/>`);
+  if (it === "book") p.push(`<rect x="148" y="166" width="46" height="58" rx="4" fill="${acc}" transform="rotate(-8 171 195)"/><rect x="152" y="170" width="6" height="50" fill="#4a2c1a" transform="rotate(-8 171 195)"/><rect x="164" y="180" width="22" height="4" fill="${gold}" transform="rotate(-8 171 195)"/>`);
+  if (it === "tablet") p.push(`<rect x="148" y="156" width="46" height="66" rx="7" fill="#1b2a41"/><rect x="153" y="162" width="36" height="52" rx="3" fill="#4cc9f0"/><g stroke="#ffffff" stroke-width="2" opacity=".8"><line x1="158" y1="172" x2="182" y2="172"/><line x1="158" y1="182" x2="176" y2="182"/><path d="M158 204 L166 194 L174 200 L184 188" fill="none"/></g>`);
+  if (it === "flag") p.push(`<line x1="176" y1="24" x2="176" y2="240" stroke="#5a3a22" stroke-width="5"/><path d="M178 28 C186 24 194 34 200 30 L200 62 C194 66 186 56 178 60Z" fill="${acc}"/>`);
+  if (it === "bow") p.push(`<path d="M168 40 C198 100 198 160 168 220" fill="none" stroke="${wood}" stroke-width="7"/><line x1="168" y1="40" x2="168" y2="220" stroke="#e8e8e8" stroke-width="1.5"/>`);
+  if (it === "wrench") p.push(`<line x1="150" y1="236" x2="180" y2="124" stroke="#9aa3ad" stroke-width="11" stroke-linecap="round"/><circle cx="183" cy="112" r="16" fill="#9aa3ad"/><circle cx="188" cy="104" r="8" fill="${lighten(bgc, .2)}"/>`);
+  if (it === "key") p.push(`<line x1="176" y1="236" x2="176" y2="142" stroke="${gold}" stroke-width="8"/><circle cx="176" cy="126" r="15" fill="none" stroke="${gold}" stroke-width="7"/><rect x="176" y="208" width="14" height="6" fill="${gold}"/><rect x="176" y="222" width="10" height="6" fill="${gold}"/>`);
+  if (it === "lute") p.push(`<line x1="172" y1="196" x2="190" y2="104" stroke="#5a3a22" stroke-width="7"/><ellipse cx="168" cy="208" rx="24" ry="30" fill="#a0522d"/><ellipse cx="168" cy="204" rx="7" ry="7" fill="#3a2a1a"/>`);
+  if (it === "map") p.push(`<rect x="146" y="176" width="50" height="42" rx="3" fill="#efe3c2" transform="rotate(6 171 197)"/><path d="M154 190 Q166 182 176 196 T190 200" stroke="#c0392b" stroke-width="2.5" fill="none" stroke-dasharray="4 3"/>`);
+  if (sp.shield) p.push(`<path d="M8 168 L58 168 L58 208 C58 226 40 236 33 240 C26 236 8 226 8 208Z" fill="${sp.shield}"/><path d="M33 168 L58 168 L58 208 C58 226 40 236 33 240Z" fill="${darken(sp.shield, .25)}"/><path d="M33 180 L33 228 M20 196 L46 196" stroke="${acc}" stroke-width="5"/>`);
+  p.push(`<rect x="1.5" y="1.5" width="197" height="237" rx="10" fill="none" stroke="${ink}" stroke-width="3"/>`);
+  return `<svg class="portrait-svg" viewBox="0 0 200 240" role="img" aria-label="${esc(o.label || "")}">${p.join("")}</svg>`;
+}
+
 /* ================================================================ comic scenes (64x40 pixel canvases) */
 const THEMES = {
   gate:{ sky:"#f6a15d", sky2:"#f9c784", ground:"#5f8a4b" }, citadel:{ sky:"#9fd3f2", sky2:"#cdeafa", ground:"#f4f8fb" },
@@ -945,6 +1092,7 @@ function panelURL(key, theme, kind, heroSpec, gkSpec, extra) {
   else if (kind === "ob") { L(() => landmark(x, theme, "faint"), .3); drawSprite(x, gk, 84, 28, 1, true); L(() => prop(x, "?", 8 + (extra % 3) * 4, 10)); x.fillStyle = "#ffffff"; x.font = "bold 16px monospace"; x.fillText(String(extra + 1), (8 + (extra % 3) * 4) * 2 + 32, 40); }
   else if (kind === "trap") { L(() => landmark(x, theme, "faint")); x.fillStyle = "#d00000"; x.globalAlpha = .3; x.fillRect(0, 0, 128, 80); x.globalAlpha = 1; L(() => prop(x, "!", 27, 6)); drawSprite(x, gk, 88, 28, 1, true); drawSprite(x, hero, 8, 28); }
   else if (kind === "rules") { L(() => landmark(x, theme, "faint"), .3); L(() => prop(x, "scroll", 8, 12)); drawSprite(x, gk, 80, 28, 1, true); }
+  else if (kind === "bg") { L(() => landmark(x, theme, "faint"), .45); x.fillStyle = "#000000"; x.globalAlpha = .12; x.fillRect(0, 0, 128, 80); x.globalAlpha = 1; }
   else if (kind === "hero") { L(() => landmark(x, theme, "faint"), .3); drawSprite(x, hero, 28, -4, 2); L(() => prop(x, "spark", 50, 6)); }
   return (PANEL_URLS[key] = c.toDataURL());
 }
@@ -1055,7 +1203,7 @@ function viewSelect() {
   <h2>Choose your hero</h2>
   <p class="lead">Each hero carries part of your real background into the quest. The choice changes how you look and what you shout at the gates. It doesn't change the questions or the scoring.</p>
   <div class="select">${HEROES.map(h => `<div class="hcard ${cur === h.id ? "on" : ""}">
-    <div class="art"><img class="px" src="${spriteURL("hero-" + h.id, h.spec)}" alt="${esc(h.cls)} pixel portrait"></div>
+    <div class="art"><div class="hport">${heroPortrait(cur === h.id ? "pleased" : "neutral", h)}</div><img class="px badge16" src="${spriteURL("hero-" + h.id, h.spec)}" alt="${esc(h.cls)} pixel sprite"></div>
     <h4>${esc(h.cls)}</h4>
     <p>${esc(h.persona)}</p>
     <div><span class="label">Strengths from your career</span><ul>${h.strengths.map(s => `<li>${esc(s)}</li>`).join("")}</ul></div>
@@ -1083,21 +1231,24 @@ function mapSvg() {
     const num = n.final ? "★" : n.cleared ? "✓" : String(i + 1), sub = n.cleared && !n.final ? "Cleared · " + n.score : n.sub;
     const gkImg = spriteURL("gk-" + n.id, n.gk.spec);
     const scr = n.cleared && !n.final ? `<image href="${scrollURL(QX[n.id].scroll[1])}" x="${x - 52}" y="${y - 44}" width="24" height="24"/>` : "";
-    return `<a href="#${n.id}" class="${cls}" aria-label="${esc(n.name)}"><image href="${gkImg}" x="${x + 22}" y="${y - 58}" width="33" height="38"/>${scr}
+    return `<a href="#${n.id}" class="${cls}" aria-label="${esc(n.name)}"><image href="${gkImg}" data-frames="${gkImg}|${spriteURL("gk-" + n.id, n.gk.spec, 1)}" x="${x + 22}" y="${y - 58}" width="33" height="38"/>${scr}
       <circle cx="${x}" cy="${y}" r="30"/><text class="num" x="${x}" y="${y}">${num}</text>
       <text class="nm" x="${x}" y="${y + 52}">${esc(n.name)}</text><text class="sub" x="${x}" y="${y + 68}">${esc(sub)}</text></a>`;
   }).join("");
   const [hx, hy] = POS[Math.min(S.heroAt, 11)];
-  const hero = S.hero ? `<g id="hero-token" transform="translate(${hx - 20} ${hy - 84})"><image href="${heroImg()}" width="36" height="42"/><text x="18" y="-4" class="heroname">${esc(heroName().slice(0, 18))}</text></g>` : "";
+  const hero = S.hero ? `<g id="hero-token" transform="translate(${hx - 20} ${hy - 84})"><image id="hero-img" href="${heroImg()}" data-frames="${heroImg()}|${spriteURL("hero-" + heroObj().id, heroObj().spec, 1)}" width="36" height="42"/><text x="18" y="-4" class="heroname">${esc(heroName().slice(0, 18))}</text></g>` : "";
   return `<svg class="map" viewBox="0 -24 1000 514" role="img" aria-label="Quest map">${segs}${nodeSvg}${hero}</svg>`;
 }
 function animateTravel(from, to, done) {
   const tok = $("hero-token");
   if (!tok || from === to || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { done(); return; }
   const segs = []; for (let i = from; i < to; i++) segs.push($("seg-" + i));
-  let si = 0, t0 = null;
+  let si = 0, t0 = null; const img = $("hero-img"), H = heroObj();
+  const walk = [spriteURL("hero-" + H.id, H.spec, 2), spriteURL("hero-" + H.id, H.spec, 3)];
+  WALKING = true;
   const step = ts => {
-    const seg = segs[si]; if (!seg) { done(); return; }
+    const seg = segs[si]; if (!seg) { WALKING = false; if (img) img.setAttribute("href", heroImg()); done(); return; }
+    if (img) img.setAttribute("href", walk[Math.floor(ts / 140) % 2]);
     if (t0 == null) t0 = ts;
     const L = seg.getTotalLength(), k = Math.min(1, (ts - t0) / 900), p = seg.getPointAtLength(L * k);
     tok.setAttribute("transform", `translate(${p.x - 20} ${p.y - 84 + Math.abs(Math.sin(k * Math.PI * 4)) * -4})`);
@@ -1170,18 +1321,25 @@ function hallPanels() {
     { k:"gate", cap:"The doors of the hall open." }
   ];
 }
+function heroPortrait(expr, h) {
+  h = h || heroObj();
+  return portrait(h.spec, { iris:IRIS[h.id], expr, bg:lighten(h.spec.prim, .35), label:h.cls + " portrait" });
+}
+function gkPortrait(gk, theme, expr) { return portrait(gk.spec, { expr, bg:THEMES[theme].sky, label:gk.name + " portrait" }); }
 function comicHtml(key, theme, gk, panels) {
   const H = heroObj();
   return `<div class="comic">${panels.map((p, i) => {
-    const url = panelURL(key + "-" + i + "-" + H.id, theme, p.k, H.spec, gk.spec, p.n || 0);
-    return `<div class="cpanel"><img class="px" src="${url}" alt=""><span class="no">${i + 1}</span><div class="txt">
+    const close = p.k === "gk" || p.k === "hero";
+    const url = panelURL(key + "-" + i + "-" + H.id + (close ? "-bg" : ""), theme, close ? "bg" : p.k, H.spec, gk.spec, p.n || 0);
+    const shot = close ? `<div class="pshot"><img class="px" src="${url}" alt=""><div class="pover">${p.k === "gk" ? gkPortrait(gk, theme, "stern") : heroPortrait("pleased")}</div></div>` : `<img class="px" src="${url}" alt="">`;
+    return `<div class="cpanel">${shot}<span class="no">${i + 1}</span><div class="txt">
       ${p.cap ? `<div class="cap">${esc(p.cap)}</div>` : ""}
       ${p.gk ? `<div class="bubble gk"><b>${esc(gk.name)}</b>${esc(p.gk)}</div>` : ""}
       ${p.hero ? `<div class="bubble hero"><b>${esc(heroName())}</b>${esc(p.hero)}</div>` : ""}</div></div>`;
   }).join("")}</div>`;
 }
-function gkCard(gk, theme, line) {
-  return `<div class="gkcard"><div class="portrait"><img class="px" src="${spriteURL("gk-card-" + gk.name, gk.spec)}" alt="${esc(gk.name)} pixel portrait"></div>
+function gkCard(gk, theme, line, expr) {
+  return `<div class="gkcard"><div class="portrait">${gkPortrait(gk, theme, expr || "neutral")}<img class="px badge16" src="${spriteURL("gk-" + gk.name, gk.spec)}" alt=""></div>
     <div class="stack" style="gap:4px"><span class="label">Gatekeeper</span><h3>${esc(gk.name)}</h3><span class="topic">${esc(gk.title)}</span><p style="margin:0">${esc(line)}</p></div></div>`;
 }
 
@@ -1210,7 +1368,7 @@ function viewQuest(q) {
   </div>
 </section>`;
   const brief = `<section class="panel stack">
-    ${gkCard(X.gk, X.theme, X.intro.replace("{hero}", heroName()))}
+    ${gkCard(X.gk, X.theme, X.intro.replace("{hero}", heroName()), questCleared(q) ? "pleased" : questStarted(q) ? "neutral" : "stern")}
     ${briefed ? `<details><summary class="label">Re-read the gatekeeper's storyboard</summary><div style="margin-top:10px">${comicHtml(q.id, X.theme, X.gk, questPanels(q))}</div></details>`
       : `${comicHtml(q.id, X.theme, X.gk, questPanels(q))}<div class="row"><button type="button" class="ember" data-brief="${q.id}">Accept the quest</button><span class="note">Read all nine panels first. They list exactly what you'll face.</span></div>`}
   </section>`;
@@ -1267,7 +1425,7 @@ function selfCheck(o, which) {
 function dojoBlock(o) {
   const d = o.dojo, q = o.quest, gk = QX[q.id].gk;
   return `<div class="dojo">
-    <div class="row" style="justify-content:space-between"><div class="row" style="gap:10px"><img class="px" src="${spriteURL("gk-" + q.id, gk.spec)}" alt="" style="width:36px;height:42px"><h3>${esc(gk.name)}'s dojo</h3></div><span class="label">Study this, then retake the obstacle</span></div>
+    <div class="row" style="justify-content:space-between"><div class="row" style="gap:10px"><div class="mini">${gkPortrait(gk, QX[q.id].theme, "neutral")}</div><h3>${esc(gk.name)}'s dojo</h3></div><span class="label">Study this, then retake the obstacle</span></div>
     <div class="card"><span class="label">Definition</span><div>${d.def}</div></div>
     <div class="grid">
       <div class="card"><span class="label">How it works</span><ul>${d.how.map(x => `<li>${x}</li>`).join("")}</ul></div>
@@ -1322,7 +1480,7 @@ function questLessons(q) {
 function questScroll(q) {
   const i = QUESTS.indexOf(q), next = QUESTS[i + 1], L = questLessons(q), X = QX[q.id];
   return `<section class="questscroll">
-    <div class="award"><img class="px" src="${scrollURL(X.scroll[1])}" alt="">
+    <div class="award"><div class="mini lg">${gkPortrait(X.gk, X.theme, "pleased")}</div><img class="px" src="${scrollURL(X.scroll[1])}" alt="">
       <div class="stack" style="gap:4px"><span class="label">${esc(X.gk.name)} hands you a scroll</span><h3>You earned the ${esc(X.scroll[0])}</h3>
       <span class="pill ${tone(questScore(q))}" style="width:fit-content">Region score ${questScore(q)}</span></div></div>
     <div class="twocol">
@@ -1396,7 +1554,7 @@ function viewHall() {
   ${packHtml("Scrolls you bring into the hall")}
 </section>
 <section class="panel stack">
-  ${gkCard(HALL.gk, "hall", "I chair the panel. Read the storyboard, then step inside.")}
+  ${gkCard(HALL.gk, "hall", "I chair the panel. Read the storyboard, then step inside.", hallDone() ? "pleased" : "stern")}
   ${briefed ? `<details><summary class="label">Re-read the storyboard</summary><div style="margin-top:10px">${comicHtml("hall", "hall", HALL.gk, hallPanels())}</div></details>`
     : `${comicHtml("hall", "hall", HALL.gk, hallPanels())}<div class="row"><button type="button" class="ember" data-brief="hall">Step into the hall</button></div>`}
 </section>
@@ -1494,7 +1652,7 @@ function viewVerdict() {
   return `
 <section class="panel verdict stack">
   <span class="label">Journey's end · <a href="#map">back to map</a></span>
-  <div class="row" style="gap:16px"><img class="px" src="${heroImg()}" alt="" style="width:72px;height:84px"><h2>The verdict for ${esc(heroName())}</h2></div>
+  <div class="row" style="gap:16px"><div class="mini lg">${heroPortrait(r >= 80 ? "pleased" : "stern")}</div><h2>The verdict for ${esc(heroName())}</h2></div>
   <div class="bigs">
     <div class="tile"><span class="label">Readiness</span><b class="tnum">${r}</b><span class="pill ${tone(r)}">${r >= 80 ? "Ready to face the interviewer" : r >= 60 ? "Close" : "More training needed"}</span></div>
     <div class="tile"><span class="label">Rank</span><b>${rankOf(r)}</b></div>
@@ -1569,6 +1727,11 @@ document.addEventListener("input", ev => {
 });
 window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
 setInterval(header, 60000);
+setInterval(() => {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  TICK = 1 - TICK;
+  document.querySelectorAll("[data-frames]").forEach(el => { if (WALKING && el.id === "hero-img") return; el.setAttribute("href", el.dataset.frames.split("|")[TICK]); });
+}, 650);
 route();
 })();
 </script>
