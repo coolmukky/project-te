@@ -188,14 +188,14 @@ code{font-family:var(--mono);font-size:.86em;background:var(--sunk);padding:1px 
 /* pixel art, heroes, comics, pack */
 .px{image-rendering:pixelated;image-rendering:crisp-edges}
 .herochip{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:3px 10px 3px 4px}
-.herochip img{width:30px;height:34px}
+.herochip img{width:30px;height:35px}
 .herochip b{font-family:var(--display);font-size:1rem;display:block;line-height:1.1}
 .herochip span{font-family:var(--mono);font-size:.64rem;color:var(--muted)}
 .select{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
 .hcard{border:2px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
 .hcard.on{border-color:var(--ember);box-shadow:0 0 0 3px var(--ember-soft)}
 .hcard .art{display:grid;place-items:center;background:var(--sunk);border-radius:8px;padding:10px}
-.hcard .art img{width:108px;height:120px}
+.hcard .art img{width:108px;height:126px}
 .hcard h4{font-size:1.3rem}
 .hcard ul{margin:0;padding-left:1.1rem;font-size:.92rem}
 .hcard .cry{font-style:italic;color:var(--ember)}
@@ -203,7 +203,7 @@ input[type=text]{font:inherit;padding:9px 12px;border:1px solid var(--line);bord
 
 .gkcard{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
 .gkcard .portrait{background:var(--sunk);border:2px solid var(--ink);border-radius:8px;padding:8px}
-.gkcard .portrait img{width:90px;height:100px;display:block}
+.gkcard .portrait img{width:90px;height:105px;display:block}
 .comic{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;background:var(--ink);padding:10px;border-radius:6px}
 .cpanel{position:relative;background:#000;border:3px solid #f7f3e8;overflow:hidden;display:flex;flex-direction:column}
 .cpanel img{width:100%;aspect-ratio:64/40;height:auto;display:block}
@@ -669,7 +669,7 @@ const INTERVIEW = new Date(2026, 10, 2, 9, 0, 0);
 
 /* ================================================================ 8-bit sprite engine */
 const OUT = "#16121c";
-function sprite(sp) {
+function sprite(sp, raw) {
   const W = 18, H = 20, g = new Array(W * H).fill(null);
   const R = (x, y, w, h, c) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (i >= 0 && i < W && j >= 0 && j < H) g[j * W + i] = c; };
   const P = (x, y, c) => R(x, y, 1, 1, c);
@@ -735,6 +735,7 @@ function sprite(sp) {
   if (it === "lute") { R(13, 13, 3, 3, "#a0522d"); R(15, 8, 1, 5, "#5a3a22"); P(14, 14, "#3a2a1a"); }
   if (it === "map") { R(13, 12, 4, 3, "#efe3c2"); P(14, 13, "#c0392b"); P(15, 13, "#2b6cb0"); }
   if (sp.shield) { R(1, 11, 3, 6, sp.shield); P(2, 13, sp.acc); P(2, 14, sp.acc); }
+  if (raw) return { w:W, h:H, px:g };
   // outline pass
   const out = g.slice();
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
@@ -750,11 +751,51 @@ function drawSprite(ctx, s, x, y, scale, flip) {
     ctx.fillStyle = c; ctx.fillRect(x + (flip ? (s.w - 1 - i) : i) * scale, y + j * scale, scale, scale);
   }
 }
+/* 16-bit pass: double the resolution, light from the top-left, shade from the bottom-right,
+   colored (selective) outlines, detailed eyes, blush and a soft ground shadow. */
+const rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const hex = a => "#" + a.map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+const mix = (a, b, t) => { const A = rgb(a), B = rgb(b); return hex(A.map((v, i) => v + (B[i] - v) * t)); };
+const lighten = (c, t) => mix(c, "#fff6e0", t), darken = (c, t) => mix(c, "#120c1e", t);
+const S16 = {};
+function sprite16(sp) {
+  const key = JSON.stringify(sp); if (S16[key]) return S16[key];
+  const b = sprite(sp, true), W = 36, H = 42, g = new Array(W * H).fill(null);
+  for (let j = 0; j < b.h; j++) for (let i = 0; i < b.w; i++) { const c = b.px[j * b.w + i]; if (!c) continue; for (let dj = 0; dj < 2; dj++) for (let di = 0; di < 2; di++) g[(j * 2 + dj) * W + i * 2 + di] = c; }
+  const at = (i, j) => (i < 0 || j < 0 || i >= W || j >= H) ? null : g[j * W + i];
+  const eye = sp.eye || OUT, flat = new Set([eye, OUT, "#ffffff", "#f4f4f4", sp.mouth || "#b06a55"]);
+  const sh = g.slice();
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    const c = g[j * W + i]; if (!c || flat.has(c) || c[0] !== "#") continue;
+    if (at(i, j - 1) !== c) sh[j * W + i] = lighten(c, .32);
+    else if (at(i - 1, j) !== c) sh[j * W + i] = lighten(c, .14);
+    else if (at(i, j + 1) !== c || at(i + 1, j) !== c) sh[j * W + i] = darken(c, .28);
+    else if (at(i + 2, j) !== c && at(i + 2, j) !== undefined && (i + j) % 2 === 0) sh[j * W + i] = darken(c, .12);
+  }
+  // eyes: dark pupil with a white glint, mouth thinner, blush on the cheeks
+  const P = (i, j, c) => { if (i >= 0 && j >= 0 && i < W && j < H) sh[j * W + i] = c; };
+  if (b.px[7 * 18 + 7] === eye) { P(14, 14, eye); P(15, 14, "#ffffff"); P(14, 15, eye); P(15, 15, eye); }
+  if (b.px[7 * 18 + 10] === eye) { P(20, 14, "#ffffff"); P(21, 14, eye); P(20, 15, eye); P(21, 15, eye); }
+  if (b.px[9 * 18 + 8] === (sp.mouth || "#b06a55")) { P(16, 18, sp.mouth || "#b06a55"); P(17, 18, sp.mouth || "#b06a55"); P(16, 19, darken(sp.skin, .1)); P(17, 19, darken(sp.skin, .1)); }
+  if (b.px[8 * 18 + 6] === sp.skin) P(13, 17, mix(sp.skin, "#ff6b6b", .35));
+  if (b.px[8 * 18 + 11] === sp.skin) P(22, 17, mix(sp.skin, "#ff6b6b", .35));
+  // selective outline: darkened neighbour color, deepest on the bottom edge
+  const out = sh.slice();
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    if (g[j * W + i]) continue;
+    const up = at(i, j - 1), n = up || at(i - 1, j) || at(i + 1, j) || at(i, j + 1);
+    if (!n) continue;
+    out[j * W + i] = n === OUT ? OUT : darken(n[0] === "#" ? n : "#16121c", up ? .82 : .62);
+  }
+  // soft ground shadow
+  [[38, 9, 26], [39, 8, 27], [40, 11, 24]].forEach(([j, a, z]) => { for (let i = a; i <= z; i++) if (!out[j * W + i]) out[j * W + i] = "rgba(10,8,20,0.22)"; });
+  return (S16[key] = { w:W, h:H, px:out });
+}
 const URLS = {};
 function spriteURL(key, spec) {
   if (URLS[key]) return URLS[key];
-  const s = sprite(spec), c = document.createElement("canvas"); c.width = s.w * 6; c.height = s.h * 6;
-  drawSprite(c.getContext("2d"), s, 0, 0, 6);
+  const s = sprite16(spec), c = document.createElement("canvas"); c.width = s.w * 3; c.height = s.h * 3;
+  drawSprite(c.getContext("2d"), s, 0, 0, 3);
   return (URLS[key] = c.toDataURL());
 }
 function scrollURL(color) {
@@ -890,16 +931,21 @@ function prop(x, k, px, py) {
 const PANEL_URLS = {};
 function panelURL(key, theme, kind, heroSpec, gkSpec, extra) {
   if (PANEL_URLS[key]) return PANEL_URLS[key];
-  const c = document.createElement("canvas"); c.width = 64; c.height = 40; const x = c.getContext("2d"), T = THEMES[theme];
-  x.fillStyle = T.sky; x.fillRect(0, 0, 64, 40); x.fillStyle = T.sky2; x.fillRect(0, 0, 64, 10); x.fillStyle = T.ground; x.fillRect(0, 30, 64, 10);
-  const hero = sprite(heroSpec), gk = sprite(gkSpec);
-  if (kind === "arrive" || kind === "gate") { landmark(x, theme, kind); drawSprite(x, hero, kind === "gate" ? 23 : 1, 14); if (kind === "gate") prop(x, "spark", 40, 4); }
-  else if (kind === "meet") { landmark(x, theme, "faint"); x.fillStyle = T.sky; x.globalAlpha = .55; x.fillRect(0, 0, 64, 30); x.globalAlpha = 1; drawSprite(x, hero, 8, 14); drawSprite(x, gk, 38, 14, 1, true); }
-  else if (kind === "gk") { x.globalAlpha = .35; landmark(x, theme, "faint"); x.globalAlpha = 1; drawSprite(x, gk, 14, 0, 2, true); }
-  else if (kind === "ob") { x.globalAlpha = .3; landmark(x, theme, "faint"); x.globalAlpha = 1; drawSprite(x, gk, 42, 14, 1, true); prop(x, "?", 8 + (extra % 3) * 4, 10); x.fillStyle = "#ffffff"; x.font = "8px monospace"; x.fillText(String(extra + 1), 26, 20); }
-  else if (kind === "trap") { landmark(x, theme, "faint"); x.fillStyle = "#d00000"; x.globalAlpha = .3; x.fillRect(0, 0, 64, 40); x.globalAlpha = 1; prop(x, "!", 27, 6); drawSprite(x, gk, 44, 14, 1, true); drawSprite(x, hero, 4, 14); }
-  else if (kind === "rules") { x.globalAlpha = .3; landmark(x, theme, "faint"); x.globalAlpha = 1; prop(x, "scroll", 8, 12); drawSprite(x, gk, 40, 14, 1, true); }
-  else if (kind === "hero") { x.globalAlpha = .3; landmark(x, theme, "faint"); x.globalAlpha = 1; drawSprite(x, hero, 14, 0, 2); prop(x, "spark", 50, 6); }
+  // 128x80 canvas: scenery is drawn in 64x40 units at 2x, sprites at native 16-bit resolution
+  const c = document.createElement("canvas"); c.width = 128; c.height = 80; const x = c.getContext("2d"), T = THEMES[theme];
+  for (let b = 0; b < 6; b++) { x.fillStyle = mix(T.sky2, T.sky, b / 5); x.fillRect(0, b * 10, 128, 10); }
+  for (let b = 0; b < 5; b++) for (let i = (b % 2) * 2; i < 128; i += 4) { x.fillStyle = mix(T.sky2, T.sky, (b + 1) / 5); x.fillRect(i, b * 10 + 9, 2, 1); }
+  x.fillStyle = T.ground; x.fillRect(0, 60, 128, 20); x.fillStyle = lighten(T.ground, .25); x.fillRect(0, 60, 128, 2);
+  x.fillStyle = darken(T.ground, .2); for (let i = 0; i < 40; i++) x.fillRect((i * 37) % 126, 64 + (i * 13) % 15, 2, 1);
+  const L = (fn, a) => { x.save(); x.scale(2, 2); if (a != null) x.globalAlpha = a; fn(); x.restore(); };
+  const hero = sprite16(heroSpec), gk = sprite16(gkSpec);
+  if (kind === "arrive" || kind === "gate") { L(() => landmark(x, theme, kind)); drawSprite(x, hero, kind === "gate" ? 46 : 2, 28); if (kind === "gate") L(() => prop(x, "spark", 40, 4)); }
+  else if (kind === "meet") { L(() => landmark(x, theme, "faint")); x.fillStyle = T.sky; x.globalAlpha = .55; x.fillRect(0, 0, 128, 60); x.globalAlpha = 1; drawSprite(x, hero, 16, 28); drawSprite(x, gk, 76, 28, 1, true); }
+  else if (kind === "gk") { L(() => landmark(x, theme, "faint"), .35); drawSprite(x, gk, 28, -4, 2, true); }
+  else if (kind === "ob") { L(() => landmark(x, theme, "faint"), .3); drawSprite(x, gk, 84, 28, 1, true); L(() => prop(x, "?", 8 + (extra % 3) * 4, 10)); x.fillStyle = "#ffffff"; x.font = "bold 16px monospace"; x.fillText(String(extra + 1), (8 + (extra % 3) * 4) * 2 + 32, 40); }
+  else if (kind === "trap") { L(() => landmark(x, theme, "faint")); x.fillStyle = "#d00000"; x.globalAlpha = .3; x.fillRect(0, 0, 128, 80); x.globalAlpha = 1; L(() => prop(x, "!", 27, 6)); drawSprite(x, gk, 88, 28, 1, true); drawSprite(x, hero, 8, 28); }
+  else if (kind === "rules") { L(() => landmark(x, theme, "faint"), .3); L(() => prop(x, "scroll", 8, 12)); drawSprite(x, gk, 80, 28, 1, true); }
+  else if (kind === "hero") { L(() => landmark(x, theme, "faint"), .3); drawSprite(x, hero, 28, -4, 2); L(() => prop(x, "spark", 50, 6)); }
   return (PANEL_URLS[key] = c.toDataURL());
 }
 
@@ -1037,12 +1083,12 @@ function mapSvg() {
     const num = n.final ? "★" : n.cleared ? "✓" : String(i + 1), sub = n.cleared && !n.final ? "Cleared · " + n.score : n.sub;
     const gkImg = spriteURL("gk-" + n.id, n.gk.spec);
     const scr = n.cleared && !n.final ? `<image href="${scrollURL(QX[n.id].scroll[1])}" x="${x - 52}" y="${y - 44}" width="24" height="24"/>` : "";
-    return `<a href="#${n.id}" class="${cls}" aria-label="${esc(n.name)}"><image href="${gkImg}" x="${x + 22}" y="${y - 58}" width="33" height="37"/>${scr}
+    return `<a href="#${n.id}" class="${cls}" aria-label="${esc(n.name)}"><image href="${gkImg}" x="${x + 22}" y="${y - 58}" width="33" height="38"/>${scr}
       <circle cx="${x}" cy="${y}" r="30"/><text class="num" x="${x}" y="${y}">${num}</text>
       <text class="nm" x="${x}" y="${y + 52}">${esc(n.name)}</text><text class="sub" x="${x}" y="${y + 68}">${esc(sub)}</text></a>`;
   }).join("");
   const [hx, hy] = POS[Math.min(S.heroAt, 11)];
-  const hero = S.hero ? `<g id="hero-token" transform="translate(${hx - 20} ${hy - 82})"><image href="${heroImg()}" width="36" height="40"/><text x="18" y="-4" class="heroname">${esc(heroName().slice(0, 18))}</text></g>` : "";
+  const hero = S.hero ? `<g id="hero-token" transform="translate(${hx - 20} ${hy - 84})"><image href="${heroImg()}" width="36" height="42"/><text x="18" y="-4" class="heroname">${esc(heroName().slice(0, 18))}</text></g>` : "";
   return `<svg class="map" viewBox="0 -24 1000 514" role="img" aria-label="Quest map">${segs}${nodeSvg}${hero}</svg>`;
 }
 function animateTravel(from, to, done) {
@@ -1054,7 +1100,7 @@ function animateTravel(from, to, done) {
     const seg = segs[si]; if (!seg) { done(); return; }
     if (t0 == null) t0 = ts;
     const L = seg.getTotalLength(), k = Math.min(1, (ts - t0) / 900), p = seg.getPointAtLength(L * k);
-    tok.setAttribute("transform", `translate(${p.x - 20} ${p.y - 82 + Math.abs(Math.sin(k * Math.PI * 4)) * -4})`);
+    tok.setAttribute("transform", `translate(${p.x - 20} ${p.y - 84 + Math.abs(Math.sin(k * Math.PI * 4)) * -4})`);
     if (k >= 1) { si++; t0 = null; }
     requestAnimationFrame(step);
   };
@@ -1074,7 +1120,7 @@ function viewMap() {
       <div class="row">${next}<button type="button" class="ghost" data-go="hero">Change hero</button>${S.verdict ? `<button type="button" class="ghost" data-go="verdict">Read your verdict</button>` : ""}</div>
     </div>
     <div class="rank">
-      <div class="row" style="gap:14px;align-items:center"><img class="px" src="${heroImg()}" alt="" style="width:72px;height:80px">
+      <div class="row" style="gap:14px;align-items:center"><img class="px" src="${heroImg()}" alt="" style="width:72px;height:84px">
         <div><span class="label">${esc(H.cls)}</span><div class="title">${rankOf(r)}</div></div></div>
       <div class="meters">
         <div class="m"><span>Readiness</span><div class="bar"><i style="width:${r}%"></i></div><b>${r}</b></div>
@@ -1156,7 +1202,7 @@ function viewQuest(q) {
       <p class="lead">${esc(q.intro)}</p>
     </div>
     <div class="stack" style="align-items:flex-start">
-      <div class="row" style="gap:10px"><img class="px" src="${heroImg()}" alt="" style="width:45px;height:50px"><div><b>${esc(heroName())}</b><br><span class="note">${esc(heroObj().cls)}</span></div></div>
+      <div class="row" style="gap:10px"><img class="px" src="${heroImg()}" alt="" style="width:45px;height:52px"><div><b>${esc(heroName())}</b><br><span class="note">${esc(heroObj().cls)}</span></div></div>
       <span class="label">Obstacles</span><div class="pips">${pips}</div>
       <span class="pill ${questCleared(q) ? tone(questScore(q)) : "none"}">${questCleared(q) ? "Region score " + questScore(q) : q.obstacles.filter(o => obScore(o) != null).length + " of " + q.obstacles.length + " cleared"}</span>
       ${packHtml("Scrolls you carry")}
@@ -1221,7 +1267,7 @@ function selfCheck(o, which) {
 function dojoBlock(o) {
   const d = o.dojo, q = o.quest, gk = QX[q.id].gk;
   return `<div class="dojo">
-    <div class="row" style="justify-content:space-between"><div class="row" style="gap:10px"><img class="px" src="${spriteURL("gk-" + q.id, gk.spec)}" alt="" style="width:36px;height:40px"><h3>${esc(gk.name)}'s dojo</h3></div><span class="label">Study this, then retake the obstacle</span></div>
+    <div class="row" style="justify-content:space-between"><div class="row" style="gap:10px"><img class="px" src="${spriteURL("gk-" + q.id, gk.spec)}" alt="" style="width:36px;height:42px"><h3>${esc(gk.name)}'s dojo</h3></div><span class="label">Study this, then retake the obstacle</span></div>
     <div class="card"><span class="label">Definition</span><div>${d.def}</div></div>
     <div class="grid">
       <div class="card"><span class="label">How it works</span><ul>${d.how.map(x => `<li>${x}</li>`).join("")}</ul></div>
@@ -1448,7 +1494,7 @@ function viewVerdict() {
   return `
 <section class="panel verdict stack">
   <span class="label">Journey's end · <a href="#map">back to map</a></span>
-  <div class="row" style="gap:16px"><img class="px" src="${heroImg()}" alt="" style="width:72px;height:80px"><h2>The verdict for ${esc(heroName())}</h2></div>
+  <div class="row" style="gap:16px"><img class="px" src="${heroImg()}" alt="" style="width:72px;height:84px"><h2>The verdict for ${esc(heroName())}</h2></div>
   <div class="bigs">
     <div class="tile"><span class="label">Readiness</span><b class="tnum">${r}</b><span class="pill ${tone(r)}">${r >= 80 ? "Ready to face the interviewer" : r >= 60 ? "Close" : "More training needed"}</span></div>
     <div class="tile"><span class="label">Rank</span><b>${rankOf(r)}</b></div>
