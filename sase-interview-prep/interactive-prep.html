@@ -185,6 +185,50 @@ code{font-family:var(--mono);font-size:.86em;background:var(--sunk);padding:1px 
 .verdict .tile{border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .verdict .tile b{font-family:var(--display);font-size:2rem;line-height:1.1}
 
+/* pixel art, heroes, comics, pack */
+.px{image-rendering:pixelated;image-rendering:crisp-edges}
+.herochip{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:3px 10px 3px 4px}
+.herochip img{width:30px;height:34px}
+.herochip b{font-family:var(--display);font-size:1rem;display:block;line-height:1.1}
+.herochip span{font-family:var(--mono);font-size:.64rem;color:var(--muted)}
+.select{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.hcard{border:2px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.hcard.on{border-color:var(--ember);box-shadow:0 0 0 3px var(--ember-soft)}
+.hcard .art{display:grid;place-items:center;background:var(--sunk);border-radius:8px;padding:10px}
+.hcard .art img{width:108px;height:120px}
+.hcard h4{font-size:1.3rem}
+.hcard ul{margin:0;padding-left:1.1rem;font-size:.92rem}
+.hcard .cry{font-style:italic;color:var(--ember)}
+input[type=text]{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:min(320px,100%)}
+
+.gkcard{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.gkcard .portrait{background:var(--sunk);border:2px solid var(--ink);border-radius:8px;padding:8px}
+.gkcard .portrait img{width:90px;height:100px;display:block}
+.comic{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;background:var(--ink);padding:10px;border-radius:6px}
+.cpanel{position:relative;background:#000;border:3px solid #f7f3e8;overflow:hidden;display:flex;flex-direction:column}
+.cpanel img{width:100%;aspect-ratio:64/40;height:auto;display:block}
+.cpanel .no{position:absolute;top:4px;right:6px;font-family:var(--mono);font-size:.65rem;color:#fff;background:#0009;padding:0 4px;border-radius:2px}
+.cpanel .txt{background:#f7f3e8;color:#16121c;padding:8px 10px;font-size:.9rem;line-height:1.35;flex:1;display:flex;flex-direction:column;gap:6px}
+.cap{background:#ffd75e;color:#16121c;border:2px solid #16121c;padding:4px 7px;font-family:var(--body);font-weight:500;font-size:.86rem}
+.bubble{position:relative;background:#fff;color:#16121c;border:2px solid #16121c;border-radius:12px;padding:6px 9px;font-size:.88rem}
+.bubble::before{content:"";position:absolute;top:-9px;left:var(--tail,22px);border:8px solid transparent;border-bottom-color:#16121c;border-top:0}
+.bubble::after{content:"";position:absolute;top:-6px;left:calc(var(--tail,22px) + 2px);border:6px solid transparent;border-bottom-color:#fff;border-top:0}
+.bubble b{font-family:var(--mono);font-size:.66rem;text-transform:uppercase;letter-spacing:.06em;display:block;color:#5a3d0a}
+.bubble.hero{--tail:22px}
+.bubble.gk{--tail:calc(100% - 40px)}
+
+.pack{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pack img{width:26px;height:26px}
+.pack .emp{font-size:.85rem;color:var(--muted)}
+.scrollbadge{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:2px 10px 2px 4px;font-size:.82rem;text-decoration:none;color:var(--ink)}
+.scrollbadge img{width:22px;height:22px}
+.award{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:center}
+.award img{width:72px;height:72px}
+@media (prefers-reduced-motion:no-preference){.award img{animation:glow 1.6s ease-in-out 3}}
+@keyframes glow{50%{transform:scale(1.12) rotate(-6deg)}}
+.map image{image-rendering:pixelated}
+@media (max-width:820px){.comic{grid-template-columns:minmax(0,1fr)}.gkcard{grid-template-columns:minmax(0,1fr)}}
+.map .heroname{font-family:var(--mono);font-size:11px;fill:var(--ember);text-anchor:middle;font-weight:500}
 @media (max-width:820px){
   .top{position:static}
   .stats{margin-left:0;width:100%;gap:14px}
@@ -202,7 +246,8 @@ code{font-family:var(--mono);font-size:.86em;background:var(--sunk);padding:1px 
     <div class="brand"><h1><a href="#map">The Prisma SASE Quest</a></h1>
       <small>Palo Alto Networks · Technical Enablement Architect, NetSec &amp; SASE · JR-017228</small></div>
     <div class="stats">
-      <div class="stat"><span class="label">Rank</span><b id="h-rank">Novice</b></div>
+      <a class="herochip" href="#hero" id="h-hero" title="Change hero"><img class="px" id="h-hero-img" alt=""><span><b id="h-hero-name">Choose a hero</b><span id="h-rank">Novice</span></span></a>
+      <div class="stat"><span class="label">Scrolls</span><b id="h-scrolls" class="tnum">0 / 11</b></div>
       <div class="stat"><span class="label">Knowledge</span><b id="h-know" class="tnum">0</b><div class="bar"><i id="h-know-bar"></i></div></div>
       <div class="stat"><span class="label">Obstacles cleared</span><b id="h-obs" class="tnum">0 / 0</b><div class="bar"><i id="h-obs-bar"></i></div></div>
       <div class="stat"><span class="label">Interview</span><b id="h-count" class="tnum">Mon, Nov 2</b><span class="sync" id="sync">Saved in this browser</span></div>
@@ -622,11 +667,247 @@ const QUESTS = [
 const OBS = QUESTS.flatMap(q => q.obstacles.map(o => Object.assign(o, { quest:q })));
 const INTERVIEW = new Date(2026, 10, 2, 9, 0, 0);
 
+/* ================================================================ 8-bit sprite engine */
+const OUT = "#16121c";
+function sprite(sp) {
+  const W = 18, H = 20, g = new Array(W * H).fill(null);
+  const R = (x, y, w, h, c) => { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) if (i >= 0 && i < W && j >= 0 && j < H) g[j * W + i] = c; };
+  const P = (x, y, c) => R(x, y, 1, 1, c);
+  const metal = sp.metal || "#b7c0cc", hair = sp.hair || "#3b2a20", eye = sp.eye || OUT;
+  if (sp.cape) R(3, 11, 12, 7, sp.cape);
+  // legs and boots
+  R(6, 16, 2, 3, sp.legs || sp.sec); R(10, 16, 2, 3, sp.legs || sp.sec); R(6, 18, 2, 1, "#3a2a22"); R(10, 18, 2, 1, "#3a2a22");
+  // torso and arms
+  R(5, 11, 8, 5, sp.prim); R(4, 11, 1, 4, sp.prim); R(13, 11, 1, 4, sp.prim); P(4, 15, sp.skin); P(13, 15, sp.skin);
+  switch (sp.body) {
+    case "armor": R(5, 11, 8, 5, metal); R(4, 11, 1, 4, metal); R(13, 11, 1, 4, metal); R(8, 11, 2, 4, sp.acc); break;
+    case "robe": R(5, 16, 8, 3, sp.prim); R(5, 18, 8, 1, sp.sec); R(8, 11, 2, 5, sp.sec); break;
+    case "apron": R(6, 12, 6, 5, "#7a4b2a"); P(6, 11, "#7a4b2a"); P(11, 11, "#7a4b2a"); break;
+    case "coat": R(8, 11, 2, 1, "#f4f4f4"); R(8, 12, 2, 3, sp.acc); R(5, 16, 1, 1, sp.prim); R(12, 16, 1, 1, sp.prim); break;
+    case "split": R(9, 11, 4, 5, sp.sec); R(13, 11, 1, 4, sp.sec); P(8, 13, sp.acc); break;
+    case "tabard": R(7, 11, 4, 6, sp.sec); P(8, 13, sp.acc); P(9, 13, sp.acc); break;
+    default: R(5, 14, 8, 1, sp.sec); P(8, 14, sp.acc); P(9, 14, sp.acc);
+  }
+  // head
+  R(6, 5, 6, 6, sp.skin); P(7, 7, eye); P(10, 7, eye); P(8, 9, sp.mouth || "#b06a55");
+  if (sp.hairStyle !== "none") { R(6, 5, 6, 1, hair); P(6, 6, hair); P(11, 6, hair); }
+  if (sp.hairStyle === "long") { R(6, 6, 1, 4, hair); R(11, 6, 1, 4, hair); }
+  if (sp.hairStyle === "spiky") { P(6, 4, hair); P(8, 4, hair); P(10, 4, hair); P(11, 4, hair); }
+  // hats
+  const hc = sp.hatC || sp.prim;
+  switch (sp.hat) {
+    case "helmet": R(5, 4, 8, 3, metal); R(6, 3, 6, 1, metal); if (sp.plume) { R(8, 0, 2, 3, sp.plume); P(10, 1, sp.plume); } if (sp.visor) { R(6, 7, 6, 1, "#2b2f3a"); P(7, 7, sp.acc); P(10, 7, sp.acc); } break;
+    case "wizard": P(9, 0, hc); R(8, 1, 3, 1, hc); R(7, 2, 4, 1, hc); R(7, 3, 5, 1, hc); R(6, 4, 6, 1, hc); R(4, 5, 10, 1, hc); P(9, 2, sp.acc); P(8, 3, sp.acc); break;
+    case "hood": R(6, 3, 6, 1, hc); R(5, 4, 8, 2, hc); R(5, 6, 1, 5, hc); R(12, 6, 1, 5, hc); R(5, 11, 8, 1, hc); break;
+    case "crown": R(6, 4, 6, 1, "#e0b130"); P(6, 3, "#e0b130"); P(8, 3, "#e0b130"); P(9, 3, "#e0b130"); P(11, 3, "#e0b130"); P(9, 4, "#c0392b"); break;
+    case "mortar": R(4, 4, 10, 1, "#222831"); R(6, 5, 6, 1, "#222831"); P(9, 3, "#222831"); R(13, 5, 1, 3, "#e0b130"); break;
+    case "hardhat": R(6, 3, 6, 2, "#f2c230"); R(5, 5, 8, 1, "#f2c230"); P(9, 3, "#d79a0c"); break;
+    case "pirate": R(5, 3, 8, 2, "#1e1e24"); R(4, 5, 10, 1, "#1e1e24"); P(9, 3, "#f4f4f4"); P(4, 4, "#1e1e24"); P(13, 4, "#1e1e24"); break;
+    case "feather": R(6, 3, 6, 1, hc); R(5, 4, 8, 1, hc); P(13, 1, sp.acc); P(12, 2, sp.acc); P(12, 3, sp.acc); P(13, 2, sp.acc); break;
+    case "robot": R(6, 5, 6, 6, metal); R(8, 2, 1, 3, "#6b7280"); P(8, 1, sp.acc); R(6, 7, 6, 1, sp.acc); P(6, 9, "#6b7280"); P(11, 9, "#6b7280"); break;
+    case "headband": R(6, 5, 6, 1, sp.sec); P(7, 5, "#7fd8e8"); P(10, 5, "#7fd8e8"); break;
+    case "horns": R(4, 3, 1, 2, "#efe3c2"); P(5, 5, "#efe3c2"); P(5, 4, "#efe3c2"); R(13, 3, 1, 2, "#efe3c2"); P(12, 5, "#efe3c2"); P(12, 4, "#efe3c2"); break;
+  }
+  // faces
+  (sp.face || []).forEach(f => {
+    if (f === "beard") { R(6, 9, 6, 2, hair); R(7, 11, 4, 1, hair); P(8, 9, hair); }
+    if (f === "longbeard") { R(6, 9, 6, 2, hair); R(7, 11, 4, 2, hair); R(8, 13, 2, 1, hair); }
+    if (f === "mustache") R(7, 9, 4, 1, hair);
+    if (f === "mask") R(6, 8, 6, 3, sp.sec);
+    if (f === "goggles") { R(6, 7, 6, 1, "#5a4a3a"); P(7, 7, "#7fd8e8"); P(10, 7, "#7fd8e8"); }
+    if (f === "glasses") { P(7, 7, "#9fe3ff"); P(10, 7, "#9fe3ff"); P(8, 7, "#333"); P(9, 7, "#333"); }
+    if (f === "eyepatch") { R(6, 6, 6, 1, "#111"); P(7, 7, "#111"); }
+    if (f === "nosering") { P(8, 10, "#e0b130"); P(9, 10, "#e0b130"); }
+    if (f === "tie") R(8, 11, 2, 4, sp.acc);
+  });
+  // items
+  const it = sp.item, wood = "#7a5230";
+  if (it === "sword") { R(14, 5, 1, 9, "#e2e7ee"); P(14, 4, "#e2e7ee"); R(13, 14, 3, 1, sp.acc); P(14, 15, "#5a3a22"); }
+  if (it === "staff") { R(14, 4, 1, 15, wood); R(13, 1, 3, 3, sp.orb || sp.acc); P(14, 2, "#ffffff"); }
+  if (it === "bow") { R(15, 9, 1, 7, wood); P(14, 8, wood); P(14, 16, wood); R(14, 9, 1, 7, "#e8e8e8"); }
+  if (it === "wrench") { R(14, 10, 1, 6, "#9aa3ad"); R(13, 7, 3, 3, "#9aa3ad"); P(14, 7, null); P(14, 8, null); }
+  if (it === "key") { R(14, 9, 1, 7, "#e0b130"); R(13, 6, 3, 3, "#e0b130"); P(14, 7, null); P(15, 13, "#e0b130"); P(15, 11, "#e0b130"); }
+  if (it === "hammer") { R(14, 10, 1, 7, wood); R(12, 7, 5, 3, "#6b7280"); }
+  if (it === "lantern") { R(14, 11, 1, 2, "#333"); R(13, 13, 3, 3, "#f6c453"); P(14, 14, "#fff3b0"); }
+  if (it === "flag") { R(14, 2, 1, 15, "#5a3a22"); R(15, 2, 3, 3, sp.acc); }
+  if (it === "tablet") { R(13, 11, 4, 5, "#2b6cb0"); R(14, 12, 2, 1, "#ffffff"); R(14, 14, 2, 1, "#ffffff"); }
+  if (it === "book") { R(13, 12, 4, 4, sp.acc); R(13, 12, 1, 4, "#4a2c1a"); }
+  if (it === "lute") { R(13, 13, 3, 3, "#a0522d"); R(15, 8, 1, 5, "#5a3a22"); P(14, 14, "#3a2a1a"); }
+  if (it === "map") { R(13, 12, 4, 3, "#efe3c2"); P(14, 13, "#c0392b"); P(15, 13, "#2b6cb0"); }
+  if (sp.shield) { R(1, 11, 3, 6, sp.shield); P(2, 13, sp.acc); P(2, 14, sp.acc); }
+  // outline pass
+  const out = g.slice();
+  for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+    if (g[j * W + i]) continue;
+    if ((i > 0 && g[j * W + i - 1]) || (i < W - 1 && g[j * W + i + 1]) || (j > 0 && g[(j - 1) * W + i]) || (j < H - 1 && g[(j + 1) * W + i])) out[j * W + i] = OUT;
+  }
+  return { w:W, h:H, px:out };
+}
+function drawSprite(ctx, s, x, y, scale, flip) {
+  scale = scale || 1;
+  for (let j = 0; j < s.h; j++) for (let i = 0; i < s.w; i++) {
+    const c = s.px[j * s.w + i]; if (!c) continue;
+    ctx.fillStyle = c; ctx.fillRect(x + (flip ? (s.w - 1 - i) : i) * scale, y + j * scale, scale, scale);
+  }
+}
+const URLS = {};
+function spriteURL(key, spec) {
+  if (URLS[key]) return URLS[key];
+  const s = sprite(spec), c = document.createElement("canvas"); c.width = s.w * 6; c.height = s.h * 6;
+  drawSprite(c.getContext("2d"), s, 0, 0, 6);
+  return (URLS[key] = c.toDataURL());
+}
+function scrollURL(color) {
+  const k = "scroll" + color; if (URLS[k]) return URLS[k];
+  const c = document.createElement("canvas"); c.width = c.height = 12 * 6; const x = c.getContext("2d");
+  const R = (a, b, w, h, col) => { x.fillStyle = col; x.fillRect(a * 6, b * 6, w * 6, h * 6); };
+  R(2, 2, 8, 8, OUT); R(3, 3, 6, 6, "#efe3c2"); R(1, 2, 2, 8, OUT); R(1, 3, 1, 6, color); R(9, 2, 2, 8, OUT); R(10, 3, 1, 6, color);
+  R(4, 4, 4, 1, "#9b8a6a"); R(4, 6, 3, 1, "#9b8a6a"); R(5, 8, 2, 1, color);
+  return (URLS[k] = c.toDataURL());
+}
+
+/* ================================================================ heroes */
+const HEROES = [
+  { id:"knight", cls:"Firewall Knight", persona:"A veteran of a thousand rulebases who started on SRX zones and Firepower policies and has never trusted a port number.",
+    strengths:["NGFW policy and threat inspection","Calm troubleshooting under pressure"], power:"Shield of App-ID: sees the application behind any port.", cry:"No port goes unchallenged.",
+    spec:{ skin:"#f1c27d", hair:"#5a3a22", prim:"#3d5a80", sec:"#293241", acc:"#e63946", body:"armor", hat:"helmet", plume:"#e63946", item:"sword", shield:"#c9a227" } },
+  { id:"mage", cls:"Identity Mage", persona:"Trained in the ISE towers, fluent in 802.1X and segmentation, and certain that every packet has a name behind it.",
+    strengths:["Zero Trust and identity-based policy","Cisco ISE and TrustSec depth"], power:"True Name: binds every session to a user and a device.", cry:"Show me who you are, and I'll show you the way.",
+    spec:{ skin:"#c68642", hair:"#1b1b1b", prim:"#1d7874", sec:"#0b3d3a", acc:"#f4d35e", body:"robe", hat:"wizard", hatC:"#1d7874", item:"staff", orb:"#f4d35e" } },
+  { id:"ranger", cls:"Packet Ranger", persona:"Has walked every path from campus EVPN fabrics to SD-WAN overlays, and always checks the road home.",
+    strengths:["Routing, switching and SD-WAN","Packet walks and path design"], power:"Return Route: can trace any packet there and back.", cry:"Every path has a return route.",
+    spec:{ skin:"#e0ac69", hair:"#7b3f00", prim:"#4f772d", sec:"#31572c", acc:"#ecf39e", body:"tunic", hat:"hood", hatC:"#31572c", item:"bow", legs:"#6b4f2a" } },
+  { id:"artificer", cls:"Automation Artificer", persona:"Builds labs that build themselves, with Python, Ansible and Apstra, and teaches by letting people break things safely.",
+    strengths:["Lab-as-code and automation","Hands-on enablement at scale"], power:"Clockwork Lab: spins up a thousand labs before breakfast.", cry:"If I can script it, I can teach it.",
+    spec:{ skin:"#8d5524", hair:"#2d1b0e", prim:"#e76f51", sec:"#264653", acc:"#f4a261", body:"coat", hat:"headband", hairStyle:"spiky", item:"wrench" } }
+];
+
+/* ================================================================ gatekeepers, comics, scrolls */
+const QX = {
+  q1:{ theme:"gate", scroll:["Scroll of Definitions","#c0392b"],
+    gk:{ name:"Lexis", title:"Warden of the Gate", spec:{ skin:"#e8b98a", hair:"#8a8a8a", prim:"#2c3e66", sec:"#7a2e2e", acc:"#e0b130", body:"tabard", hat:"helmet", item:"key", face:["beard"] } },
+    arrive:"Dawn. The road to Palo Alto starts at a stone gate carved with acronyms.", intro:"Halt, {hero}. I am Lexis, Warden of the Gate. Many arrive speaking in slogans. None pass that way.",
+    lore:"Here I test whether you can say what SASE and SSE really are, and why Prisma Access running PAN-OS matters.", trap:"Beware the slide-deck answer. PoP counts and rankings are not architecture.", resolve:"I'll speak in mechanisms, not slogans." },
+  q2:{ theme:"citadel", scroll:["Scroll of the Four Gates","#3a86ff"],
+    gk:{ name:"Nimbus", title:"Keeper of the Four Gates", spec:{ skin:"#f2d0b5", hair:"#f4f4f4", prim:"#8ecae6", sec:"#4a7fa7", acc:"#ffffff", body:"robe", hat:"wizard", hatC:"#dff3ff", item:"staff", orb:"#ffffff", face:["longbeard"] } },
+    arrive:"Above the clouds floats a citadel with four gates: mobile users, remote networks, service connections and connectors.", intro:"Welcome, {hero}. I am Nimbus. I decide who enters the cloud, and by which gate.",
+    lore:"Know each gate's purpose, where traffic leaves, and how it finds its way home.", trap:"Many forget the road home: the return route for the mobile user pool.", resolve:"Every gate has a purpose. I'll name each one." },
+  q3:{ theme:"forge", scroll:["Scroll of the Forge","#e85d04"],
+    gk:{ name:"Ember", title:"Smith of the Firewall Forge", spec:{ skin:"#a0522d", hair:"#d9480f", prim:"#6c757d", sec:"#343a40", acc:"#ffba08", body:"apron", hairStyle:"none", item:"hammer", face:["beard"] } },
+    arrive:"Heat rolls from the forge where Palo Alto's oldest blades were made: App-ID, User-ID and Content-ID.", intro:"So, {hero}, you've swung SRX and Firepower blades. Show me you can work this steel.",
+    lore:"Here applications, not ports, are the edge of every rule. Users have names. Allowed traffic still gets inspected.", trap:"Mind the NAT trap: security rules see the pre-NAT address and the post-NAT zone.", resolve:"I know these blades by other names. I'll learn their Palo Alto temper." },
+  q4:{ theme:"bridge", scroll:["Scroll of Trust","#7b2cbf"],
+    gk:{ name:"Brother Hip", title:"Keeper of Posture", spec:{ skin:"#f1c27d", prim:"#5a189a", sec:"#3c096c", acc:"#f6c453", body:"robe", hat:"hood", hatC:"#7b2cbf", item:"lantern", face:["mask"] } },
+    arrive:"A rope bridge spans a chasm called Allow-and-Ignore. Only the continuously trusted cross.", intro:"Peace, {hero}. I am Brother Hip. I check every traveller, and I keep checking halfway across.",
+    lore:"ZTNA 2.0 must be shown in configuration: App-ID rules, posture rechecked, inspection that never stops.", trap:"Don't claim rivals can do none of this. Overclaiming breaks the bridge.", resolve:"I'll show the configuration, not the slogan." },
+  q5:{ theme:"maze", scroll:["Scroll of the Packet Walk","#2a9d8f"],
+    gk:{ name:"Traceroute", title:"Minotaur of the Labyrinth", spec:{ skin:"#7f5539", hair:"#432818", prim:"#9c6644", sec:"#582f0e", acc:"#e0b130", body:"tunic", hat:"horns", item:"map", face:["nosering"], eye:"#d00000" } },
+    arrive:"The labyrinth swallows packets whole. Its walls are DNS, routing tables and return paths.", intro:"Grrr. {hero}. I am Traceroute. I've watched many engineers stop at the firewall and get lost.",
+    lore:"Walk every hop, out and back. Read the logs: no log, deny and incomplete each mean something different.", trap:"Never stop at the processing node. The DC side and the return route hide most monsters.", resolve:"Every path has a return route. I'll trace both directions." },
+  q6:{ theme:"river", scroll:["Scroll of the Rivers","#0077b6"],
+    gk:{ name:"Captain Jitter", title:"Pilot of the WAN Rivers", spec:{ skin:"#e0ac69", hair:"#1b1b1b", prim:"#023e8a", sec:"#03045e", acc:"#d00000", body:"coat", hat:"pirate", item:"flag", face:["eyepatch","mustache"] } },
+    arrive:"Branch traffic flows down three rivers: MPLS, broadband and LTE. Choose the channel badly and calls go robotic.", intro:"Ahoy, {hero}. Captain Jitter. I've steered every SD-WAN boat on these waters.",
+    lore:"Explain how app-defined paths differ from probe-based ones, and who should steer: SCM or Panorama.", trap:"Don't confuse Prisma SD-WAN with SD-WAN on the firewalls. Two different boats.", resolve:"I've sailed Catalyst and SSR waters. I'll compare them fairly." },
+  q7:{ theme:"towers", scroll:["Scroll of the Watch","#38b000"],
+    gk:{ name:"ADEM-7", title:"The Watching Engine", spec:{ skin:"#b7c0cc", metal:"#b7c0cc", prim:"#495057", sec:"#212529", acc:"#38b000", body:"tunic", hat:"robot", hairStyle:"none", item:"tablet" } },
+    arrive:"Two towers watch the realm: one guards the data, one watches the experience.", intro:"Greetings, {hero}. I am ADEM-7. I measure every segment from laptop to app.",
+    lore:"Know which tower sees what: inline vs. API CASB, Enterprise DLP, and segment-by-segment experience.", trap:"Never blame the cloud before reading the segments.", resolve:"I'll let the measurements speak first." },
+  q8:{ theme:"kingdoms", scroll:["Scroll of Rival Lore","#ffb703"],
+    gk:{ name:"Envoy Duality", title:"Ambassador of the Borderlands", spec:{ skin:"#f1c27d", hair:"#6d4c41", prim:"#c1121f", sec:"#1d4ed8", acc:"#e0b130", body:"split", hat:"crown", cape:"#3c1642", shield:"#e0b130" } },
+    arrive:"You enter the borderlands between the kingdoms you served and the one you seek to join.", intro:"Welcome back, {hero}. I am Envoy Duality. I know your old allegiances, and here they're useful.",
+    lore:"Map Cisco and Juniper to Palo Alto precisely, and position with respect, not mockery.", trap:"Old maps lie: competitor names change. Verify before you quote.", resolve:"My past kingdoms are my advantage. I'll use them with precision." },
+  q9:{ theme:"summit", scroll:["Scroll of the Architect","#457b9d"],
+    gk:{ name:"Archimedia", title:"Master Architect of the Summit", spec:{ skin:"#c68642", hair:"#2b2b2b", prim:"#f4a261", sec:"#264653", acc:"#2a9d8f", body:"coat", hat:"hardhat", item:"tablet", face:["glasses"] } },
+    arrive:"Above the clouds, the summit. Here you stop answering and start designing.", intro:"{hero}. I'm Archimedia. Every line you draw here must survive the word 'why'.",
+    lore:"Design a full SASE migration and a segmented three-tier app, with phases, rollbacks and metrics.", trap:"A bill of materials is not a design. Start with discovery.", resolve:"Discovery first, then design, then defend every tradeoff." },
+  q10:{ theme:"academy", scroll:["Scroll of Readiness","#6a4c93"],
+    gk:{ name:"Professor Rubrica", title:"Dean of the Academy", spec:{ skin:"#f2d0b5", hair:"#adb5bd", prim:"#22223b", sec:"#4a4e69", acc:"#c9184a", body:"robe", hat:"mortar", item:"book", face:["beard","glasses"] } },
+    arrive:"The Academy of Enablement: your home ground, and where the role itself is judged.", intro:"Ah, {hero}. Professor Rubrica. I grade programs, not slides.",
+    lore:"Readiness strategy, competency models, honest metrics, safe AI and influence without authority.", trap:"Completion rates are not readiness. Measure behavior in the field.", resolve:"Readiness is a field outcome. I'll prove it." },
+  q11:{ theme:"library", scroll:["Scroll of True Stories","#d62828"],
+    gk:{ name:"Saga", title:"Bard of the Hall of Stories", spec:{ skin:"#e0ac69", hair:"#9d0208", prim:"#9d0208", sec:"#370617", acc:"#ffba08", body:"tunic", hat:"feather", hatC:"#2d6a4f", item:"lute", face:["mustache"] } },
+    arrive:"A quiet hall lined with stories. Only true ones survive the follow-up questions.", intro:"Sit, {hero}. I'm Saga. I've heard a thousand STAR stories, and I can tell which are invented.",
+    lore:"Tell true stories of influence and innovation, and say plainly why you're on this road.", trap:"Never invent a number. Use [brackets] for details you still need to confirm.", resolve:"I'll tell it true, with the lesson and where I used it next." }
+};
+const HALL = { theme:"hall", gk:{ name:"The Chair", title:"Head of the Interview Panel", spec:{ skin:"#d4a373", hair:"#ced4da", prim:"#343a40", sec:"#212529", acc:"#e0b130", body:"coat", hairStyle:"long", face:["glasses"] } } };
+const BRIEF = { o11:"Explain Prisma SASE to a Cisco-trained SE in 90 seconds, and say what's architecturally different.", o12:"Decide SASE or SSE for a customer who already runs someone else's SD-WAN.",
+  o21:"Tell remote networks, service connections and mobile users apart.", o22:"Design app access for two DCs and an acquired company with overlapping IPs.", o23:"Explain locations, compute locations and the infrastructure subnet.",
+  o31:"Explain how App-ID unmasks an application, even inside TLS.", o32:"Turn an SRX 'any to tcp/443 permit' rule into proper PAN-OS policy.", o33:"Explain User-ID, and how to bring Cisco ISE identity into it.",
+  o41:"Prove ZTNA 2.0 is configuration, not a slogan.", o42:"Secure contractors on unmanaged laptops and posture-check employees.",
+  o51:"Walk a packet from laptop to Jira and back, DNS included.", o52:"Troubleshoot a user who is connected but can't reach the app.", o53:"Read three log riddles and name the layer each one points to.",
+  o61:"Explain app-defined path selection to a Catalyst veteran.", o62:"Choose Prisma SD-WAN or PAN-OS SD-WAN, and SCM or Panorama.",
+  o71:"Diagnose robotic Teams calls with ADEM.", o72:"Stop data leaking to personal cloud and GenAI apps.",
+  o81:"Keep ISE campus segmentation consistent with Prisma Access.", o82:"Position against a rival without bashing them.",
+  o91:"Design the full SASE migration for 20 branches and 500 users.", o92:"Segment a three-tier app for four kinds of users.",
+  o101:"Present a 90-day readiness campaign for 1,000 SEs.", o102:"Prove enablement worked, and choose the skills that matter.", o103:"Use AI safely and win early access from Product.",
+  o111:"Tell a true story of influencing without authority.", o112:"Tell the story of the innovation you built.", o113:"Say why you're on this road: cybersecurity, Palo Alto, this role." };
+
+/* ================================================================ comic scenes (64x40 pixel canvases) */
+const THEMES = {
+  gate:{ sky:"#f6a15d", sky2:"#f9c784", ground:"#5f8a4b" }, citadel:{ sky:"#9fd3f2", sky2:"#cdeafa", ground:"#f4f8fb" },
+  forge:{ sky:"#3b1f1f", sky2:"#5c2a1d", ground:"#4a3b35" }, bridge:{ sky:"#6c5b9e", sky2:"#a28fd0", ground:"#5a4a3a" },
+  maze:{ sky:"#a9d8b8", sky2:"#d3efd9", ground:"#c2b280" }, river:{ sky:"#8ecae6", sky2:"#bde0f0", ground:"#e9c46a" },
+  towers:{ sky:"#1d2b53", sky2:"#2f4377", ground:"#3d5a40" }, kingdoms:{ sky:"#ffd6a5", sky2:"#ffe8cc", ground:"#7fb069" },
+  summit:{ sky:"#cde7f0", sky2:"#e8f4f8", ground:"#8d99ae" }, academy:{ sky:"#b8c0ff", sky2:"#d6dbff", ground:"#9c8b72" },
+  library:{ sky:"#5c3d2e", sky2:"#6f4a37", ground:"#8b5a2b" }, hall:{ sky:"#2b2d42", sky2:"#3a3d5c", ground:"#8d99ae" }
+};
+function landmark(x, t, kind) {
+  const R = (a, b, w, h, c) => { x.fillStyle = c; x.fillRect(a, b, w, h); };
+  const open = kind === "gate";
+  switch (t) {
+    case "gate": R(14, 8, 7, 22, "#8e8e9c"); R(43, 8, 7, 22, "#8e8e9c"); R(14, 5, 36, 5, "#a3a3b2"); R(21, 10, 22, 20, open ? "#1b1420" : "#6b4226");
+      if (!open) { R(31, 10, 1, 20, "#4a2c18"); R(28, 19, 2, 2, "#e0b130"); } for (let i = 16; i < 50; i += 6) R(i, 6, 3, 1, "#6d6d7a"); break;
+    case "citadel": R(6, 26, 52, 6, "#ffffff"); R(10, 23, 44, 4, "#ffffff"); R(20, 10, 24, 14, "#e9eef5"); R(18, 6, 5, 18, "#dfe6ef"); R(41, 6, 5, 18, "#dfe6ef");
+      R(29, 8, 6, 16, "#dfe6ef"); R(30, 16, 4, 8, open ? "#1b2a40" : "#3a86ff"); R(18, 4, 5, 2, "#3a86ff"); R(41, 4, 5, 2, "#3a86ff"); R(29, 6, 6, 2, "#3a86ff"); break;
+    case "forge": R(24, 22, 16, 4, "#3c3c44"); R(28, 26, 8, 4, "#2b2b31"); R(22, 21, 4, 2, "#3c3c44"); R(46, 12, 12, 18, "#5b3a29"); R(48, 18, 8, 10, "#ff7b00");
+      R(50, 20, 4, 6, "#ffd000"); R(50, 2, 5, 10, "#4a3226"); R(8, 24, 6, 6, "#7a4b2a"); break;
+    case "bridge": R(0, 30, 18, 10, "#5a4a3a"); R(46, 30, 18, 10, "#5a4a3a"); R(18, 32, 28, 8, "#1b1430"); for (let i = 16; i < 48; i += 3) R(i, 28, 2, 2, "#a0703a");
+      R(16, 22, 1, 7, "#7a5230"); R(47, 22, 1, 7, "#7a5230"); R(16, 23, 32, 1, "#c9a26b"); break;
+    case "maze": for (let i = 0; i < 64; i += 10) R(i, 12, 4, 18, "#2e6b3a"); R(0, 12, 64, 3, "#2e6b3a"); R(14, 20, 20, 3, "#2e6b3a"); R(40, 24, 18, 3, "#2e6b3a"); R(26, 4, 12, 4, "#3e8a4c"); break;
+    case "river": R(0, 24, 64, 10, "#219ebc"); for (let i = 2; i < 64; i += 8) R(i, 27, 4, 1, "#8ecae6"); for (let i = 6; i < 64; i += 8) R(i, 31, 3, 1, "#8ecae6");
+      R(36, 22, 14, 3, "#6b4226"); R(42, 14, 1, 8, "#5a3a22"); R(43, 14, 5, 5, "#ffffff"); break;
+    case "towers": R(6, 6, 9, 24, "#6c757d"); R(49, 6, 9, 24, "#6c757d"); R(5, 4, 11, 3, "#495057"); R(48, 4, 11, 3, "#495057"); R(9, 9, 3, 3, "#f6c453"); R(52, 9, 3, 3, "#38b000");
+      x.globalAlpha = .25; R(15, 8, 18, 4, "#f6c453"); R(31, 8, 18, 4, "#38b000"); x.globalAlpha = 1; for (let i = 3; i < 64; i += 11) R(i, 2, 1, 1, "#ffffff"); break;
+    case "kingdoms": R(2, 14, 16, 16, "#adb5bd"); R(2, 11, 4, 3, "#adb5bd"); R(14, 11, 4, 3, "#adb5bd"); R(9, 4, 1, 10, "#5a3a22"); R(10, 4, 5, 3, "#1d4ed8");
+      R(46, 14, 16, 16, "#adb5bd"); R(46, 11, 4, 3, "#adb5bd"); R(58, 11, 4, 3, "#adb5bd"); R(53, 4, 1, 10, "#5a3a22"); R(54, 4, 5, 3, "#c1121f"); R(28, 20, 8, 10, "#e0b130"); break;
+    case "summit": x.fillStyle = "#6c757d"; x.beginPath(); x.moveTo(8, 30); x.lineTo(32, 4); x.lineTo(56, 30); x.fill(); x.fillStyle = "#ffffff"; x.beginPath(); x.moveTo(26, 11); x.lineTo(32, 4); x.lineTo(38, 11); x.fill();
+      R(31, 1, 1, 4, "#5a3a22"); R(32, 1, 4, 2, "#457b9d"); R(44, 22, 10, 6, "#2b6cb0"); R(45, 23, 8, 1, "#ffffff"); R(45, 25, 6, 1, "#ffffff"); break;
+    case "academy": R(14, 12, 36, 18, "#e9e4f0"); x.fillStyle = "#cfc6e0"; x.beginPath(); x.moveTo(12, 12); x.lineTo(32, 3); x.lineTo(52, 12); x.fill();
+      for (let i = 17; i < 48; i += 7) R(i, 14, 3, 16, "#cfc6e0"); R(29, 20, 6, 10, open ? "#1b1420" : "#6a4c93"); R(29, 6, 6, 2, "#22223b"); break;
+    case "library": for (let s = 0; s < 3; s++) { R(2, 6 + s * 8, 60, 1, "#3e2418"); for (let i = 3; i < 61; i += 3) R(i, s * 8 + 1, 2, 5, ["#d62828","#f77f00","#003049","#2a9d8f","#fcbf49"][(i + s) % 5]); }
+      R(26, 26, 12, 4, "#7a4b2a"); R(31, 22, 3, 4, "#fff3b0"); break;
+    case "hall": R(4, 4, 4, 26, "#8d99ae"); R(56, 4, 4, 26, "#8d99ae"); R(10, 24, 44, 4, "#6b4226"); R(12, 28, 2, 4, "#4a2c18"); R(50, 28, 2, 4, "#4a2c18");
+      [18, 30, 42].forEach(px => { R(px, 15, 5, 5, "#d4a373"); R(px - 1, 20, 7, 4, "#343a40"); R(px, 14, 5, 1, "#ced4da"); }); R(14, 2, 36, 2, "#e0b130"); break;
+  }
+}
+function prop(x, k, px, py) {
+  const R = (a, b, w, h, c) => { x.fillStyle = c; x.fillRect(px + a, py + b, w, h); };
+  if (k === "?") { R(0, 0, 12, 14, OUT); R(1, 1, 10, 12, "#ffd75e"); R(3, 3, 6, 2, OUT); R(7, 5, 2, 2, OUT); R(5, 7, 2, 2, OUT); R(5, 10, 2, 2, OUT); }
+  if (k === "!") { R(0, 0, 10, 14, OUT); R(1, 1, 8, 12, "#ff595e"); R(4, 3, 2, 6, "#ffffff"); R(4, 10, 2, 2, "#ffffff"); }
+  if (k === "scroll") { R(0, 2, 16, 10, OUT); R(2, 3, 12, 8, "#efe3c2"); R(0, 2, 2, 10, "#c0392b"); R(14, 2, 2, 10, "#c0392b"); R(4, 5, 8, 1, "#9b8a6a"); R(4, 7, 6, 1, "#9b8a6a"); }
+  if (k === "spark") { R(3, 0, 2, 8, "#ffd75e"); R(0, 3, 8, 2, "#ffd75e"); R(10, 6, 1, 3, "#ffffff"); R(9, 7, 3, 1, "#ffffff"); }
+}
+const PANEL_URLS = {};
+function panelURL(key, theme, kind, heroSpec, gkSpec, extra) {
+  if (PANEL_URLS[key]) return PANEL_URLS[key];
+  const c = document.createElement("canvas"); c.width = 64; c.height = 40; const x = c.getContext("2d"), T = THEMES[theme];
+  x.fillStyle = T.sky; x.fillRect(0, 0, 64, 40); x.fillStyle = T.sky2; x.fillRect(0, 0, 64, 10); x.fillStyle = T.ground; x.fillRect(0, 30, 64, 10);
+  const hero = sprite(heroSpec), gk = sprite(gkSpec);
+  if (kind === "arrive" || kind === "gate") { landmark(x, theme, kind); drawSprite(x, hero, kind === "gate" ? 23 : 1, 14); if (kind === "gate") prop(x, "spark", 40, 4); }
+  else if (kind === "meet") { landmark(x, theme, "faint"); x.fillStyle = T.sky; x.globalAlpha = .55; x.fillRect(0, 0, 64, 30); x.globalAlpha = 1; drawSprite(x, hero, 8, 14); drawSprite(x, gk, 38, 14, 1, true); }
+  else if (kind === "gk") { x.globalAlpha = .35; landmark(x, theme, "faint"); x.globalAlpha = 1; drawSprite(x, gk, 14, 0, 2, true); }
+  else if (kind === "ob") { x.globalAlpha = .3; landmark(x, theme, "faint"); x.globalAlpha = 1; drawSprite(x, gk, 42, 14, 1, true); prop(x, "?", 8 + (extra % 3) * 4, 10); x.fillStyle = "#ffffff"; x.font = "8px monospace"; x.fillText(String(extra + 1), 26, 20); }
+  else if (kind === "trap") { landmark(x, theme, "faint"); x.fillStyle = "#d00000"; x.globalAlpha = .3; x.fillRect(0, 0, 64, 40); x.globalAlpha = 1; prop(x, "!", 27, 6); drawSprite(x, gk, 44, 14, 1, true); drawSprite(x, hero, 4, 14); }
+  else if (kind === "rules") { x.globalAlpha = .3; landmark(x, theme, "faint"); x.globalAlpha = 1; prop(x, "scroll", 8, 12); drawSprite(x, gk, 40, 14, 1, true); }
+  else if (kind === "hero") { x.globalAlpha = .3; landmark(x, theme, "faint"); x.globalAlpha = 1; drawSprite(x, hero, 14, 0, 2); prop(x, "spark", 50, 6); }
+  return (PANEL_URLS[key] = c.toDataURL());
+}
+
 /* ================================================================ state */
 const KEY = "panw-sase-quest-v2";
-let S = { obs:{}, open:{}, hall:{ turns:[], draft:"" }, verdict:null, updatedAt:0 };
+let S = { obs:{}, open:{}, hall:{ turns:[], draft:"" }, verdict:null, hero:null, heroName:"", heroAt:0, briefed:{}, travelTo:null, updatedAt:0 };
 try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
-S.hall = S.hall || { turns:[], draft:"" };
+S.hall = S.hall || { turns:[], draft:"" }; S.briefed = S.briefed || {}; if (S.heroAt == null) S.heroAt = 0;
 
 let dbRef = null, dbTimer = null, dbBusy = false, dbDirty = false;
 function persistLocal() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
@@ -681,6 +962,9 @@ function cleared() { return OBS.filter(o => obScore(o) != null).length; }
 function rankOf(s) { return s >= 90 ? "Architect" : s >= 80 ? "Adept" : s >= 60 ? "Journeyman" : s >= 40 ? "Apprentice" : "Novice"; }
 function tone(s) { return s == null ? "none" : s >= 80 ? "good" : s >= 60 ? "warn" : "bad"; }
 function currentQuest() { return QUESTS.find(q => !questCleared(q)) || null; }
+function scrolls() { return QUESTS.filter(questCleared); }
+function heroObj() { return HEROES.find(h => h.id === S.hero) || HEROES[0]; }
+function heroName() { return (S.heroName || "").trim() || heroObj().cls; }
 
 /* ================================================================ helpers */
 const $ = id => document.getElementById(id);
@@ -697,84 +981,172 @@ function sampleErr(e) {
   if (c === "invalid_json") return "The grader's reply couldn't be read. Try again.";
   return "Grading didn't complete. Try again, or use the self-check.";
 }
+function heroImg() { const h = heroObj(); return spriteURL("hero-" + h.id, h.spec); }
 function header() {
   const k = knowledge(), c = cleared(), r = readiness();
   $("h-rank").textContent = rankOf(r);
+  $("h-hero-name").textContent = S.hero ? heroName() : "Choose a hero";
+  const img = $("h-hero-img"); if (S.hero) { img.src = heroImg(); img.hidden = false; } else img.hidden = true;
+  $("h-scrolls").textContent = scrolls().length + " / " + QUESTS.length;
   $("h-know").textContent = k + " / 100"; $("h-know-bar").style.width = k + "%";
   $("h-obs").textContent = c + " / " + OBS.length; $("h-obs-bar").style.width = (c / OBS.length * 100) + "%";
   const ms = INTERVIEW - Date.now();
   $("h-count").textContent = ms > 0 ? Math.floor(ms / 3600000) + " h to Mon 9:00" : "Interview day";
 }
-
-/* ================================================================ map */
-const POS = [[110,80],[370,80],[630,80],[890,80],[890,230],[630,230],[370,230],[110,230],[110,380],[370,380],[630,380],[890,380]];
-function mapSvg() {
-  const nodes = [...QUESTS.map(q => ({ id:q.id, name:q.name, sub:q.day + " · " + q.obstacles.length + " obstacles", cleared:questCleared(q), started:questStarted(q), score:questScore(q) })),
-    { id:"hall", name:"Interview Hall", sub:"Final role-play", cleared:hallDone(), started:S.hall.turns.length > 0, final:true }];
-  const segs = [];
-  for (let i = 0; i < POS.length - 1; i++) {
-    const [x1, y1] = POS[i], [x2, y2] = POS[i + 1];
-    const d = y1 === y2 ? `M${x1} ${y1} L${x2} ${y2}` : (x1 > 500 ? `M${x1} ${y1} C${x1 + 75} ${y1} ${x2 + 75} ${y2} ${x2} ${y2}` : `M${x1} ${y1} C${x1 - 75} ${y1} ${x2 - 75} ${y2} ${x2} ${y2}`);
-    segs.push(`<path class="seg ${nodes[i].cleared ? "done" : ""}" d="${d}"/>`);
-  }
-  const cur = currentQuest(); const curIdx = cur ? QUESTS.indexOf(cur) : (hallDone() ? -1 : 11);
-  const nodeSvg = nodes.map((n, i) => {
-    const [x, y] = POS[i], cls = ["node", n.cleared ? "cleared" : n.started ? "started" : "", n.final ? "final" : ""].join(" ");
-    const num = n.final ? "★" : n.cleared ? "✓" : String(i + 1);
-    const sub = n.cleared && !n.final ? "Cleared · " + n.score : n.sub;
-    return `<a href="#${n.id}" class="${cls}" aria-label="${esc(n.name)}"><circle cx="${x}" cy="${y}" r="30"/><text class="num" x="${x}" y="${y}">${num}</text>
-      <text class="nm" x="${x}" y="${y + 52}">${esc(n.name)}</text><text class="sub" x="${x}" y="${y + 68}">${esc(sub)}</text></a>`;
-  }).join("");
-  let flag = "";
-  if (curIdx >= 0) { const [x, y] = POS[curIdx]; flag = `<g class="flag"><line x1="${x + 22}" y1="${y - 26}" x2="${x + 22}" y2="${y - 62}"/><path d="M${x + 23} ${y - 62} l26 8 l-26 8 z"/><text x="${x + 22}" y="${y - 68}">you</text></g>`; }
-  return `<svg class="map" viewBox="0 0 1000 460" role="img" aria-label="Quest map">${segs.join("")}${nodeSvg}${flag}</svg>`;
+function packHtml(label) {
+  const sc = scrolls();
+  return `<div class="stack" style="gap:6px"><span class="label">${label || "Scrolls in your pack"}</span><div class="pack">${sc.length
+    ? sc.map(q => `<a class="scrollbadge" href="#${q.id}" title="${esc(QX[q.id].scroll[0])}: ${esc(q.topic)}"><img class="px" src="${scrollURL(QX[q.id].scroll[1])}" alt="">${esc(QX[q.id].scroll[0].replace("Scroll of ", ""))}</a>`).join("")
+    : `<span class="emp">Empty. Clear a region to earn its scroll.</span>`}</div></div>`;
 }
 
-/* ================================================================ views */
+/* ================================================================ hero select */
+function viewSelect() {
+  const cur = S.hero;
+  return `
+<section class="panel stack">
+  <span class="label">Before the journey</span>
+  <h2>Choose your hero</h2>
+  <p class="lead">Each hero carries part of your real background into the quest. The choice changes how you look and what you shout at the gates. It doesn't change the questions or the scoring.</p>
+  <div class="select">${HEROES.map(h => `<div class="hcard ${cur === h.id ? "on" : ""}">
+    <div class="art"><img class="px" src="${spriteURL("hero-" + h.id, h.spec)}" alt="${esc(h.cls)} pixel portrait"></div>
+    <h4>${esc(h.cls)}</h4>
+    <p>${esc(h.persona)}</p>
+    <div><span class="label">Strengths from your career</span><ul>${h.strengths.map(s => `<li>${esc(s)}</li>`).join("")}</ul></div>
+    <div><span class="label">Signature power</span><p style="margin:2px 0 0">${esc(h.power)}</p></div>
+    <p class="cry">“${esc(h.cry)}”</p>
+    <button type="button" data-pick="${h.id}">${cur === h.id ? "Chosen" : "Choose " + esc(h.cls)}</button></div>`).join("")}</div>
+  <div class="row"><label class="label" for="hero-name">Hero name (optional)</label>
+    <input type="text" id="hero-name" maxlength="32" placeholder="${esc(heroObj().cls)}" value="${esc(S.heroName || "")}"></div>
+  ${cur ? `<div class="row"><button type="button" class="ember" data-go="map">Continue the journey</button></div>` : ""}
+</section>`;
+}
+
+/* ================================================================ map with travelling hero */
+const POS = [[110,90],[370,90],[630,90],[890,90],[890,250],[630,250],[370,250],[110,250],[110,410],[370,410],[630,410],[890,410]];
+function segPath(i) {
+  const [x1, y1] = POS[i], [x2, y2] = POS[i + 1];
+  return y1 === y2 ? `M${x1} ${y1} L${x2} ${y2}` : (x1 > 500 ? `M${x1} ${y1} C${x1 + 80} ${y1} ${x2 + 80} ${y2} ${x2} ${y2}` : `M${x1} ${y1} C${x1 - 80} ${y1} ${x2 - 80} ${y2} ${x2} ${y2}`);
+}
+function mapSvg() {
+  const nodes = [...QUESTS.map(q => ({ id:q.id, name:q.name, sub:q.day + " · " + q.obstacles.length + " obstacles", cleared:questCleared(q), started:questStarted(q), score:questScore(q), gk:QX[q.id].gk })),
+    { id:"hall", name:"Interview Hall", sub:"Final role-play", cleared:hallDone(), started:S.hall.turns.length > 0, final:true, gk:HALL.gk }];
+  const segs = POS.slice(0, -1).map((p, i) => `<path id="seg-${i}" class="seg ${nodes[i].cleared ? "done" : ""}" d="${segPath(i)}"/>`).join("");
+  const nodeSvg = nodes.map((n, i) => {
+    const [x, y] = POS[i], cls = ["node", n.cleared ? "cleared" : n.started ? "started" : "", n.final ? "final" : ""].join(" ");
+    const num = n.final ? "★" : n.cleared ? "✓" : String(i + 1), sub = n.cleared && !n.final ? "Cleared · " + n.score : n.sub;
+    const gkImg = spriteURL("gk-" + n.id, n.gk.spec);
+    const scr = n.cleared && !n.final ? `<image href="${scrollURL(QX[n.id].scroll[1])}" x="${x - 52}" y="${y - 44}" width="24" height="24"/>` : "";
+    return `<a href="#${n.id}" class="${cls}" aria-label="${esc(n.name)}"><image href="${gkImg}" x="${x + 22}" y="${y - 58}" width="33" height="37"/>${scr}
+      <circle cx="${x}" cy="${y}" r="30"/><text class="num" x="${x}" y="${y}">${num}</text>
+      <text class="nm" x="${x}" y="${y + 52}">${esc(n.name)}</text><text class="sub" x="${x}" y="${y + 68}">${esc(sub)}</text></a>`;
+  }).join("");
+  const [hx, hy] = POS[Math.min(S.heroAt, 11)];
+  const hero = S.hero ? `<g id="hero-token" transform="translate(${hx - 20} ${hy - 82})"><image href="${heroImg()}" width="36" height="40"/><text x="18" y="-4" class="heroname">${esc(heroName().slice(0, 18))}</text></g>` : "";
+  return `<svg class="map" viewBox="0 -24 1000 514" role="img" aria-label="Quest map">${segs}${nodeSvg}${hero}</svg>`;
+}
+function animateTravel(from, to, done) {
+  const tok = $("hero-token");
+  if (!tok || from === to || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { done(); return; }
+  const segs = []; for (let i = from; i < to; i++) segs.push($("seg-" + i));
+  let si = 0, t0 = null;
+  const step = ts => {
+    const seg = segs[si]; if (!seg) { done(); return; }
+    if (t0 == null) t0 = ts;
+    const L = seg.getTotalLength(), k = Math.min(1, (ts - t0) / 900), p = seg.getPointAtLength(L * k);
+    tok.setAttribute("transform", `translate(${p.x - 20} ${p.y - 82 + Math.abs(Math.sin(k * Math.PI * 4)) * -4})`);
+    if (k >= 1) { si++; t0 = null; }
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 function viewMap() {
-  const r = readiness(), k = knowledge(), h = hallScore(), cur = currentQuest();
-  const next = cur ? `<button type="button" data-go="${cur.id}">${questStarted(cur) ? "Continue" : "Begin"}: ${esc(cur.name)}</button>`
-    : `<button type="button" class="ember" data-go="hall">Enter the Interview Hall</button>`;
-  const scrolls = QUESTS.filter(questStarted).map(q => `<a class="scroll" href="#${q.id}">
-      <div class="row"><b>${esc(q.name)}</b><span class="pill ${questCleared(q) ? tone(questScore(q)) : "none"}">${questCleared(q) ? questScore(q) : "in progress"}</span></div>
-      <span class="note">${esc(q.topic)}</span></a>`).join("");
+  const r = readiness(), k = knowledge(), h = hallScore(), cur = currentQuest(), H = heroObj();
+  const next = cur ? `<button type="button" data-travel="${QUESTS.indexOf(cur)}">${questStarted(cur) ? "Continue" : "Travel to"}: ${esc(cur.name)}</button>`
+    : `<button type="button" class="ember" data-travel="11">Travel to the Interview Hall</button>`;
   return `
 <section class="panel">
   <div class="herobar">
     <div class="stack">
       <span class="label">Your journey · Sat Oct 31 to Mon Nov 2</span>
-      <h2>Cross eleven regions, then face the interview</h2>
-      <p class="lead">Every region holds obstacles: the questions a Palo Alto panel is likely to ask. Answer one cold, see how you did, train at the dojo, then take it again. Clear a region and you collect its lessons. The road ends at the Interview Hall, where a role-play decides your verdict.</p>
-      <div class="row">${next}${S.verdict ? `<button type="button" class="ghost" data-go="verdict">Read your verdict</button>` : ""}</div>
+      <h2>${esc(heroName())}, cross eleven regions and face the interview</h2>
+      <p class="lead">At each region a gatekeeper explains its obstacles in a comic. For each obstacle, answer cold, train at the dojo, then face it again. Clear a region to earn its scroll and carry it on. The road ends at the Interview Hall, where a role-play decides your verdict.</p>
+      <div class="row">${next}<button type="button" class="ghost" data-go="hero">Change hero</button>${S.verdict ? `<button type="button" class="ghost" data-go="verdict">Read your verdict</button>` : ""}</div>
     </div>
     <div class="rank">
-      <span class="label">Hero rank</span>
-      <span class="title">${rankOf(r)}</span>
+      <div class="row" style="gap:14px;align-items:center"><img class="px" src="${heroImg()}" alt="" style="width:72px;height:80px">
+        <div><span class="label">${esc(H.cls)}</span><div class="title">${rankOf(r)}</div></div></div>
       <div class="meters">
         <div class="m"><span>Readiness</span><div class="bar"><i style="width:${r}%"></i></div><b>${r}</b></div>
         <div class="m"><span>Knowledge</span><div class="bar"><i style="width:${k}%"></i></div><b>${k}</b></div>
         <div class="m"><span>Role-play</span><div class="bar"><i style="width:${h || 0}%"></i></div><b>${h == null ? "–" : h}</b></div>
       </div>
-      <span class="note">Readiness = 70% knowledge across quests + 30% final role-play. Ranks: Novice, Apprentice (40), Journeyman (60), Adept (80, interview ready), Architect (90).</span>
+      ${packHtml()}
     </div>
   </div>
 </section>
 <section class="panel stack">
   <div class="row" style="justify-content:space-between"><h3>The quest map</h3>
-    <div class="legend"><span><i class="sw"></i>Ahead</span><span><i class="sw started"></i>Underway</span><span><i class="sw cleared"></i>Cleared</span></div></div>
+    <div class="legend"><span><i class="sw"></i>Ahead</span><span><i class="sw started"></i>Underway</span><span><i class="sw cleared"></i>Cleared, scroll earned</span></div></div>
   <div class="mapbox">${mapSvg()}</div>
-  <p class="note">Saturday: regions 1–7 (technical). Sunday: regions 8–11 (competitive, design, enablement, stories), then the Interview Hall. Monday morning: read your verdict, nothing new.</p>
-</section>
-${scrolls ? `<section class="panel stack"><h3>Your satchel of lessons</h3><div class="satchel">${scrolls}</div></section>` : ""}`;
+  <p class="note">Each region's gatekeeper stands beside it. Saturday: regions 1–7. Sunday: regions 8–11, then the Interview Hall. Readiness = 70% knowledge + 30% role-play. Ranks: Novice, Apprentice (40), Journeyman (60), Adept (80, interview ready), Architect (90).</p>
+</section>`;
 }
 
+/* ================================================================ comic storyboard */
+function questPanels(q) {
+  const X = QX[q.id], hn = heroName(), H = heroObj(), o = q.obstacles, gk = X.gk;
+  const g = s => s.replace("{hero}", hn);
+  const P = [
+    { k:"arrive", cap:X.arrive },
+    { k:"meet", gk:g(X.intro) },
+    { k:"gk", gk:X.lore },
+    { k:"ob", n:0, gk:`Obstacle one, “${o[0].title}”: ${BRIEF[o[0].id]}` },
+    { k:"ob", n:1, gk:`Obstacle two, “${o[1].title}”: ${BRIEF[o[1].id]}` },
+    o[2] ? { k:"ob", n:2, gk:`Obstacle three, “${o[2].title}”: ${BRIEF[o[2].id]}` } : { k:"trap", gk:"A warning. " + X.trap },
+    { k:"rules", cap:"The rules of the gate", gk:`Answer each one cold. Train in my dojo. Face it again. Clear every obstacle and you'll carry the ${X.scroll[0]} onward.` },
+    { k:"hero", hero:`${H.cry} ${X.resolve}` },
+    { k:"gate", cap:`The way into ${q.name} opens.`, gk:o[2] ? "Before you go: " + X.trap : `Go, ${hn}. ${o.length} obstacles wait inside.` }
+  ];
+  return P;
+}
+function hallPanels() {
+  const hn = heroName(), n = scrolls().length;
+  return [
+    { k:"arrive", cap:"At the end of the road stands the Interview Hall. Behind its doors sits a panel of three." },
+    { k:"meet", gk:`${hn}, I am the Chair. With me sit the Hiring Manager, a Principal SASE Architect and the Director of Field Enablement.` },
+    { k:"gk", gk:"We ask one question at a time and follow up when you're vague: technical, troubleshooting, design, strategy, your stories and your motivation." },
+    { k:"ob", n:0, gk:"Each answer is scored on six marks: accuracy, depth, problem-solving, communication, strategic judgment and relevance to this role." },
+    { k:"ob", n:1, gk:"We know your weak spots from the road. Expect us to probe them." },
+    { k:"rules", cap:"The scrolls you carry", gk:n ? `I see you carry ${n} scroll${n > 1 ? "s" : ""}. Use what they taught you.` : "You carry no scrolls. Bold. We'll see if that was wise." },
+    { k:"ob", n:2, gk:"Answer at least five questions. Then the panel gives its verdict." },
+    { k:"hero", hero:`${heroObj().cry} I've been the SE and the enabler. I'm ready.` },
+    { k:"gate", cap:"The doors of the hall open." }
+  ];
+}
+function comicHtml(key, theme, gk, panels) {
+  const H = heroObj();
+  return `<div class="comic">${panels.map((p, i) => {
+    const url = panelURL(key + "-" + i + "-" + H.id, theme, p.k, H.spec, gk.spec, p.n || 0);
+    return `<div class="cpanel"><img class="px" src="${url}" alt=""><span class="no">${i + 1}</span><div class="txt">
+      ${p.cap ? `<div class="cap">${esc(p.cap)}</div>` : ""}
+      ${p.gk ? `<div class="bubble gk"><b>${esc(gk.name)}</b>${esc(p.gk)}</div>` : ""}
+      ${p.hero ? `<div class="bubble hero"><b>${esc(heroName())}</b>${esc(p.hero)}</div>` : ""}</div></div>`;
+  }).join("")}</div>`;
+}
+function gkCard(gk, theme, line) {
+  return `<div class="gkcard"><div class="portrait"><img class="px" src="${spriteURL("gk-card-" + gk.name, gk.spec)}" alt="${esc(gk.name)} pixel portrait"></div>
+    <div class="stack" style="gap:4px"><span class="label">Gatekeeper</span><h3>${esc(gk.name)}</h3><span class="topic">${esc(gk.title)}</span><p style="margin:0">${esc(line)}</p></div></div>`;
+}
+
+/* ================================================================ quest view */
 function viewQuest(q) {
-  const i = QUESTS.indexOf(q);
+  const i = QUESTS.indexOf(q), X = QX[q.id], briefed = S.briefed[q.id];
   let openId = S.open[q.id];
   if (openId === "__none") openId = null;
   else if (!openId || !q.obstacles.find(o => o.id === openId)) { const f = q.obstacles.find(o => obScore(o) == null); openId = f ? f.id : null; }
   const pips = q.obstacles.map(o => `<span class="pip ${obScore(o) != null ? "cleared" : obStarted(o) ? "started" : ""}"></span>`).join("");
-  return `
+  const head = `
 <section class="panel">
   <div class="questhead">
     <div class="stack">
@@ -783,21 +1155,29 @@ function viewQuest(q) {
       <span class="topic">${esc(q.topic)}</span>
       <p class="lead">${esc(q.intro)}</p>
     </div>
-    <div class="stack" style="align-items:flex-start"><span class="label">Obstacles</span><div class="pips">${pips}</div>
-      <span class="pill ${questCleared(q) ? tone(questScore(q)) : "none"}">${questCleared(q) ? "Region score " + questScore(q) : q.obstacles.filter(o => obScore(o) != null).length + " of " + q.obstacles.length + " cleared"}</span></div>
+    <div class="stack" style="align-items:flex-start">
+      <div class="row" style="gap:10px"><img class="px" src="${heroImg()}" alt="" style="width:45px;height:50px"><div><b>${esc(heroName())}</b><br><span class="note">${esc(heroObj().cls)}</span></div></div>
+      <span class="label">Obstacles</span><div class="pips">${pips}</div>
+      <span class="pill ${questCleared(q) ? tone(questScore(q)) : "none"}">${questCleared(q) ? "Region score " + questScore(q) : q.obstacles.filter(o => obScore(o) != null).length + " of " + q.obstacles.length + " cleared"}</span>
+      ${packHtml("Scrolls you carry")}
+    </div>
   </div>
-</section>
-${q.obstacles.map((o, oi) => obstacleCard(o, oi, o.id === openId)).join("")}
-${questCleared(q) ? questScroll(q) : ""}`;
+</section>`;
+  const brief = `<section class="panel stack">
+    ${gkCard(X.gk, X.theme, X.intro.replace("{hero}", heroName()))}
+    ${briefed ? `<details><summary class="label">Re-read the gatekeeper's storyboard</summary><div style="margin-top:10px">${comicHtml(q.id, X.theme, X.gk, questPanels(q))}</div></details>`
+      : `${comicHtml(q.id, X.theme, X.gk, questPanels(q))}<div class="row"><button type="button" class="ember" data-brief="${q.id}">Accept the quest</button><span class="note">Read all nine panels first. They list exactly what you'll face.</span></div>`}
+  </section>`;
+  if (!briefed) return head + brief;
+  return head + brief + q.obstacles.map((o, oi) => obstacleCard(o, oi, o.id === openId)).join("") + (questCleared(q) ? questScroll(q) : "");
 }
-
 function obstacleCard(o, oi, open) {
   const r = S.obs[o.id] || { stage:"encounter" }, sc = obScore(o);
   const status = sc != null ? `<span class="pill ${tone(sc)}">${sc}</span>` : obStarted(o) ? `<span class="pill warn">${r.stage}</span>` : `<span class="pill none">ahead</span>`;
   return `<article class="obs ${open ? "active" : ""}" id="card-${o.id}">
     <button type="button" class="obshead" data-open="${o.id}" aria-expanded="${open}">
       <span class="badge ${sc != null ? "cleared" : obStarted(o) ? "started" : ""}">${sc != null ? "✓" : oi + 1}</span>
-      <span class="t"><b>${esc(o.title)}</b><span>${esc(o.who)} · ${esc(o.q.length > 90 ? o.q.slice(0, 88) + "…" : o.q)}</span></span>${status}</button>
+      <span class="t"><b>${esc(o.title)}</b><span>${esc(o.who)} · ${esc(BRIEF[o.id])}</span></span>${status}</button>
     ${open ? `<div class="obsbody">${obstacleBody(o, r)}</div>` : ""}
   </article>`;
 }
@@ -839,9 +1219,9 @@ function selfCheck(o, which) {
     <div class="row"><button type="button" data-selfscore="${o.id}:${which}">Score my self-check</button></div></div>`;
 }
 function dojoBlock(o) {
-  const d = o.dojo, q = o.quest;
+  const d = o.dojo, q = o.quest, gk = QX[q.id].gk;
   return `<div class="dojo">
-    <div class="row" style="justify-content:space-between"><h3>The dojo</h3><span class="label">Study this, then retake the obstacle</span></div>
+    <div class="row" style="justify-content:space-between"><div class="row" style="gap:10px"><img class="px" src="${spriteURL("gk-" + q.id, gk.spec)}" alt="" style="width:36px;height:40px"><h3>${esc(gk.name)}'s dojo</h3></div><span class="label">Study this, then retake the obstacle</span></div>
     <div class="card"><span class="label">Definition</span><div>${d.def}</div></div>
     <div class="grid">
       <div class="card"><span class="label">How it works</span><ul>${d.how.map(x => `<li>${x}</li>`).join("")}</ul></div>
@@ -894,15 +1274,17 @@ function questLessons(q) {
   return { well, improve };
 }
 function questScroll(q) {
-  const i = QUESTS.indexOf(q), next = QUESTS[i + 1], L = questLessons(q);
+  const i = QUESTS.indexOf(q), next = QUESTS[i + 1], L = questLessons(q), X = QX[q.id];
   return `<section class="questscroll">
-    <div class="row" style="justify-content:space-between"><h3>Region cleared: ${esc(q.name)}</h3><span class="pill ${tone(questScore(q))}">Region score ${questScore(q)}</span></div>
+    <div class="award"><img class="px" src="${scrollURL(X.scroll[1])}" alt="">
+      <div class="stack" style="gap:4px"><span class="label">${esc(X.gk.name)} hands you a scroll</span><h3>You earned the ${esc(X.scroll[0])}</h3>
+      <span class="pill ${tone(questScore(q))}" style="width:fit-content">Region score ${questScore(q)}</span></div></div>
     <div class="twocol">
-      <div><span class="label">What you did well</span><ul>${(L.well.length ? L.well : ["Complete the graded attempts to collect strengths."]).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
-      <div><span class="label">Carry forward to improve</span><ul>${(L.improve.length ? L.improve : ["Nothing major flagged."]).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+      <div><span class="label">Written on it: what you did well</span><ul>${(L.well.length ? L.well : ["Complete the graded attempts to collect strengths."]).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+      <div><span class="label">Written on it: carry forward to improve</span><ul>${(L.improve.length ? L.improve : ["Nothing major flagged."]).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
     </div>
     <div class="say"><span class="label">What good sounds like in this region</span>${q.obstacles.map(o => `<p>${esc(o.dojo.say[0])}</p>`).join("")}</div>
-    <div class="row">${next ? `<button type="button" data-go="${next.id}">Travel on to ${esc(next.name)} →</button>` : `<button type="button" class="ember" data-go="hall">Enter the Interview Hall →</button>`}
+    <div class="row">${next ? `<button type="button" class="ember" data-travel="${i + 1}">Pack the scroll and travel to ${esc(next.name)} →</button>` : `<button type="button" class="ember" data-travel="11">Pack the scroll and travel to the Interview Hall →</button>`}
       <button type="button" class="ghost" data-go="map">Back to the map</button></div>
   </section>`;
 }
@@ -912,7 +1294,7 @@ async function grade(o, which, text) {
   const r = ob(o.id), msg = $("msg-" + o.id + "-" + which);
   const sample = await getSample();
   if (!sample) { msg.textContent = "Claude grading isn't available here. Use the self-check."; $("self-" + o.id + "-" + which).hidden = false; return; }
-  msg.textContent = which === 1 ? "The interviewer is weighing your answer…" : "Judging your second attempt…";
+  msg.textContent = which === 1 ? "The gatekeeper weighs your answer…" : "Judging your second attempt…";
   document.querySelectorAll(`[data-grade="${o.id}:${which}"]`).forEach(b => b.disabled = true);
   const prompt = `You are a demanding but constructive Palo Alto Networks interviewer grading a practice answer for the role Technical Enablement Architect, Network Security & SASE (JR-017228). The role owns multi-quarter technical readiness strategy, SE learning journeys, labs, competency models and launch readiness for Prisma SASE and NGFW.
 ${BG}
@@ -958,19 +1340,27 @@ Ask one question at a time, in character, naming which panelist asks. Vary categ
 function transcript() { return S.hall.turns.map((t, i) => `Q${i + 1} (${t.who || "Panel"}, ${t.cat}): ${t.q}\nA${i + 1}: ${t.a || "(no answer yet)"}`).join("\n\n"); }
 function viewHall() {
   const T = S.hall.turns, n = T.filter(t => t.eval).length, cur = T.length && !T[T.length - 1].a, unc = QUESTS.filter(q => !questCleared(q));
+  const briefed = S.briefed.hall;
   return `
 <section class="panel stack">
   <span class="label">Final destination · <a href="#map">back to map</a></span>
   <h2>The Interview Hall</h2>
-  <p class="lead">Three panelists wait: the hiring manager, a principal SASE architect and the director of field enablement. They ask one question at a time and follow up when you're vague. Each answer is scored on the six interview categories. Answer at least five, then ask for your verdict.</p>
+  <p class="lead">Three panelists wait: the hiring manager, a principal SASE architect and the director of field enablement. They ask one question at a time and follow up when you're vague. Answer at least five, then ask for your verdict.</p>
   ${unc.length ? `<p class="note">You haven't cleared ${unc.length} region${unc.length > 1 ? "s" : ""} yet (${unc.map(q => `<a href="#${q.id}">${esc(q.name)}</a>`).join(", ")}). You can enter now, but the panel will probe those gaps.</p>` : `<p class="note">Every region is cleared. The panel will still probe your weakest obstacles.</p>`}
+  ${packHtml("Scrolls you bring into the hall")}
+</section>
+<section class="panel stack">
+  ${gkCard(HALL.gk, "hall", "I chair the panel. Read the storyboard, then step inside.")}
+  ${briefed ? `<details><summary class="label">Re-read the storyboard</summary><div style="margin-top:10px">${comicHtml("hall", "hall", HALL.gk, hallPanels())}</div></details>`
+    : `${comicHtml("hall", "hall", HALL.gk, hallPanels())}<div class="row"><button type="button" class="ember" data-brief="hall">Step into the hall</button></div>`}
+</section>
+${briefed ? `<section class="panel stack">
   <div class="row">
-    ${!T.length ? `<button type="button" class="ember" id="hall-start">Step into the hall</button>` : ""}
+    ${!T.length ? `<button type="button" class="ember" id="hall-start">Begin the role-play</button>` : ""}
     ${T.length ? `<button type="button" class="ember" id="hall-verdict" ${n < 5 ? "disabled" : ""}>Receive the verdict</button><button type="button" class="ghost" id="hall-reset">Start the role-play over</button>` : ""}
     <span class="note" id="hall-msg">${n} answered${n < 5 ? " · " + (5 - n) + " more before the verdict" : ""}</span>
   </div>
-</section>
-${T.length ? `<section class="panel stack">${T.map((t, i) => `<div class="turn">
+  ${T.map((t, i) => `<div class="turn">
     <span class="label">Q${i + 1} · ${esc(t.who || "Panel")} · ${esc(t.cat || "")}${t.followup ? " · follow-up" : ""}</span>
     <div class="challenger"><span class="avatar">${esc((t.who || "PN").split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase())}</span><div><q>${esc(t.q)}</q></div></div>
     ${t.a ? `<div class="ans">${esc(t.a)}</div>` : ""}
@@ -1033,7 +1423,7 @@ function localVerdict() {
 }
 async function makeVerdict() {
   const msg = $("hall-msg"), sample = await getSample();
-  const facts = { knowledge:knowledge(), roleplay:hallScore(), readiness:readiness(),
+  const facts = { hero:heroObj().cls, knowledge:knowledge(), roleplay:hallScore(), readiness:readiness(), scrolls:scrolls().map(q => QX[q.id].scroll[0]),
     quests: QUESTS.map(q => ({ region:q.name, topic:q.topic, score:questScore(q), cleared:questCleared(q),
       obstacles: q.obstacles.map(o => { const r = S.obs[o.id] || {}, res = r.r2 || r.r1; return { title:o.title, first:r.r1 ? r.r1.overall : null, final:obScore(o), well:res ? (res.covered || []).slice(0, 3) : [], gaps:res ? (res.missing || []).slice(0, 3) : [] }; }) })),
     roleplay_turns: S.hall.turns.filter(t => t.eval).map(t => ({ q:t.q, score:t.eval.pct, gaps:(t.eval.missing || []).slice(0, 3) })) };
@@ -1058,7 +1448,7 @@ function viewVerdict() {
   return `
 <section class="panel verdict stack">
   <span class="label">Journey's end · <a href="#map">back to map</a></span>
-  <h2>The verdict</h2>
+  <div class="row" style="gap:16px"><img class="px" src="${heroImg()}" alt="" style="width:72px;height:80px"><h2>The verdict for ${esc(heroName())}</h2></div>
   <div class="bigs">
     <div class="tile"><span class="label">Readiness</span><b class="tnum">${r}</b><span class="pill ${tone(r)}">${r >= 80 ? "Ready to face the interviewer" : r >= 60 ? "Close" : "More training needed"}</span></div>
     <div class="tile"><span class="label">Rank</span><b>${rankOf(r)}</b></div>
@@ -1067,6 +1457,7 @@ function viewVerdict() {
   </div>
   <p class="lead">${esc(v.verdict)}</p>
   ${v.local ? `<p class="note">Compiled from your saved results because Claude wasn't available for the panel's write-up.</p>` : ""}
+  ${packHtml("The scrolls you carried to the end")}
 </section>
 <section class="panel"><div class="twocol" style="gap:22px">${list("Things you did well", v.strengths)}${list("Things to improve", v.improve)}</div></section>
 <section class="panel stack">${list("Notes of your learning", v.learning)}</section>
@@ -1077,12 +1468,20 @@ function viewVerdict() {
 
 /* ================================================================ router + events */
 function route(focusObs) {
-  const id = (location.hash || "#map").slice(1), v = $("view");
-  const q = QUESTS.find(x => x.id === id);
-  if (q) v.innerHTML = viewQuest(q);
+  let id = (location.hash || "#map").slice(1);
+  if (!S.hero && id !== "hero") id = "hero";
+  const v = $("view"), q = QUESTS.find(x => x.id === id);
+  if (id === "hero") v.innerHTML = viewSelect();
+  else if (q) v.innerHTML = viewQuest(q);
   else if (id === "hall") { v.innerHTML = viewHall(); bindHall(); }
   else if (id === "verdict") { v.innerHTML = viewVerdict(); const b = $("re-verdict"); if (b) b.onclick = () => { b.disabled = true; makeVerdict(); }; }
-  else v.innerHTML = viewMap();
+  else {
+    v.innerHTML = viewMap();
+    if (S.travelTo != null) {
+      const to = S.travelTo, from = S.heroAt; S.travelTo = null;
+      animateTravel(Math.min(from, to), to, () => { S.heroAt = to; save(); setTimeout(() => { location.hash = to >= 11 ? "#hall" : "#" + QUESTS[to].id; }, 450); });
+    }
+  }
   header();
   if (focusObs) { const c = $("card-" + focusObs); if (c) c.scrollIntoView({ block:"start", behavior:"smooth" }); }
 }
@@ -1090,6 +1489,15 @@ document.addEventListener("click", ev => {
   const t = ev.target.closest("button,[data-go]"); if (!t) return;
   const d = t.dataset;
   if (d.go) { const h = "#" + d.go; if (location.hash === h) route(); else location.hash = h; window.scrollTo(0, 0); return; }
+  if (d.pick) { S.hero = d.pick; const nm = $("hero-name"); if (nm) S.heroName = nm.value.trim(); save(); route(); return; }
+  if (d.travel != null && d.travel !== undefined && t.hasAttribute("data-travel")) {
+    const to = Number(d.travel);
+    if (to === S.heroAt) { location.hash = to >= 11 ? "#hall" : "#" + QUESTS[to].id; return; }
+    S.travelTo = to; persistLocal();
+    if (location.hash === "#map") route(); else location.hash = "#map";
+    window.scrollTo(0, 0); return;
+  }
+  if (d.brief) { S.briefed[d.brief] = true; save(); route(); return; }
   if (d.open) { const qid = OBS.find(o => o.id === d.open).quest.id; S.open[qid] = S.open[qid] === d.open && t.getAttribute("aria-expanded") === "true" ? "__none" : d.open; persistLocal(); route(d.open); return; }
   if (d.next) { const o = OBS.find(x => x.id === d.next); S.open[o.quest.id] = o.id; persistLocal(); route(o.id); return; }
   if (d.stage) { const [id, st] = d.stage.split(":"); const r = ob(id); r.stage = st; if (st === "retest") r.d2 = ""; save(); route(id); return; }
@@ -1109,6 +1517,7 @@ document.addEventListener("click", ev => {
   }
 });
 document.addEventListener("input", ev => {
+  if (ev.target.id === "hero-name") { S.heroName = ev.target.value; persistLocal(); header(); return; }
   const d = ev.target.dataset && ev.target.dataset.draft; if (!d) return;
   const [id, w] = d.split(":"), r = ob(id); r["d" + w] = ev.target.value; persistLocal();
 });
