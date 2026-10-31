@@ -188,7 +188,7 @@ code{font-family:var(--mono);font-size:.86em;background:var(--sunk);padding:1px 
 /* pixel art, heroes, comics, pack */
 .px{image-rendering:pixelated;image-rendering:crisp-edges}
 .herochip{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:3px 10px 3px 4px}
-.herochip img{width:30px;height:35px}
+.herochip img{width:30px;height:40px}
 .herochip b{font-family:var(--display);font-size:1rem;display:block;line-height:1.1}
 .herochip span{font-family:var(--mono);font-size:.64rem;color:var(--muted)}
 .select{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
@@ -226,10 +226,10 @@ input[type=text]{font:inherit;padding:9px 12px;border:1px solid var(--line);bord
 .map image{image-rendering:pixelated}
 .portrait-svg{display:block;width:100%;height:auto}
 .gkcard .portrait{position:relative;width:150px;padding:0;border:0;background:none}
-.gkcard .portrait .badge16{position:absolute;right:-10px;bottom:-8px;width:40px;height:47px}
+.gkcard .portrait .badge16{position:absolute;right:-12px;bottom:-8px;width:42px;height:56px}
 .hcard .art{position:relative;padding:0;background:none}
 .hcard .art .hport{width:100%;max-width:220px}
-.hcard .art .badge16{position:absolute;right:6px;bottom:-6px;width:46px;height:54px}
+.hcard .art .badge16{position:absolute;right:4px;bottom:-6px;width:48px;height:64px}
 .pshot{position:relative;aspect-ratio:64/40}
 .pshot img{position:absolute;inset:0;width:100%;height:100%}
 .pover{position:absolute;bottom:0;left:50%;transform:translateX(-50%);height:100%;aspect-ratio:200/240}
@@ -811,11 +811,217 @@ function sprite16(sp, frame) {
     for (let j = 31; j <= 38; j++) for (let i = a; i < z; i++) fr[(j - 1) * W + i] = out[j * W + i]; for (let i = a; i < z; i++) fr[38 * W + i] = out[39 * W + i]; }
   return (S16[key] = { w:W, h:H, px:fr });
 }
+/* ================================================================ 48x64 fantasy pixel figures
+   Each figure is laid out on a 48x64 pixel grid as crisp-edged vector shapes (no anti-aliasing),
+   rasterized once, snapped to its own palette, then given a selective outline and ground shadow. */
+const BUILDS = {
+  normal:{ hw:14, hh:13, hy:8,  ty:23, tw:18, th:16, ly:39, lh:19, lw:6, aw:5 },
+  dwarf: { hw:16, hh:14, hy:15, ty:30, tw:24, th:15, ly:45, lh:13, lw:8, aw:6 },
+  slim:  { hw:13, hh:13, hy:5,  ty:20, tw:14, th:18, ly:38, lh:20, lw:5, aw:4 },
+  broad: { hw:15, hh:13, hy:7,  ty:22, tw:24, th:17, ly:39, lh:19, lw:8, aw:6 },
+  small: { hw:16, hh:15, hy:19, ty:36, tw:14, th:11, ly:47, lh:11, lw:5, aw:4 },
+  giant: { hw:16, hh:14, hy:2,  ty:18, tw:28, th:20, ly:38, lh:20, lw:9, aw:7 },
+  float: { hw:14, hh:13, hy:6,  ty:21, tw:18, th:16, ly:37, lh:19, lw:6, aw:5, float:true }
+};
+const fR = (x, y, w, h, c) => w > 0 && h > 0 ? `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${c}"/>` : "";
+const fP = (pts, c) => `<polygon points="${pts}" fill="${c}"/>`;
+function fBox(x, y, w, h, c, o) {
+  o = o || {}; const s = [fR(x, y, w, h, c)];
+  if (w >= 3) { const k = Math.max(1, Math.floor(w / 3)); s.push(fR(x + w - k, y, k, h, darken(c, .26))); }
+  if (h >= 3 && !o.noHi) s.push(fR(x, y + 1, 1, h - 2, lighten(c, .22)));
+  if (!o.noTop) s.push(fR(x, y, w, 1, lighten(c, .32)));
+  s.push(fR(x, y + h - 1, w, 1, darken(c, .38)));
+  return s.join("");
+}
+function figure(sp) {
+  const B = BUILDS[sp.build || "normal"], cx = 24, o = [];
+  const skin = sp.skin, hair = sp.hair || "#3b2a20", prim = sp.prim, sec = sp.sec || darken(prim, .3), acc = sp.acc || "#e0b130";
+  const metal = sp.metal || "#b7c0cc", legs = sp.legs || sec, gold = "#e0b130", wood = "#7a5230", boot = "#4a3426";
+  const race = sp.race || "", hat = sp.hat, face = sp.face || [], hst = sp.hairStyle || "short", hc = sp.hatC || prim;
+  const hw = B.hw, hh = B.hh, hy = B.hy, hx = cx - Math.floor(hw / 2);
+  const tw = B.tw, th = B.th, ty = B.ty, tx = cx - tw / 2;
+  const ly = B.ly, lh = B.lh, lw = B.lw, llx = cx - 1 - lw, rlx = cx + 1, foot = ly + lh;
+  const aw = B.aw, alx = tx - aw, arx = tx + tw, ay = ty + 1, ah = th - 4, rhx = arx, rhy = ay + ah;
+  const eyeY = hy + Math.round(hh * .5), elx = hx + Math.round(hw * .22), erx = hx + hw - Math.round(hw * .22) - 2, mY = eyeY + 5;
+  const isRobot = hat === "robot" || race === "golem";
+  const headC = race === "golem" ? skin : hat === "robot" ? metal : skin;
+  // --- behind everything
+  if (sp.cape) o.push(fBox(tx - 3, ty + 1, tw + 6, th + Math.round(lh * .7), sp.cape, { noHi:1 }));
+  if (hat === "hood") o.push(fR(hx - 3, hy - 3, hw + 6, hh + 7, darken(hc, .2)), fR(tx - 1, ty - 1, tw + 2, 4, darken(hc, .2)));
+  if (hst === "long" && hat !== "hood") o.push(fBox(hx - 2, hy + 2, hw + 4, hh + 9, darken(hair, .1), { noTop:1 }));
+  if (race === "tiefling") o.push(fP(`${cx + 5},${ly} ${cx + 13},${ly + 6} ${cx + 18},${ly + 2} ${cx + 17},${ly + 8} ${cx + 12},${ly + 9} ${cx + 5},${ly + 3}`, "#8c2f39"));
+  // --- legs, robe skirt or djinn wisp
+  if (B.float) {
+    o.push(fP(`${tx + 1},${ly - 1} ${tx + tw - 1},${ly - 1} ${cx + 5},${ly + 9} ${cx + 11},${ly + 14} ${cx + 4},${ly + 19} ${cx + 6},${ly + 14} ${cx - 3},${ly + 9}`, lighten(prim, .25)));
+    o.push(fP(`${cx + 2},${ly + 1} ${tx + tw - 2},${ly} ${cx + 7},${ly + 9} ${cx + 11},${ly + 14} ${cx + 6},${ly + 13}`, darken(prim, .1)));
+    o.push(fR(cx - 6, ly + 3, 3, 1, "#ffffff"), fR(cx + 2, ly + 8, 3, 1, "#ffffff"), fR(cx + 6, ly + 15, 2, 1, "#ffffff"));
+  } else if (sp.body === "robe") {
+    o.push(fP(`${tx},${ty + th - 2} ${tx + tw},${ty + th - 2} ${tx + tw + 3},${foot} ${tx - 3},${foot}`, prim));
+    o.push(fP(`${cx + 3},${ty + th - 2} ${tx + tw},${ty + th - 2} ${tx + tw + 3},${foot} ${cx + 4},${foot}`, darken(prim, .26)));
+    o.push(fR(tx - 3, foot - 2, tw + 6, 2, sec), fR(cx - 1, ty + th - 2, 2, foot - ty - th, sec), fR(llx + 1, foot, lw, 1, boot), fR(rlx, foot, lw, 1, boot));
+  } else {
+    o.push(fBox(llx, ly, lw, lh, legs), fBox(rlx, ly, lw, lh, legs));
+    o.push(fBox(llx - 1, foot - 5, lw + 1, 5, boot), fBox(rlx, foot - 5, lw + 1, 5, boot));
+    o.push(fR(llx - 1, foot - 5, lw + 1, 1, lighten(boot, .3)), fR(rlx, foot - 5, lw + 1, 1, lighten(boot, .3)));
+  }
+  // --- torso and outfit
+  const tc = sp.body === "armor" ? metal : prim;
+  o.push(fBox(tx, ty, tw, th, tc));
+  switch (sp.body) {
+    case "armor": o.push(fR(cx - 1, ty + 1, 2, th - 4, acc), fR(tx + 2, ty + 4, tw - 4, 1, darken(metal, .35)), fR(tx + 2, ty + 9, tw - 4, 1, darken(metal, .35)), fR(tx, ty + th - 3, tw, 2, "#5a3a22"), fR(cx - 1, ty + th - 3, 2, 2, gold)); break;
+    case "robe": o.push(fP(`${cx - 4},${ty} ${cx},${ty + 6} ${cx + 4},${ty} ${cx + 2},${ty} ${cx},${ty + 3} ${cx - 2},${ty}`, sec), fR(tx, ty + th - 4, tw, 2, sec), fR(cx - 1, ty + th - 4, 2, 2, acc)); break;
+    case "apron": o.push(fBox(tx + 2, ty + 5, tw - 4, th - 5, "#7a4b2a", { noTop:1 }), fR(tx + 3, ty, 2, 6, "#5a3520"), fR(tx + tw - 5, ty, 2, 6, "#5a3520"), fR(tx + 2, ly, tw - 4, 5, "#7a4b2a"), fR(cx - 1, ty + 9, 2, 2, acc)); break;
+    case "coat": o.push(fP(`${cx - 3},${ty} ${cx + 3},${ty} ${cx},${ty + 8}`, "#f4f4f4"), fR(cx - 1, ty + 2, 2, 7, acc), fP(`${cx - 4},${ty} ${cx},${ty + 9} ${cx - 6},${ty + 5}`, darken(prim, .3)), fP(`${cx + 4},${ty} ${cx},${ty + 9} ${cx + 6},${ty + 5}`, darken(prim, .4)), fR(tx, ly, 3, 6, prim), fR(tx + tw - 3, ly, 3, 6, darken(prim, .26)), fR(cx - 3, ty + 10, 1, 1, gold), fR(cx - 3, ty + 13, 1, 1, gold)); break;
+    case "split": o.push(fBox(cx, ty, tw / 2, th, sec, { noHi:1 }), fR(cx - 2, ty + 5, 4, 4, acc), fR(cx - 1, ty + 6, 2, 2, lighten(acc, .4))); break;
+    case "tabard": o.push(fBox(cx - 4, ty, 8, th + 7, sec), fP(`${cx},${ty + 4} ${cx + 3},${ty + 8} ${cx},${ty + 12} ${cx - 3},${ty + 8}`, acc)); break;
+    default: o.push(fR(tx, ty + th - 4, tw, 2, "#5a3a22"), fR(cx - 1, ty + th - 4, 2, 2, gold), fP(`${tx + 1},${ty} ${tx + 4},${ty} ${tx + tw - 2},${ty + th - 4} ${tx + tw - 5},${ty + th - 4}`, "#6b4a2a"), fR(cx - 3, ty, 6, 2, sec));
+  }
+  // --- arms, shoulders, hands
+  const sl = sp.body === "armor" ? metal : prim, sr = sp.body === "split" ? sec : sl;
+  o.push(fBox(alx, ay, aw, ah, sl), fBox(arx, ay, aw, ah, sr));
+  if (sp.body === "armor") o.push(fBox(alx - 1, ty - 1, aw + 3, 5, metal), fBox(arx - 2, ty - 1, aw + 3, 5, metal), fR(alx, ty + 1, 1, 1, lighten(metal, .6)), fR(arx + aw - 1, ty + 1, 1, 1, lighten(metal, .6)));
+  o.push(fBox(alx, ay + ah, aw, 3, skin, { noHi:1 }), fBox(arx, ay + ah, aw, 3, skin, { noHi:1 }));
+  if (sp.shield) o.push(fBox(alx - 6, ty + 3, 10, 13, sp.shield), fP(`${alx - 6},${ty + 16} ${alx + 4},${ty + 16} ${alx - 1},${ty + 20}`, darken(sp.shield, .2)), fR(alx - 2, ty + 5, 2, 10, acc), fR(alx - 5, ty + 8, 8, 2, acc));
+  // --- neck and head
+  o.push(fR(cx - 3, hy + hh - 1, 6, ty - hy - hh + 2, darken(isRobot ? headC : skin, .22)));
+  if (race === "minotaur") o.push(fP(`${hx - 4},${hy + 4} ${hx},${hy + 3} ${hx},${hy + 6}`, darken(skin, .1)), fP(`${hx + hw + 4},${hy + 4} ${hx + hw},${hy + 3} ${hx + hw},${hy + 6}`, darken(skin, .3)));
+  if (race === "gnome") o.push(fBox(hx - 3, eyeY - 2, 3, 5, skin, { noHi:1 }), fBox(hx + hw, eyeY - 2, 3, 5, darken(skin, .15), { noHi:1 }));
+  o.push(fP(`${hx + 2},${hy} ${hx + hw - 2},${hy} ${hx + hw},${hy + 2} ${hx + hw},${hy + hh - 3} ${hx + hw - 3},${hy + hh} ${hx + 3},${hy + hh} ${hx},${hy + hh - 3} ${hx},${hy + 2}`, headC));
+  o.push(fR(hx + hw - 3, hy + 2, 3, hh - 5, darken(headC, .2)), fR(hx + 3, hy + hh - 1, hw - 6, 1, darken(headC, .25)), fR(hx + 2, hy + 1, 3, 1, lighten(headC, .35)));
+  if (race === "minotaur") o.push(fBox(hx + 3, mY - 3, hw - 6, 5, lighten(skin, .3), { noHi:1 }), fR(hx + 5, mY - 1, 1, 1, "#2a1a10"), fR(hx + hw - 6, mY - 1, 1, 1, "#2a1a10"));
+  if (race === "golem") o.push(fR(hx + 4, hy + 2, 1, 4, darken(skin, .4)), fR(hx + 5, hy + 5, 1, 2, darken(skin, .4)), fR(hx + hw - 4, hy + hh - 5, 1, 3, darken(skin, .4)), fR(cx - 2, ty + 5, 4, 4, sp.glow || acc));
+  // eyes, brows, nose, mouth
+  if (hat === "robot") {
+    o.push(fR(hx + 1, eyeY - 1, hw - 2, 4, "#1d1520"), fR(hx + 2, eyeY, hw - 4, 2, acc), fR(hx + 3, eyeY, 3, 1, "#ffffff"), fR(cx - 3, mY, 6, 1, darken(metal, .4)), fR(cx - 3, mY + 2, 6, 1, darken(metal, .4)));
+  } else if (race === "lich") {
+    o.push(fR(elx - 1, eyeY - 1, 4, 3, "#2a2433"), fR(erx - 1, eyeY - 1, 4, 3, "#2a2433"), fR(elx, eyeY, 2, 1, sp.glow), fR(erx, eyeY, 2, 1, sp.glow), fR(cx - 1, eyeY + 3, 2, 2, "#2a2433"));
+    for (let i = cx - 3; i < cx + 3; i += 2) o.push(fR(i, mY, 1, 2, "#f4f4f4"), fR(i + 1, mY, 1, 2, "#2a2433"));
+  } else {
+    const glow = sp.glow;
+    o.push(fR(elx, eyeY, 2, 2, glow || (sp.eye || "#1d1520")), fR(erx, eyeY, 2, 2, glow || (sp.eye || "#1d1520")));
+    if (!glow) o.push(fR(elx + 1, eyeY, 1, 1, "#ffffff"), fR(erx, eyeY, 1, 1, "#ffffff"), fR(elx, eyeY + 1, 1, 1, sp.iris || "#3a5a8a"), fR(erx + 1, eyeY + 1, 1, 1, sp.iris || "#3a5a8a"));
+    const bc = hst === "none" ? darken(skin, .5) : darken(hair, .25);
+    if (race !== "golem") o.push(fR(elx - 1, eyeY - 2, 3, 1, race === "orc" ? darken(skin, .5) : bc), fR(erx, eyeY - 2, 3, 1, race === "orc" ? darken(skin, .5) : bc));
+    if (race !== "minotaur" && race !== "golem") o.push(fR(cx - (race === "gnome" ? 1 : 0), eyeY + 2, race === "gnome" ? 3 : 1, race === "gnome" ? 3 : 2, darken(skin, .25)), fR(cx - 1, mY, 3, 1, "#9b4a4a"));
+    if (race !== "golem") o.push(fR(elx - 1, eyeY + 3, 1, 1, mix(skin, "#ff6b6b", .45)), fR(erx + 2, eyeY + 3, 1, 1, mix(skin, "#ff6b6b", .4)));
+    if (race === "orc") o.push(fR(cx - 2, mY - 1, 1, 2, "#f4efe0"), fR(cx + 2, mY - 1, 1, 2, "#f4efe0"));
+  }
+  // facial hair and accessories
+  if (face.includes("beard") || face.includes("longbeard")) {
+    const bl = face.includes("longbeard") ? 14 : 7, bc = race === "giant" ? "#ff7b00" : hair;
+    o.push(fP(`${hx},${eyeY + 2} ${hx + hw},${eyeY + 2} ${hx + hw - 1},${hy + hh + bl - 4} ${cx + 2},${hy + hh + bl} ${cx - 2},${hy + hh + bl} ${hx + 1},${hy + hh + bl - 4}`, bc));
+    o.push(fP(`${cx + 2},${eyeY + 2} ${hx + hw},${eyeY + 2} ${hx + hw - 1},${hy + hh + bl - 4} ${cx + 2},${hy + hh + bl}`, darken(bc, .25)));
+    for (let i = hx + 2; i < hx + hw - 2; i += 3) o.push(fR(i, eyeY + 5, 1, bl, darken(bc, .35)));
+    if (race === "giant") o.push(fR(cx - 3, hy + hh + bl - 1, 2, 3, "#ffd000"), fR(cx + 1, hy + hh + bl, 2, 2, "#ffd000"));
+    o.push(fR(cx - 2, mY - 1, 4, 1, darken(skin, .3)));
+  }
+  if (face.includes("mustache") && !face.includes("beard")) o.push(fR(cx - 4, mY - 1, 3, 1, hair), fR(cx + 1, mY - 1, 3, 1, hair), fR(cx - 5, mY, 1, 1, hair), fR(cx + 4, mY, 1, 1, hair));
+  if (face.includes("mask")) o.push(fBox(hx + 1, eyeY + 2, hw - 2, hh - (eyeY - hy) - 2, sec, { noHi:1 }));
+  if (face.includes("glasses")) o.push(fR(elx - 1, eyeY - 1, 4, 1, "#2b2b2b"), fR(erx - 1, eyeY - 1, 4, 1, "#2b2b2b"), fR(elx - 1, eyeY + 2, 4, 1, "#2b2b2b"), fR(erx - 1, eyeY + 2, 4, 1, "#2b2b2b"), fR(elx + 3, eyeY, erx - elx - 4, 1, "#2b2b2b"));
+  if (face.includes("eyepatch")) o.push(fR(hx, eyeY - 3, hw, 1, "#111111"), fR(elx - 1, eyeY - 1, 4, 4, "#111111"));
+  if (face.includes("nosering")) o.push(fR(cx - 1, mY - 2, 3, 1, gold));
+  // --- hair
+  if (!isRobot && hat !== "hood") {
+    if (hst === "short" || hst === "long") {
+      o.push(fBox(hx - 1, hy - 2, hw + 2, 5, hair, { noHi:1 }), fR(hx - 1, hy + 3, 2, hst === "long" ? 9 : 4, hair), fR(hx + hw - 1, hy + 3, 2, hst === "long" ? 9 : 4, darken(hair, .2)));
+      for (let i = hx + 1; i < hx + hw - 1; i += 2) o.push(fR(i, hy + 3, 1, 1, hair));
+      o.push(fR(hx + 2, hy - 1, 5, 1, lighten(hair, .45)));
+    }
+    if (hst === "spiky") {
+      o.push(fBox(hx - 1, hy - 2, hw + 2, 5, hair, { noHi:1 }));
+      for (let i = 0; i < 5; i++) o.push(fP(`${hx + i * 3},${hy - 1} ${hx + i * 3 + 2},${hy - 6 + (i % 2) * 2} ${hx + i * 3 + 4},${hy - 1}`, i % 2 ? darken(hair, .15) : hair));
+      for (let i = hx + 1; i < hx + hw - 1; i += 2) o.push(fR(i, hy + 3, 1, 1, hair));
+    }
+    if (hst === "none") o.push(fR(hx + 3, hy + 1, 3, 1, lighten(skin, .45)));
+  }
+  if (race === "elf") o.push(fP(`${hx + 1},${eyeY - 1} ${hx - 5},${eyeY - 6} ${hx + 1},${eyeY + 2}`, skin), fP(`${hx + hw - 1},${eyeY - 1} ${hx + hw + 5},${eyeY - 6} ${hx + hw - 1},${eyeY + 2}`, darken(skin, .2)));
+  // --- headgear
+  if (hat === "helmet") {
+    o.push(fBox(hx - 2, hy - 3, hw + 4, 7, metal), fBox(hx - 2, hy + 4, 3, eyeY - hy + 1, metal, { noTop:1 }), fBox(hx + hw - 1, hy + 4, 3, eyeY - hy + 1, metal, { noTop:1 }), fR(cx - 1, hy + 3, 2, eyeY - hy + 1, metal), fR(cx - 1, hy - 3, 2, 7, lighten(metal, .4)));
+    if (sp.plume) o.push(fR(cx - 1, hy - 7, 3, 4, sp.plume), fR(cx + 2, hy - 8, 4, 3, sp.plume), fR(cx + 5, hy - 7, 3, 3, darken(sp.plume, .25)), fR(cx, hy - 7, 1, 2, lighten(sp.plume, .4)));
+  }
+  if (hat === "wizard") {
+    const cxh = cx + 1;
+    o.push(fP(`${hx + 1},${hy + 1} ${hx + hw - 1},${hy + 1} ${cxh + 3},${hy - 11} ${cxh + 8},${hy - 15} ${cxh + 2},${hy - 13}`, hc));
+    o.push(fP(`${cxh + 1},${hy + 1} ${hx + hw - 1},${hy + 1} ${cxh + 3},${hy - 11}`, darken(hc, .25)));
+    o.push(fBox(hx - 5, hy + 1, hw + 10, 3, hc, { noHi:1 }), fR(hx + 1, hy - 1, hw - 2, 2, acc), fR(cxh - 1, hy - 6, 1, 1, acc), fR(cxh + 1, hy - 9, 1, 1, "#ffffff"));
+  }
+  if (hat === "hood") o.push(fBox(hx - 3, hy - 4, hw + 6, 6, hc, { noHi:1 }), fR(hx - 3, hy + 2, 3, hh, hc), fR(hx + hw, hy + 2, 3, hh, darken(hc, .25)), fR(hx + 2, hy + 1, hw - 4, 2, darken(hc, .45)));
+  if (hat === "crown") {
+    if (race === "tiefling") o.push(fP(`${hx},${hy + 1} ${hx - 3},${hy - 5} ${hx + 2},${hy - 1}`, "#2a1a1a"), fP(`${hx + hw},${hy + 1} ${hx + hw + 3},${hy - 5} ${hx + hw - 2},${hy - 1}`, "#2a1a1a"));
+    o.push(fBox(hx + 1, hy - 3, hw - 2, 3, gold, { noHi:1 }), fR(hx + 1, hy - 6, 2, 3, gold), fR(cx - 1, hy - 7, 2, 4, gold), fR(hx + hw - 3, hy - 6, 2, 3, gold), fR(cx - 1, hy - 2, 2, 1, "#c0392b"));
+  }
+  if (hat === "mortar") o.push(fBox(hx - 4, hy - 4, hw + 8, 2, "#2d3340", { noHi:1 }), fBox(hx, hy - 2, hw, 3, "#222831", { noHi:1 }), fR(hx + hw + 2, hy - 3, 1, 8, gold), fR(hx + hw + 1, hy + 5, 3, 2, gold));
+  if (hat === "hardhat") o.push(fBox(hx, hy - 4, hw, 6, "#f2c230", { noHi:1 }), fR(hx - 2, hy + 1, hw + 4, 2, "#d79a0c"), fR(cx - 1, hy - 4, 2, 5, "#ffe27a"));
+  if (hat === "pirate") o.push(fBox(hx - 4, hy - 1, hw + 8, 3, "#1e1e24", { noHi:1 }), fBox(hx + 1, hy - 5, hw - 2, 5, "#2a2a33", { noHi:1 }), fR(hx - 4, hy - 3, 2, 2, "#1e1e24"), fR(hx + hw + 2, hy - 3, 2, 2, "#1e1e24"), fR(cx - 1, hy - 4, 2, 2, "#f4f4f4"), fR(hx + 1, hy - 1, hw - 2, 1, gold));
+  if (hat === "feather") o.push(fBox(hx - 2, hy - 3, hw + 4, 4, hc, { noHi:1 }), fR(hx, hy - 5, hw - 2, 2, hc), fP(`${hx + hw - 2},${hy - 3} ${hx + hw + 6},${hy - 13} ${hx + hw + 3},${hy - 4}`, acc), fP(`${hx + hw},${hy - 4} ${hx + hw + 6},${hy - 13} ${hx + hw + 4},${hy - 5}`, darken(acc, .25)));
+  if (hat === "horns") o.push(fP(`${hx},${hy + 2} ${hx - 5},${hy - 2} ${hx - 3},${hy - 8} ${hx - 1},${hy - 3} ${hx + 2},${hy}`, "#efe3c2"), fP(`${hx + hw},${hy + 2} ${hx + hw + 5},${hy - 2} ${hx + hw + 3},${hy - 8} ${hx + hw + 1},${hy - 3} ${hx + hw - 2},${hy}`, "#d8cba6"), fR(hx - 4, hy - 3, 2, 1, "#b8a77e"), fR(hx + hw + 2, hy - 3, 2, 1, "#b8a77e"));
+  if (hat === "robot") o.push(fR(cx - 1, hy - 6, 1, 6, "#6b7280"), fR(cx - 2, hy - 8, 3, 3, acc), fR(hx - 2, eyeY - 1, 2, 4, darken(metal, .3)), fR(hx + hw, eyeY - 1, 2, 4, darken(metal, .4)));
+  if (hat === "headband") o.push(fR(hx, hy + 2, hw, 2, sec), fBox(elx - 1, hy - 1, 4, 4, "#8a6a3a", { noHi:1 }), fBox(erx - 1, hy - 1, 4, 4, "#8a6a3a", { noHi:1 }), fR(elx, hy, 2, 2, "#7fd8e8"), fR(erx, hy, 2, 2, "#7fd8e8"), fR(elx, hy, 1, 1, "#ffffff"), fR(erx, hy, 1, 1, "#ffffff"));
+  // --- held items (right hand)
+  const it = sp.item, hxr = rhx + Math.floor(aw / 2);
+  if (it === "sword") o.push(fR(hxr, rhy - 18, 2, 17, metal), fR(hxr, rhy - 18, 1, 17, "#ffffff"), fR(hxr, rhy - 20, 1, 2, metal), fR(hxr - 3, rhy - 1, 8, 2, acc), fR(hxr, rhy + 1, 2, 4, "#5a3a22"), fR(hxr, rhy + 5, 2, 2, acc));
+  if (it === "staff") { o.push(fR(hxr + 2, 4, 2, foot - 4, wood), fR(hxr + 2, 4, 1, foot - 4, lighten(wood, .3)), fBox(hxr, 0, 6, 6, sp.orb || acc, { noHi:1 }), fR(hxr + 1, 1, 2, 2, "#ffffff")); }
+  if (it === "bow") { for (let j = 0; j < 22; j++) { const d = Math.round(Math.sin(j / 21 * Math.PI) * 4); o.push(fR(hxr + 2 + d, rhy - 14 + j, 2, 1, wood)); } o.push(fR(hxr + 2, rhy - 14, 1, 22, "#e8e8e8")); }
+  if (it === "wrench") o.push(fR(hxr, rhy - 10, 2, 13, "#9aa3ad"), fBox(hxr - 2, rhy - 14, 6, 4, "#9aa3ad", { noHi:1 }), fR(hxr, rhy - 14, 2, 2, darken("#9aa3ad", .5)));
+  if (it === "key") o.push(fR(hxr + 1, rhy - 10, 2, 13, gold), fBox(hxr - 1, rhy - 16, 6, 6, gold, { noHi:1 }), fR(hxr + 1, rhy - 14, 2, 2, darken(gold, .5)), fR(hxr + 3, rhy - 6, 2, 1, gold), fR(hxr + 3, rhy - 3, 2, 1, gold));
+  if (it === "hammer") o.push(fR(hxr + 1, rhy - 12, 2, 17, wood), fBox(hxr - 4, rhy - 17, 11, 6, metal), fR(hxr - 4, rhy - 17, 11, 1, "#ffffff"));
+  if (it === "lantern") o.push(fR(hxr + 1, rhy + 1, 1, 2, "#333333"), fBox(hxr - 1, rhy + 3, 5, 6, "#3b2f2f", { noHi:1 }), fR(hxr, rhy + 4, 3, 4, "#ffd166"), fR(hxr, rhy + 4, 1, 2, "#fff3b0"));
+  if (it === "flag") o.push(fR(hxr + 1, 2, 2, foot - 2, "#5a3a22"), fBox(hxr + 3, 2, 8, 6, acc, { noHi:1 }), fR(hxr + 3, 8, 6, 1, darken(acc, .3)));
+  if (it === "tablet") o.push(fBox(hxr - 2, rhy - 6, 8, 10, "#1b2a41", { noHi:1 }), fR(hxr - 1, rhy - 5, 6, 8, "#4cc9f0"), fR(hxr, rhy - 4, 4, 1, "#ffffff"), fR(hxr, rhy - 2, 3, 1, "#ffffff"));
+  if (it === "book") o.push(fBox(hxr - 2, rhy - 2, 7, 8, acc, { noHi:1 }), fR(hxr - 2, rhy - 2, 1, 8, "#4a2c1a"), fR(hxr, rhy, 4, 1, gold));
+  if (it === "lute") o.push(fBox(hxr - 2, rhy - 1, 7, 7, "#a0522d", { noHi:1 }), fR(hxr + 3, rhy - 12, 2, 11, "#5a3a22"), fR(hxr, rhy + 2, 2, 2, "#3a2a1a"));
+  if (it === "map") o.push(fBox(hxr - 2, rhy - 1, 8, 6, "#efe3c2", { noHi:1 }), fR(hxr - 1, rhy + 1, 3, 1, "#c0392b"), fR(hxr + 2, rhy + 3, 3, 1, "#2b6cb0"));
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="64" viewBox="0 0 48 64" shape-rendering="crispEdges">${o.join("")}</svg>`;
+}
+const FIG = {};
+function rasterFigure(sp) {
+  return new Promise(res => {
+    const svg = figure(sp), img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas"); c.width = 48; c.height = 64; const x = c.getContext("2d"); x.drawImage(img, 0, 0, 48, 64);
+        const d = x.getImageData(0, 0, 48, 64).data, pal = [...new Set((svg.match(/#[0-9a-f]{6}/gi) || []).map(s => s.toLowerCase()))].map(h => [h, rgb(h)]);
+        const W = 48, H = 64, px = new Array(W * H).fill(null);
+        for (let i = 0; i < W * H; i++) {
+          if (d[i * 4 + 3] < 128) continue;
+          let best = null, bd = 1e9; for (const [h, [r, g, b]] of pal) { const e = (d[i * 4] - r) ** 2 + (d[i * 4 + 1] - g) ** 2 + (d[i * 4 + 2] - b) ** 2; if (e < bd) { bd = e; best = h; } }
+          px[i] = best;
+        }
+        const out = px.slice(), at = (i, j) => (i < 0 || j < 0 || i >= W || j >= H) ? null : px[j * W + i];
+        for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+          if (px[j * W + i]) continue;
+          const up = at(i, j - 1), n = up || at(i - 1, j) || at(i + 1, j) || at(i, j + 1);
+          if (n) out[j * W + i] = darken(n, up ? .8 : .62);
+        }
+        for (let j = 59; j <= 62; j++) for (let i = 0; i < W; i++) { const dx = (i - 24) / 15, dy = (j - 60.5) / 2.2; if (dx * dx + dy * dy <= 1 && !out[j * W + i]) out[j * W + i] = "rgba(10,8,20,0.24)"; }
+        res({ w:W, h:H, px:out, hip:(BUILDS[sp.build || "normal"]).ly });
+      } catch (e) { res(null); }
+    };
+    img.onerror = () => res(null);
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  });
+}
+function frameOf(f, frame) {
+  if (!frame) return f;
+  const W = f.w, src = f.px, fr = src.slice();
+  if (frame === 1) { for (let j = f.hip - 1; j >= 1; j--) for (let i = 0; i < W; i++) fr[j * W + i] = src[(j - 1) * W + i]; for (let i = 0; i < W; i++) fr[i] = null; }
+  else { const a = frame === 2 ? 0 : 24, z = a + 24; for (let j = f.hip; j <= 59; j++) for (let i = a; i < z; i++) fr[(j - 1) * W + i] = src[j * W + i]; }
+  return { w:W, h:f.h, px:fr };
+}
+function spriteData(sp, frame) { const f = FIG[JSON.stringify(sp)]; return f ? frameOf(f, frame || 0) : sprite16(sp, frame); }
+async function preloadFigures() {
+  const specs = [...HEROES.map(h => h.spec), ...Object.values(QX).map(q => q.gk.spec), HALL.gk.spec];
+  const res = await Promise.all(specs.map(rasterFigure));
+  let n = 0; res.forEach((f, i) => { if (f) { FIG[JSON.stringify(specs[i])] = f; n++; } });
+  if (n) { Object.keys(URLS).forEach(k => delete URLS[k]); Object.keys(PANEL_URLS).forEach(k => delete PANEL_URLS[k]); const a = document.activeElement; if (!a || a.tagName !== "TEXTAREA") route(); }
+}
+
 const URLS = {};
 function spriteURL(key, spec, frame) {
   key += "|" + (frame || 0); if (URLS[key]) return URLS[key];
-  const s = sprite16(spec, frame), c = document.createElement("canvas"); c.width = s.w * 3; c.height = s.h * 3;
-  drawSprite(c.getContext("2d"), s, 0, 0, 3);
+  const s = spriteData(spec, frame), c = document.createElement("canvas"); c.width = 48 * 3; c.height = 64 * 3;
+  drawSprite(c.getContext("2d"), s, (48 - s.w) / 2 * 3, (64 - s.h) * 3, 3);
   return (URLS[key] = c.toDataURL());
 }
 function scrollURL(color) {
@@ -831,30 +1037,30 @@ function scrollURL(color) {
 const HEROES = [
   { id:"knight", cls:"Firewall Knight", persona:"A veteran of a thousand rulebases who started on SRX zones and Firepower policies and has never trusted a port number.",
     strengths:["NGFW policy and threat inspection","Calm troubleshooting under pressure"], power:"Shield of App-ID: sees the application behind any port.", cry:"No port goes unchallenged.",
-    spec:{ skin:"#f1c27d", hair:"#5a3a22", prim:"#3d5a80", sec:"#293241", acc:"#e63946", body:"armor", hat:"helmet", plume:"#e63946", item:"sword", shield:"#c9a227" } },
+    spec:{ skin:"#f1c27d", hair:"#8a4b2a", prim:"#3d5a80", sec:"#293241", acc:"#e63946", body:"armor", hat:"helmet", plume:"#e63946", item:"sword", shield:"#c9a227", build:"dwarf", race:"dwarf", face:["beard"] } },
   { id:"mage", cls:"Identity Mage", persona:"Trained in the ISE towers, fluent in 802.1X and segmentation, and certain that every packet has a name behind it.",
     strengths:["Zero Trust and identity-based policy","Cisco ISE and TrustSec depth"], power:"True Name: binds every session to a user and a device.", cry:"Show me who you are, and I'll show you the way.",
-    spec:{ skin:"#c68642", hair:"#1b1b1b", prim:"#1d7874", sec:"#0b3d3a", acc:"#f4d35e", body:"robe", hat:"wizard", hatC:"#1d7874", item:"staff", orb:"#f4d35e" } },
+    spec:{ skin:"#c68642", hair:"#e8e6f0", hairStyle:"long", prim:"#1d7874", sec:"#0b3d3a", acc:"#f4d35e", body:"robe", hat:"wizard", hatC:"#1d7874", item:"staff", orb:"#f4d35e", build:"slim", race:"elf" } },
   { id:"ranger", cls:"Packet Ranger", persona:"Has walked every path from campus EVPN fabrics to SD-WAN overlays, and always checks the road home.",
     strengths:["Routing, switching and SD-WAN","Packet walks and path design"], power:"Return Route: can trace any packet there and back.", cry:"Every path has a return route.",
-    spec:{ skin:"#e0ac69", hair:"#7b3f00", prim:"#4f772d", sec:"#31572c", acc:"#ecf39e", body:"tunic", hat:"hood", hatC:"#31572c", item:"bow", legs:"#6b4f2a" } },
+    spec:{ skin:"#8fae74", hair:"#2b1d12", build:"broad", race:"orc", prim:"#4f772d", sec:"#31572c", acc:"#ecf39e", body:"tunic", hat:"hood", hatC:"#31572c", item:"bow", legs:"#6b4f2a" } },
   { id:"artificer", cls:"Automation Artificer", persona:"Builds labs that build themselves, with Python, Ansible and Apstra, and teaches by letting people break things safely.",
     strengths:["Lab-as-code and automation","Hands-on enablement at scale"], power:"Clockwork Lab: spins up a thousand labs before breakfast.", cry:"If I can script it, I can teach it.",
-    spec:{ skin:"#8d5524", hair:"#2d1b0e", prim:"#e76f51", sec:"#264653", acc:"#f4a261", body:"coat", hat:"headband", hairStyle:"spiky", item:"wrench" } }
+    spec:{ skin:"#8d5524", hair:"#2d1b0e", prim:"#e76f51", sec:"#264653", acc:"#f4a261", body:"coat", hat:"headband", hairStyle:"spiky", item:"wrench", build:"small", race:"gnome" } }
 ];
 
 /* ================================================================ gatekeepers, comics, scrolls */
 const QX = {
   q1:{ theme:"gate", scroll:["Scroll of Definitions","#c0392b"],
-    gk:{ name:"Lexis", title:"Warden of the Gate", spec:{ skin:"#e8b98a", hair:"#8a8a8a", prim:"#2c3e66", sec:"#7a2e2e", acc:"#e0b130", body:"tabard", hat:"helmet", item:"key", face:["beard"] } },
+    gk:{ name:"Lexis", title:"Warden of the Gate", spec:{ skin:"#8f949e", hair:"#8a8a8a", hairStyle:"none", prim:"#2c3e66", sec:"#7a2e2e", acc:"#e0b130", body:"tabard", hat:"helmet", item:"key", build:"broad", race:"golem", glow:"#7fe3ff" } },
     arrive:"Dawn. The road to Palo Alto starts at a stone gate carved with acronyms.", intro:"Halt, {hero}. I am Lexis, Warden of the Gate. Many arrive speaking in slogans. None pass that way.",
     lore:"Here I test whether you can say what SASE and SSE really are, and why Prisma Access running PAN-OS matters.", trap:"Beware the slide-deck answer. PoP counts and rankings are not architecture.", resolve:"I'll speak in mechanisms, not slogans." },
   q2:{ theme:"citadel", scroll:["Scroll of the Four Gates","#3a86ff"],
-    gk:{ name:"Nimbus", title:"Keeper of the Four Gates", spec:{ skin:"#f2d0b5", hair:"#f4f4f4", prim:"#8ecae6", sec:"#4a7fa7", acc:"#ffffff", body:"robe", hat:"wizard", hatC:"#dff3ff", item:"staff", orb:"#ffffff", face:["longbeard"] } },
+    gk:{ name:"Nimbus", title:"Keeper of the Four Gates", spec:{ skin:"#8fc3e6", hair:"#f4f4f4", prim:"#8ecae6", sec:"#4a7fa7", acc:"#ffffff", body:"robe", hat:"wizard", hatC:"#dff3ff", item:"staff", orb:"#ffffff", face:["longbeard"], build:"float", race:"djinn" } },
     arrive:"Above the clouds floats a citadel with four gates: mobile users, remote networks, service connections and connectors.", intro:"Welcome, {hero}. I am Nimbus. I decide who enters the cloud, and by which gate.",
     lore:"Know each gate's purpose, where traffic leaves, and how it finds its way home.", trap:"Many forget the road home: the return route for the mobile user pool.", resolve:"Every gate has a purpose. I'll name each one." },
   q3:{ theme:"forge", scroll:["Scroll of the Forge","#e85d04"],
-    gk:{ name:"Ember", title:"Smith of the Firewall Forge", spec:{ skin:"#a0522d", hair:"#d9480f", prim:"#6c757d", sec:"#343a40", acc:"#ffba08", body:"apron", hairStyle:"none", item:"hammer", face:["beard"] } },
+    gk:{ name:"Ember", title:"Smith of the Firewall Forge", spec:{ skin:"#c0582e", hair:"#ff7b00", prim:"#6c757d", sec:"#343a40", acc:"#ffba08", body:"apron", hairStyle:"none", item:"hammer", face:["beard"], build:"giant", race:"giant" } },
     arrive:"Heat rolls from the forge where Palo Alto's oldest blades were made: App-ID, User-ID and Content-ID.", intro:"So, {hero}, you've swung SRX and Firepower blades. Show me you can work this steel.",
     lore:"Here applications, not ports, are the edge of every rule. Users have names. Allowed traffic still gets inspected.", trap:"Mind the NAT trap: security rules see the pre-NAT address and the post-NAT zone.", resolve:"I know these blades by other names. I'll learn their Palo Alto temper." },
   q4:{ theme:"bridge", scroll:["Scroll of Trust","#7b2cbf"],
@@ -862,7 +1068,7 @@ const QX = {
     arrive:"A rope bridge spans a chasm called Allow-and-Ignore. Only the continuously trusted cross.", intro:"Peace, {hero}. I am Brother Hip. I check every traveller, and I keep checking halfway across.",
     lore:"ZTNA 2.0 must be shown in configuration: App-ID rules, posture rechecked, inspection that never stops.", trap:"Don't claim rivals can do none of this. Overclaiming breaks the bridge.", resolve:"I'll show the configuration, not the slogan." },
   q5:{ theme:"maze", scroll:["Scroll of the Packet Walk","#2a9d8f"],
-    gk:{ name:"Traceroute", title:"Minotaur of the Labyrinth", spec:{ skin:"#7f5539", hair:"#432818", prim:"#9c6644", sec:"#582f0e", acc:"#e0b130", body:"tunic", hat:"horns", item:"map", face:["nosering"], eye:"#d00000" } },
+    gk:{ name:"Traceroute", title:"Minotaur of the Labyrinth", spec:{ skin:"#7f5539", hair:"#432818", prim:"#9c6644", sec:"#582f0e", acc:"#e0b130", body:"tunic", hat:"horns", item:"map", face:["nosering"], eye:"#d00000", build:"broad", race:"minotaur" } },
     arrive:"The labyrinth swallows packets whole. Its walls are DNS, routing tables and return paths.", intro:"Grrr. {hero}. I am Traceroute. I've watched many engineers stop at the firewall and get lost.",
     lore:"Walk every hop, out and back. Read the logs: no log, deny and incomplete each mean something different.", trap:"Never stop at the processing node. The DC side and the return route hide most monsters.", resolve:"Every path has a return route. I'll trace both directions." },
   q6:{ theme:"river", scroll:["Scroll of the Rivers","#0077b6"],
@@ -874,7 +1080,7 @@ const QX = {
     arrive:"Two towers watch the realm: one guards the data, one watches the experience.", intro:"Greetings, {hero}. I am ADEM-7. I measure every segment from laptop to app.",
     lore:"Know which tower sees what: inline vs. API CASB, Enterprise DLP, and segment-by-segment experience.", trap:"Never blame the cloud before reading the segments.", resolve:"I'll let the measurements speak first." },
   q8:{ theme:"kingdoms", scroll:["Scroll of Rival Lore","#ffb703"],
-    gk:{ name:"Envoy Duality", title:"Ambassador of the Borderlands", spec:{ skin:"#f1c27d", hair:"#6d4c41", prim:"#c1121f", sec:"#1d4ed8", acc:"#e0b130", body:"split", hat:"crown", cape:"#3c1642", shield:"#e0b130" } },
+    gk:{ name:"Envoy Duality", title:"Ambassador of the Borderlands", spec:{ skin:"#b5655d", race:"tiefling", hair:"#2a1a1a", prim:"#c1121f", sec:"#1d4ed8", acc:"#e0b130", body:"split", hat:"crown", cape:"#3c1642", shield:"#e0b130" } },
     arrive:"You enter the borderlands between the kingdoms you served and the one you seek to join.", intro:"Welcome back, {hero}. I am Envoy Duality. I know your old allegiances, and here they're useful.",
     lore:"Map Cisco and Juniper to Palo Alto precisely, and position with respect, not mockery.", trap:"Old maps lie: competitor names change. Verify before you quote.", resolve:"My past kingdoms are my advantage. I'll use them with precision." },
   q9:{ theme:"summit", scroll:["Scroll of the Architect","#457b9d"],
@@ -882,11 +1088,11 @@ const QX = {
     arrive:"Above the clouds, the summit. Here you stop answering and start designing.", intro:"{hero}. I'm Archimedia. Every line you draw here must survive the word 'why'.",
     lore:"Design a full SASE migration and a segmented three-tier app, with phases, rollbacks and metrics.", trap:"A bill of materials is not a design. Start with discovery.", resolve:"Discovery first, then design, then defend every tradeoff." },
   q10:{ theme:"academy", scroll:["Scroll of Readiness","#6a4c93"],
-    gk:{ name:"Professor Rubrica", title:"Dean of the Academy", spec:{ skin:"#f2d0b5", hair:"#adb5bd", prim:"#22223b", sec:"#4a4e69", acc:"#c9184a", body:"robe", hat:"mortar", item:"book", face:["beard","glasses"] } },
+    gk:{ name:"Professor Rubrica", title:"Dean of the Academy", spec:{ skin:"#d9dccf", hair:"#adb5bd", prim:"#22223b", sec:"#4a4e69", acc:"#c9184a", body:"robe", hat:"mortar", item:"book", face:["beard"], race:"lich", glow:"#5ef2ff" } },
     arrive:"The Academy of Enablement: your home ground, and where the role itself is judged.", intro:"Ah, {hero}. Professor Rubrica. I grade programs, not slides.",
     lore:"Readiness strategy, competency models, honest metrics, safe AI and influence without authority.", trap:"Completion rates are not readiness. Measure behavior in the field.", resolve:"Readiness is a field outcome. I'll prove it." },
   q11:{ theme:"library", scroll:["Scroll of True Stories","#d62828"],
-    gk:{ name:"Saga", title:"Bard of the Hall of Stories", spec:{ skin:"#e0ac69", hair:"#9d0208", prim:"#9d0208", sec:"#370617", acc:"#ffba08", body:"tunic", hat:"feather", hatC:"#2d6a4f", item:"lute", face:["mustache"] } },
+    gk:{ name:"Saga", title:"Bard of the Hall of Stories", spec:{ skin:"#e0ac69", hair:"#9d0208", prim:"#9d0208", sec:"#370617", acc:"#ffba08", body:"tunic", hat:"feather", hatC:"#2d6a4f", item:"lute", face:["mustache"], build:"small", race:"halfling" } },
     arrive:"A quiet hall lined with stories. Only true ones survive the follow-up questions.", intro:"Sit, {hero}. I'm Saga. I've heard a thousand STAR stories, and I can tell which are invented.",
     lore:"Tell true stories of influence and innovation, and say plainly why you're on this road.", trap:"Never invent a number. Use [brackets] for details you still need to confirm.", resolve:"I'll tell it true, with the lesson and where I used it next." }
 };
@@ -910,7 +1116,7 @@ function portrait(sp, o) {
   o = o || {}; const id = "pt" + (++PID);
   const skin = sp.skin, ss = darken(skin, .2), hair = sp.hair || "#3b2a20", hs = darken(hair, .32), hh = lighten(hair, .38);
   const prim = sp.prim, ps = darken(prim, .32), sec = sp.sec || ps, acc = sp.acc || "#e0b130", metal = sp.metal || "#b7c0cc";
-  const iris = o.iris || sp.iris || mix(acc, "#3a86ff", .35), expr = o.expr || "neutral", bgc = o.bg || lighten(prim, .3);
+  const iris = o.iris || sp.glow || sp.iris || mix(acc, "#3a86ff", .35), race = sp.race || "", expr = o.expr || "neutral", bgc = o.bg || lighten(prim, .3);
   const hat = sp.hat, face = sp.face || [], robot = hat === "robot", hc = sp.hatC || prim;
   const hst = sp.hairStyle === "none" ? "none" : (sp.hairStyle || "short");
   const ink = "#1d1520", wood = "#7a5230", gold = "#e0b130";
@@ -959,7 +1165,8 @@ function portrait(sp, o) {
     if (hst === "short" && hat !== "hood") p.push(`<path d="M58 104 C52 60 76 36 100 36 C124 36 148 60 142 104 C140 92 136 84 132 80 L68 80 C64 84 60 92 58 104Z" fill="url(#${id}h)"/>`);
     if (hst === "spiky" && hat !== "hood") p.push(`<path d="M56 104 L46 72 L64 76 L58 46 L80 58 L86 30 L100 50 L114 28 L120 56 L142 44 L136 76 L154 72 L144 104Z" fill="url(#${id}h)"/>`);
     // ears, face, cel shading, blush
-    p.push(`<ellipse cx="62" cy="112" rx="6" ry="10" fill="${skin}"/><ellipse cx="138" cy="112" rx="6" ry="10" fill="${ss}"/>
+    p.push(race === "elf" ? `<path d="M64 102 L34 78 L62 122Z" fill="${skin}" stroke="${ink}" stroke-width="2" stroke-opacity=".5"/><path d="M136 102 L166 78 L138 122Z" fill="${ss}" stroke="${ink}" stroke-width="2" stroke-opacity=".5"/>` : race === "gnome" ? `<ellipse cx="58" cy="110" rx="12" ry="15" fill="${skin}"/><ellipse cx="142" cy="110" rx="12" ry="15" fill="${ss}"/>` : `<ellipse cx="62" cy="112" rx="6" ry="10" fill="${skin}"/><ellipse cx="138" cy="112" rx="6" ry="10" fill="${ss}"/>`);
+    p.push(`
       <path d="M62 98 C62 70 80 52 100 52 C120 52 138 70 138 98 C138 124 128 142 112 154 Q100 162 88 154 C72 142 62 124 62 98Z" fill="${skin}" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/>
       <path d="M138 98 C138 124 128 142 112 154 Q100 162 88 154 C106 150 122 132 126 106 C128 92 130 80 133 74 C137 82 138 90 138 98Z" fill="${ss}" opacity=".85"/>
       <ellipse cx="76" cy="128" rx="8" ry="4" fill="#ff7b8a" opacity=".32"/><ellipse cx="124" cy="128" rx="8" ry="4" fill="#ff7b8a" opacity=".28"/>`);
@@ -983,6 +1190,11 @@ function portrait(sp, o) {
     p.push(expr === "pleased" ? `<path d="M90 137 Q100 148 110 137 Q100 141 90 137Z" fill="#8a2c36" stroke="${darken(skin, .5)}" stroke-width="1.5"/>`
       : expr === "stern" ? `<path d="M92 141 Q100 137 108 141" fill="none" stroke="${darken(skin, .5)}" stroke-width="2.2" stroke-linecap="round"/>`
       : `<path d="M93 139 Q100 142 107 139" fill="none" stroke="${darken(skin, .5)}" stroke-width="2.2" stroke-linecap="round"/>`);
+    if (race === "orc") p.push(`<path d="M89 142 L92 130 L96 142Z" fill="#f4efe0" stroke="${ink}" stroke-width="1"/><path d="M104 142 L108 130 L111 142Z" fill="#f4efe0" stroke="${ink}" stroke-width="1"/>`);
+    if (race === "minotaur") p.push(`<ellipse cx="100" cy="134" rx="20" ry="13" fill="${lighten(skin, .3)}"/><ellipse cx="92" cy="132" rx="3" ry="2" fill="#2a1a10"/><ellipse cx="108" cy="132" rx="3" ry="2" fill="#2a1a10"/><path d="M93 141 Q100 144 107 141" fill="none" stroke="#2a1a10" stroke-width="2"/>`);
+    if (race === "golem") p.push(`<path d="M76 70 L82 84 L78 92 M126 128 L120 140 L124 150 M108 60 L104 72" fill="none" stroke="${darken(skin, .45)}" stroke-width="2.5"/>`);
+    if (sp.glow) p.push(`<circle cx="84" cy="112" r="15" fill="${sp.glow}" opacity=".25"/><circle cx="116" cy="112" r="15" fill="${sp.glow}" opacity=".25"/>`);
+    if (race === "gnome") p.push(`<ellipse cx="100" cy="126" rx="7" ry="6" fill="${darken(skin, .08)}" stroke="${darken(skin, .35)}" stroke-width="1.5"/>`);
     // facial hair and accessories
     if (face.includes("beard")) p.push(`<path d="M64 110 C66 152 86 178 100 180 C114 178 134 152 136 110 C130 134 118 148 100 148 C82 148 70 134 64 110Z" fill="url(#${id}h)"/><path d="M86 136 C92 130 98 132 100 135 C102 132 108 130 114 136 C108 136 104 138 100 138 C96 138 92 136 86 136Z" fill="${hair}"/>`);
     if (face.includes("longbeard")) p.push(`<path d="M64 110 C62 172 86 214 100 220 C114 214 138 172 136 110 C130 134 118 148 100 148 C82 148 70 134 64 110Z" fill="url(#${id}h)"/><path d="M86 136 C92 130 98 132 100 135 C102 132 108 130 114 136 C108 136 104 138 100 138 C96 138 92 136 86 136Z" fill="${hair}"/><path d="M92 170 Q100 196 108 170" fill="none" stroke="${hs}" stroke-width="2"/>`);
@@ -1003,6 +1215,7 @@ function portrait(sp, o) {
       if (sp.plume) p.push(`<path d="M100 32 C94 10 112 -4 140 0 C124 6 116 18 114 34Z" fill="${sp.plume}"/><path d="M104 28 C104 12 118 4 132 4" fill="none" stroke="${lighten(sp.plume, .4)}" stroke-width="2"/>`); }
     if (hat === "wizard") p.push(`<path d="M62 74 C74 52 86 22 116 -4 C110 22 126 46 138 74Z" fill="${hc}" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/><path d="M116 -4 C110 22 126 46 138 74 L112 74 C112 46 110 22 116 -4Z" fill="${darken(hc, .3)}" opacity=".6"/>
       <ellipse cx="100" cy="76" rx="62" ry="13" fill="${hc}" stroke="${ink}" stroke-width="2.2" stroke-opacity=".6" stroke-linejoin="round"/><ellipse cx="100" cy="80" rx="62" ry="9" fill="${darken(hc, .35)}" opacity=".5"/><path d="M66 70 Q100 80 134 70 L134 76 Q100 86 66 76Z" fill="${acc}"/><path d="M98 40 l3 6 6 1 -5 4 1 6 -5 -3 -5 3 1 -6 -5 -4 6 -1z" fill="${acc}"/>`);
+    if (race === "tiefling") p.push(`<path d="M66 78 C50 66 46 46 56 34 C58 50 66 60 78 66Z" fill="#2a1a1a"/><path d="M134 78 C150 66 154 46 144 34 C142 50 134 60 122 66Z" fill="#2a1a1a"/>`);
     if (hat === "crown") p.push(`<path d="M68 70 L72 42 L86 58 L100 34 L114 58 L128 42 L132 70 Q100 78 68 70Z" fill="${gold}"/><path d="M68 70 Q100 78 132 70 L132 64 Q100 72 68 64Z" fill="${darken(gold, .3)}"/><circle cx="100" cy="58" r="5" fill="#c0392b"/><circle cx="78" cy="62" r="3" fill="#2b6cb0"/><circle cx="122" cy="62" r="3" fill="#2b6cb0"/>`);
     if (hat === "mortar") p.push(`<path d="M66 74 Q100 60 134 74 L134 86 Q100 74 66 86Z" fill="#222831"/><path d="M100 36 L164 54 L100 72 L36 54Z" fill="#2d3340"/><path d="M100 36 L164 54 L100 58 L36 54Z" fill="#3d4454"/><path d="M100 54 L152 60 L154 92" fill="none" stroke="${gold}" stroke-width="3"/><circle cx="154" cy="96" r="5" fill="${gold}"/>`);
     if (hat === "hardhat") p.push(`<path d="M60 80 C60 48 78 32 100 32 C122 32 140 48 140 80Z" fill="#f2c230"/><path d="M100 32 C122 32 140 48 140 80 L118 80 C120 56 112 40 100 32Z" fill="#d79a0c"/><path d="M50 82 Q100 70 150 82 L150 90 Q100 80 50 90Z" fill="#f2c230"/><path d="M96 34 L104 34 L104 78 L96 78Z" fill="#ffd95a"/>`);
@@ -1085,13 +1298,13 @@ function panelURL(key, theme, kind, heroSpec, gkSpec, extra) {
   x.fillStyle = T.ground; x.fillRect(0, 60, 128, 20); x.fillStyle = lighten(T.ground, .25); x.fillRect(0, 60, 128, 2);
   x.fillStyle = darken(T.ground, .2); for (let i = 0; i < 40; i++) x.fillRect((i * 37) % 126, 64 + (i * 13) % 15, 2, 1);
   const L = (fn, a) => { x.save(); x.scale(2, 2); if (a != null) x.globalAlpha = a; fn(); x.restore(); };
-  const hero = sprite16(heroSpec), gk = sprite16(gkSpec);
-  if (kind === "arrive" || kind === "gate") { L(() => landmark(x, theme, kind)); drawSprite(x, hero, kind === "gate" ? 46 : 2, 28); if (kind === "gate") L(() => prop(x, "spark", 40, 4)); }
-  else if (kind === "meet") { L(() => landmark(x, theme, "faint")); x.fillStyle = T.sky; x.globalAlpha = .55; x.fillRect(0, 0, 128, 60); x.globalAlpha = 1; drawSprite(x, hero, 16, 28); drawSprite(x, gk, 76, 28, 1, true); }
+  const hero = spriteData(heroSpec), gk = spriteData(gkSpec), Y = t => 63 - t.h;
+  if (kind === "arrive" || kind === "gate") { L(() => landmark(x, theme, kind)); drawSprite(x, hero, kind === "gate" ? 40 : 2, Y(hero)); if (kind === "gate") L(() => prop(x, "spark", 40, 4)); }
+  else if (kind === "meet") { L(() => landmark(x, theme, "faint")); x.fillStyle = T.sky; x.globalAlpha = .55; x.fillRect(0, 0, 128, 60); x.globalAlpha = 1; drawSprite(x, hero, 14, Y(hero)); drawSprite(x, gk, 70, Y(gk), 1, true); }
   else if (kind === "gk") { L(() => landmark(x, theme, "faint"), .35); drawSprite(x, gk, 28, -4, 2, true); }
-  else if (kind === "ob") { L(() => landmark(x, theme, "faint"), .3); drawSprite(x, gk, 84, 28, 1, true); L(() => prop(x, "?", 8 + (extra % 3) * 4, 10)); x.fillStyle = "#ffffff"; x.font = "bold 16px monospace"; x.fillText(String(extra + 1), (8 + (extra % 3) * 4) * 2 + 32, 40); }
-  else if (kind === "trap") { L(() => landmark(x, theme, "faint")); x.fillStyle = "#d00000"; x.globalAlpha = .3; x.fillRect(0, 0, 128, 80); x.globalAlpha = 1; L(() => prop(x, "!", 27, 6)); drawSprite(x, gk, 88, 28, 1, true); drawSprite(x, hero, 8, 28); }
-  else if (kind === "rules") { L(() => landmark(x, theme, "faint"), .3); L(() => prop(x, "scroll", 8, 12)); drawSprite(x, gk, 80, 28, 1, true); }
+  else if (kind === "ob") { L(() => landmark(x, theme, "faint"), .3); drawSprite(x, gk, 78, Y(gk), 1, true); L(() => prop(x, "?", 8 + (extra % 3) * 4, 10)); x.fillStyle = "#ffffff"; x.font = "bold 16px monospace"; x.fillText(String(extra + 1), (8 + (extra % 3) * 4) * 2 + 32, 40); }
+  else if (kind === "trap") { L(() => landmark(x, theme, "faint")); x.fillStyle = "#d00000"; x.globalAlpha = .3; x.fillRect(0, 0, 128, 80); x.globalAlpha = 1; L(() => prop(x, "!", 27, 6)); drawSprite(x, gk, 80, Y(gk), 1, true); drawSprite(x, hero, 2, Y(hero)); }
+  else if (kind === "rules") { L(() => landmark(x, theme, "faint"), .3); L(() => prop(x, "scroll", 8, 12)); drawSprite(x, gk, 78, Y(gk), 1, true); }
   else if (kind === "bg") { L(() => landmark(x, theme, "faint"), .45); x.fillStyle = "#000000"; x.globalAlpha = .12; x.fillRect(0, 0, 128, 80); x.globalAlpha = 1; }
   else if (kind === "hero") { L(() => landmark(x, theme, "faint"), .3); drawSprite(x, hero, 28, -4, 2); L(() => prop(x, "spark", 50, 6)); }
   return (PANEL_URLS[key] = c.toDataURL());
@@ -1231,12 +1444,12 @@ function mapSvg() {
     const num = n.final ? "★" : n.cleared ? "✓" : String(i + 1), sub = n.cleared && !n.final ? "Cleared · " + n.score : n.sub;
     const gkImg = spriteURL("gk-" + n.id, n.gk.spec);
     const scr = n.cleared && !n.final ? `<image href="${scrollURL(QX[n.id].scroll[1])}" x="${x - 52}" y="${y - 44}" width="24" height="24"/>` : "";
-    return `<a href="#${n.id}" class="${cls}" aria-label="${esc(n.name)}"><image href="${gkImg}" data-frames="${gkImg}|${spriteURL("gk-" + n.id, n.gk.spec, 1)}" x="${x + 22}" y="${y - 58}" width="33" height="38"/>${scr}
+    return `<a href="#${n.id}" class="${cls}" aria-label="${esc(n.name)}"><image href="${gkImg}" data-frames="${gkImg}|${spriteURL("gk-" + n.id, n.gk.spec, 1)}" x="${x + 20}" y="${y - 66}" width="36" height="48"/>${scr}
       <circle cx="${x}" cy="${y}" r="30"/><text class="num" x="${x}" y="${y}">${num}</text>
       <text class="nm" x="${x}" y="${y + 52}">${esc(n.name)}</text><text class="sub" x="${x}" y="${y + 68}">${esc(sub)}</text></a>`;
   }).join("");
   const [hx, hy] = POS[Math.min(S.heroAt, 11)];
-  const hero = S.hero ? `<g id="hero-token" transform="translate(${hx - 20} ${hy - 84})"><image id="hero-img" href="${heroImg()}" data-frames="${heroImg()}|${spriteURL("hero-" + heroObj().id, heroObj().spec, 1)}" width="36" height="42"/><text x="18" y="-4" class="heroname">${esc(heroName().slice(0, 18))}</text></g>` : "";
+  const hero = S.hero ? `<g id="hero-token" transform="translate(${hx - 21} ${hy - 92})"><image id="hero-img" href="${heroImg()}" data-frames="${heroImg()}|${spriteURL("hero-" + heroObj().id, heroObj().spec, 1)}" width="42" height="56"/><text x="21" y="-4" class="heroname">${esc(heroName().slice(0, 18))}</text></g>` : "";
   return `<svg class="map" viewBox="0 -24 1000 514" role="img" aria-label="Quest map">${segs}${nodeSvg}${hero}</svg>`;
 }
 function animateTravel(from, to, done) {
@@ -1251,7 +1464,7 @@ function animateTravel(from, to, done) {
     if (img) img.setAttribute("href", walk[Math.floor(ts / 140) % 2]);
     if (t0 == null) t0 = ts;
     const L = seg.getTotalLength(), k = Math.min(1, (ts - t0) / 900), p = seg.getPointAtLength(L * k);
-    tok.setAttribute("transform", `translate(${p.x - 20} ${p.y - 84 + Math.abs(Math.sin(k * Math.PI * 4)) * -4})`);
+    tok.setAttribute("transform", `translate(${p.x - 21} ${p.y - 92 + Math.abs(Math.sin(k * Math.PI * 4)) * -4})`);
     if (k >= 1) { si++; t0 = null; }
     requestAnimationFrame(step);
   };
@@ -1360,7 +1573,7 @@ function viewQuest(q) {
       <p class="lead">${esc(q.intro)}</p>
     </div>
     <div class="stack" style="align-items:flex-start">
-      <div class="row" style="gap:10px"><img class="px" src="${heroImg()}" alt="" style="width:45px;height:52px"><div><b>${esc(heroName())}</b><br><span class="note">${esc(heroObj().cls)}</span></div></div>
+      <div class="row" style="gap:10px"><img class="px" src="${heroImg()}" alt="" style="width:45px;height:60px"><div><b>${esc(heroName())}</b><br><span class="note">${esc(heroObj().cls)}</span></div></div>
       <span class="label">Obstacles</span><div class="pips">${pips}</div>
       <span class="pill ${questCleared(q) ? tone(questScore(q)) : "none"}">${questCleared(q) ? "Region score " + questScore(q) : q.obstacles.filter(o => obScore(o) != null).length + " of " + q.obstacles.length + " cleared"}</span>
       ${packHtml("Scrolls you carry")}
@@ -1727,6 +1940,7 @@ document.addEventListener("input", ev => {
 });
 window.addEventListener("hashchange", () => { route(); window.scrollTo(0, 0); });
 setInterval(header, 60000);
+preloadFigures();
 setInterval(() => {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   TICK = 1 - TICK;
