@@ -1059,66 +1059,66 @@ function scrollURL(color) {
 const HEROES = [
   { id:"knight", cls:"Firewall Knight", persona:"A veteran of a thousand rulebases who started on SRX zones and Firepower policies and has never trusted a port number.",
     strengths:["NGFW policy and threat inspection","Calm troubleshooting under pressure"], power:"Shield of App-ID: sees the application behind any port.", cry:"No port goes unchallenged.",
-    spec:{ skin:"#f1c27d", hair:"#8a4b2a", prim:"#3d5a80", sec:"#293241", acc:"#e63946", body:"armor", hat:"helmet", plume:"#e63946", item:"sword", shield:"#c9a227", build:"dwarf", race:"dwarf", face:["beard"] } },
+    spec:{ skin:"#f1c27d", hair:"#8a4b2a", prim:"#3d5a80", sec:"#293241", acc:"#e63946", body:"armor", hat:"helmet", plume:"#e63946", item:"sword", shield:"#c9a227", build:"dwarf", race:"dwarf", face:["beard"], faceShape:"square" } },
   { id:"mage", cls:"Identity Mage", persona:"Trained in the ISE towers, fluent in 802.1X and segmentation, and certain that every packet has a name behind it.",
     strengths:["Zero Trust and identity-based policy","Cisco ISE and TrustSec depth"], power:"True Name: binds every session to a user and a device.", cry:"Show me who you are, and I'll show you the way.",
-    spec:{ skin:"#c68642", hair:"#e8e6f0", hairStyle:"long", prim:"#1d7874", sec:"#0b3d3a", acc:"#f4d35e", body:"robe", hat:"wizard", hatC:"#1d7874", item:"staff", orb:"#f4d35e", build:"slim", race:"elf" } },
+    spec:{ skin:"#c68642", hair:"#e8e6f0", hairStyle:"long", prim:"#1d7874", sec:"#0b3d3a", acc:"#f4d35e", body:"robe", hat:"wizard", hatC:"#1d7874", item:"staff", orb:"#f4d35e", build:"slim", race:"elf", faceShape:"long", eyeShape:"narrow" } },
   { id:"ranger", cls:"Packet Ranger", persona:"Has walked every path from campus EVPN fabrics to SD-WAN overlays, and always checks the road home.",
     strengths:["Routing, switching and SD-WAN","Packet walks and path design"], power:"Return Route: can trace any packet there and back.", cry:"Every path has a return route.",
     spec:{ skin:"#8fae74", hair:"#2b1d12", build:"broad", race:"orc", prim:"#4f772d", sec:"#31572c", acc:"#ecf39e", body:"tunic", hat:"hood", hatC:"#31572c", item:"bow", legs:"#6b4f2a" } },
   { id:"artificer", cls:"Automation Artificer", persona:"Builds labs that build themselves, with Python, Ansible and Apstra, and teaches by letting people break things safely.",
     strengths:["Lab-as-code and automation","Hands-on enablement at scale"], power:"Clockwork Lab: spins up a thousand labs before breakfast.", cry:"If I can script it, I can teach it.",
-    spec:{ skin:"#8d5524", hair:"#2d1b0e", prim:"#e76f51", sec:"#264653", acc:"#f4a261", body:"coat", hat:"headband", hairStyle:"spiky", item:"wrench", build:"small", race:"gnome" } }
+    spec:{ skin:"#8d5524", hair:"#2d1b0e", prim:"#e76f51", sec:"#264653", acc:"#f4a261", body:"coat", hat:"headband", hairStyle:"spiky", item:"wrench", build:"small", race:"gnome", faceShape:"round", eyeShape:"wide", marks:["freckles"] } }
 ];
 
 /* ================================================================ gatekeepers, comics, scrolls */
 const QX = {
   q1:{ theme:"gate", scroll:["Scroll of Definitions","#c0392b"],
-    gk:{ name:"Lexis", title:"Warden of the Gate", spec:{ skin:"#8f949e", hair:"#8a8a8a", hairStyle:"none", prim:"#2c3e66", sec:"#7a2e2e", acc:"#e0b130", body:"tabard", hat:"helmet", item:"key", build:"broad", race:"golem", glow:"#7fe3ff" } },
+    gk:{ name:"Lexis", title:"Warden of the Gate", spec:{ skin:"#8f949e", hair:"#8a8a8a", hairStyle:"none", prim:"#2c3e66", sec:"#7a2e2e", acc:"#e0b130", body:"tabard", hat:"helmet", item:"key", build:"broad", race:"golem", glow:"#7fe3ff", faceShape:"square", eyeShape:"narrow", marks:["runes"], aura:"key" } },
     arrive:"Dawn. The road to Palo Alto starts at a stone gate carved with acronyms.", intro:"Halt, {hero}. I am Lexis, Warden of the Gate. Many arrive speaking in slogans. None pass that way.",
     lore:"Here I test whether you can say what SASE and SSE really are, and why Prisma Access running PAN-OS matters.", trap:"Beware the slide-deck answer. PoP counts and rankings are not architecture.", resolve:"I'll speak in mechanisms, not slogans." },
   q2:{ theme:"citadel", scroll:["Scroll of the Four Gates","#3a86ff"],
-    gk:{ name:"Nimbus", title:"Keeper of the Four Gates", spec:{ skin:"#8fc3e6", hair:"#f4f4f4", prim:"#8ecae6", sec:"#4a7fa7", acc:"#ffffff", body:"robe", hat:"wizard", hatC:"#dff3ff", item:"staff", orb:"#ffffff", face:["longbeard"], build:"float", race:"djinn" } },
+    gk:{ name:"Nimbus", title:"Keeper of the Four Gates", spec:{ skin:"#8fc3e6", hair:"#f4f4f4", prim:"#8ecae6", sec:"#4a7fa7", acc:"#ffffff", body:"robe", hat:"wizard", hatC:"#dff3ff", item:"staff", orb:"#ffffff", face:["longbeard"], build:"float", race:"djinn", faceShape:"long", eyeShape:"sleepy", marks:["wrinkles"], aura:"cloud" } },
     arrive:"Above the clouds floats a citadel with four gates: mobile users, remote networks, service connections and connectors.", intro:"Welcome, {hero}. I am Nimbus. I decide who enters the cloud, and by which gate.",
     lore:"Know each gate's purpose, where traffic leaves, and how it finds its way home.", trap:"Many forget the road home: the return route for the mobile user pool.", resolve:"Every gate has a purpose. I'll name each one." },
   q3:{ theme:"forge", scroll:["Scroll of the Forge","#e85d04"],
-    gk:{ name:"Ember", title:"Smith of the Firewall Forge", spec:{ skin:"#c0582e", hair:"#ff7b00", prim:"#6c757d", sec:"#343a40", acc:"#ffba08", body:"apron", hairStyle:"none", item:"hammer", face:["beard"], build:"giant", race:"giant" } },
+    gk:{ name:"Ember", title:"Smith of the Firewall Forge", spec:{ skin:"#c0582e", hair:"#ff7b00", prim:"#6c757d", sec:"#343a40", acc:"#ffba08", body:"apron", hairStyle:"none", item:"hammer", face:["beard"], build:"giant", race:"giant", faceShape:"square", eyeShape:"fierce", marks:["soot","scar"], aura:"anvil" } },
     arrive:"Heat rolls from the forge where Palo Alto's oldest blades were made: App-ID, User-ID and Content-ID.", intro:"So, {hero}, you've swung SRX and Firepower blades. Show me you can work this steel.",
     lore:"Here applications, not ports, are the edge of every rule. Users have names. Allowed traffic still gets inspected.", trap:"Mind the NAT trap: security rules see the pre-NAT address and the post-NAT zone.", resolve:"I know these blades by other names. I'll learn their Palo Alto temper." },
   q4:{ theme:"bridge", scroll:["Scroll of Trust","#7b2cbf"],
-    gk:{ name:"Brother Hip", title:"Keeper of Posture", spec:{ skin:"#f1c27d", prim:"#5a189a", sec:"#3c096c", acc:"#f6c453", body:"robe", hat:"hood", hatC:"#7b2cbf", item:"lantern", face:["mask"] } },
+    gk:{ name:"Brother Hip", title:"Keeper of Posture", spec:{ skin:"#f1c27d", prim:"#5a189a", sec:"#3c096c", acc:"#f6c453", body:"robe", hat:"hood", hatC:"#7b2cbf", item:"lantern", face:["mask"], faceShape:"long", eyeShape:"wide", marks:["thirdeye"], aura:"eye" } },
     arrive:"A rope bridge spans a chasm called Allow-and-Ignore. Only the continuously trusted cross.", intro:"Peace, {hero}. I am Brother Hip. I check every traveller, and I keep checking halfway across.",
     lore:"ZTNA 2.0 must be shown in configuration: App-ID rules, posture rechecked, inspection that never stops.", trap:"Don't claim rivals can do none of this. Overclaiming breaks the bridge.", resolve:"I'll show the configuration, not the slogan." },
   q5:{ theme:"maze", scroll:["Scroll of the Packet Walk","#2a9d8f"],
-    gk:{ name:"Traceroute", title:"Minotaur of the Labyrinth", spec:{ skin:"#7f5539", hair:"#432818", prim:"#9c6644", sec:"#582f0e", acc:"#e0b130", body:"tunic", hat:"horns", item:"map", face:["nosering"], eye:"#d00000", build:"broad", race:"minotaur" } },
+    gk:{ name:"Traceroute", title:"Minotaur of the Labyrinth", spec:{ skin:"#7f5539", hair:"#432818", prim:"#9c6644", sec:"#582f0e", acc:"#e0b130", body:"tunic", hat:"horns", item:"map", face:["nosering"], eye:"#d00000", build:"broad", race:"minotaur", faceShape:"bull", eyeShape:"fierce", marks:["tattoo"], aura:"maze" } },
     arrive:"The labyrinth swallows packets whole. Its walls are DNS, routing tables and return paths.", intro:"Grrr. {hero}. I am Traceroute. I've watched many engineers stop at the firewall and get lost.",
     lore:"Walk every hop, out and back. Read the logs: no log, deny and incomplete each mean something different.", trap:"Never stop at the processing node. The DC side and the return route hide most monsters.", resolve:"Every path has a return route. I'll trace both directions." },
   q6:{ theme:"river", scroll:["Scroll of the Rivers","#0077b6"],
-    gk:{ name:"Captain Jitter", title:"Pilot of the WAN Rivers", spec:{ skin:"#e0ac69", hair:"#1b1b1b", prim:"#023e8a", sec:"#03045e", acc:"#d00000", body:"coat", hat:"pirate", item:"flag", face:["eyepatch","mustache"] } },
+    gk:{ name:"Captain Jitter", title:"Pilot of the WAN Rivers", spec:{ skin:"#e0ac69", hair:"#1b1b1b", prim:"#023e8a", sec:"#03045e", acc:"#d00000", body:"coat", hat:"pirate", item:"flag", face:["eyepatch","mustache"], faceShape:"square", eyeShape:"narrow", marks:["scar","goldtooth","stubble"], hairStyle:"long", aura:"compass" } },
     arrive:"Branch traffic flows down three rivers: MPLS, broadband and LTE. Choose the channel badly and calls go robotic.", intro:"Ahoy, {hero}. Captain Jitter. I've steered every SD-WAN boat on these waters.",
     lore:"Explain how app-defined paths differ from probe-based ones, and who should steer: SCM or Panorama.", trap:"Don't confuse Prisma SD-WAN with SD-WAN on the firewalls. Two different boats.", resolve:"I've sailed Catalyst and SSR waters. I'll compare them fairly." },
   q7:{ theme:"towers", scroll:["Scroll of the Watch","#38b000"],
-    gk:{ name:"ADEM-7", title:"The Watching Engine", spec:{ skin:"#b7c0cc", metal:"#b7c0cc", prim:"#495057", sec:"#212529", acc:"#38b000", body:"tunic", hat:"robot", hairStyle:"none", item:"tablet" } },
+    gk:{ name:"ADEM-7", title:"The Watching Engine", spec:{ skin:"#b7c0cc", metal:"#b7c0cc", prim:"#495057", sec:"#212529", acc:"#38b000", body:"tunic", hat:"robot", hairStyle:"none", item:"tablet", aura:"radar" } },
     arrive:"Two towers watch the realm: one guards the data, one watches the experience.", intro:"Greetings, {hero}. I am ADEM-7. I measure every segment from laptop to app.",
     lore:"Know which tower sees what: inline vs. API CASB, Enterprise DLP, and segment-by-segment experience.", trap:"Never blame the cloud before reading the segments.", resolve:"I'll let the measurements speak first." },
   q8:{ theme:"kingdoms", scroll:["Scroll of Rival Lore","#ffb703"],
-    gk:{ name:"Envoy Duality", title:"Ambassador of the Borderlands", spec:{ skin:"#b5655d", race:"tiefling", hair:"#2a1a1a", prim:"#c1121f", sec:"#1d4ed8", acc:"#e0b130", body:"split", hat:"crown", cape:"#3c1642", shield:"#e0b130" } },
+    gk:{ name:"Envoy Duality", title:"Ambassador of the Borderlands", spec:{ skin:"#b5655d", race:"tiefling", hair:"#2a1a1a", prim:"#c1121f", sec:"#1d4ed8", acc:"#e0b130", body:"split", hat:"crown", cape:"#3c1642", shield:"#e0b130", faceShape:"long", eyeShape:"fierce", marks:["facepaint"], hairStyle:"wild", aura:"banners" } },
     arrive:"You enter the borderlands between the kingdoms you served and the one you seek to join.", intro:"Welcome back, {hero}. I am Envoy Duality. I know your old allegiances, and here they're useful.",
     lore:"Map Cisco and Juniper to Palo Alto precisely, and position with respect, not mockery.", trap:"Old maps lie: competitor names change. Verify before you quote.", resolve:"My past kingdoms are my advantage. I'll use them with precision." },
   q9:{ theme:"summit", scroll:["Scroll of the Architect","#457b9d"],
-    gk:{ name:"Archimedia", title:"Master Architect of the Summit", spec:{ skin:"#c68642", hair:"#2b2b2b", prim:"#f4a261", sec:"#264653", acc:"#2a9d8f", body:"coat", hat:"hardhat", item:"tablet", face:["glasses"] } },
+    gk:{ name:"Archimedia", title:"Master Architect of the Summit", spec:{ skin:"#c68642", hair:"#2b2b2b", prim:"#f4a261", sec:"#264653", acc:"#2a9d8f", body:"coat", hat:"hardhat", item:"tablet", face:["glasses"], faceShape:"round", eyeShape:"wide", marks:["freckles","pencil"], hairStyle:"bun", aura:"dividers" } },
     arrive:"Above the clouds, the summit. Here you stop answering and start designing.", intro:"{hero}. I'm Archimedia. Every line you draw here must survive the word 'why'.",
     lore:"Design a full SASE migration and a segmented three-tier app, with phases, rollbacks and metrics.", trap:"A bill of materials is not a design. Start with discovery.", resolve:"Discovery first, then design, then defend every tradeoff." },
   q10:{ theme:"academy", scroll:["Scroll of Readiness","#6a4c93"],
-    gk:{ name:"Professor Rubrica", title:"Dean of the Academy", spec:{ skin:"#d9dccf", hair:"#adb5bd", prim:"#22223b", sec:"#4a4e69", acc:"#c9184a", body:"robe", hat:"mortar", item:"book", face:["beard"], race:"lich", glow:"#5ef2ff" } },
+    gk:{ name:"Professor Rubrica", title:"Dean of the Academy", spec:{ skin:"#d9dccf", hair:"#adb5bd", prim:"#22223b", sec:"#4a4e69", acc:"#c9184a", body:"robe", hat:"mortar", item:"book", face:["beard"], race:"lich", glow:"#5ef2ff", faceShape:"skull", marks:["wrinkles"], aura:"book" } },
     arrive:"The Academy of Enablement: your home ground, and where the role itself is judged.", intro:"Ah, {hero}. Professor Rubrica. I grade programs, not slides.",
     lore:"Readiness strategy, competency models, honest metrics, safe AI and influence without authority.", trap:"Completion rates are not readiness. Measure behavior in the field.", resolve:"Readiness is a field outcome. I'll prove it." },
   q11:{ theme:"library", scroll:["Scroll of True Stories","#d62828"],
-    gk:{ name:"Saga", title:"Bard of the Hall of Stories", spec:{ skin:"#e0ac69", hair:"#9d0208", prim:"#9d0208", sec:"#370617", acc:"#ffba08", body:"tunic", hat:"feather", hatC:"#2d6a4f", item:"lute", face:["mustache"], build:"small", race:"halfling" } },
+    gk:{ name:"Saga", title:"Bard of the Hall of Stories", spec:{ skin:"#e0ac69", hair:"#9d0208", prim:"#9d0208", sec:"#370617", acc:"#ffba08", body:"tunic", hat:"feather", hatC:"#2d6a4f", item:"lute", face:["mustache"], build:"small", race:"halfling", faceShape:"round", eyeShape:"wide", marks:["freckles"], hairStyle:"braid", aura:"lyre" } },
     arrive:"A quiet hall lined with stories. Only true ones survive the follow-up questions.", intro:"Sit, {hero}. I'm Saga. I've heard a thousand STAR stories, and I can tell which are invented.",
     lore:"Tell true stories of influence and innovation, and say plainly why you're on this road.", trap:"Never invent a number. Use [brackets] for details you still need to confirm.", resolve:"I'll tell it true, with the lesson and where I used it next." }
 };
-const HALL = { theme:"hall", gk:{ name:"The Chair", title:"Head of the Interview Panel", spec:{ skin:"#d4a373", hair:"#ced4da", prim:"#343a40", sec:"#212529", acc:"#e0b130", body:"coat", hairStyle:"long", face:["glasses"] } } };
+const HALL = { theme:"hall", gk:{ name:"The Chair", title:"Head of the Interview Panel", spec:{ skin:"#d4a373", hair:"#ced4da", prim:"#343a40", sec:"#212529", acc:"#e0b130", body:"coat", hairStyle:"bun", face:[], faceShape:"long", eyeShape:"narrow", marks:["wrinkles","monocle"], aura:"scales" } } };
 const BRIEF = { o11:"Explain Prisma SASE to a Cisco-trained SE in 90 seconds, and say what's architecturally different.", o12:"Decide SASE or SSE for a customer who already runs someone else's SD-WAN.",
   o21:"Tell remote networks, service connections and mobile users apart.", o22:"Design app access for two DCs and an acquired company with overlapping IPs.", o23:"Explain locations, compute locations and the infrastructure subnet.",
   o31:"Explain how App-ID unmasks an application, even inside TLS.", o32:"Turn an SRX 'any to tcp/443 permit' rule into proper PAN-OS policy.", o33:"Explain User-ID, and how to bring Cisco ISE identity into it.",
@@ -1164,6 +1164,27 @@ function particles(kind, color, W, H, seed, n) {
   }
   return out.join("");
 }
+const FACES = {
+  round:"M68 100 C68 70 84 54 100 54 C118 54 134 70 134 100 C134 128 124 150 100 160 C76 150 68 128 68 100Z",
+  long:"M72 96 C72 66 86 50 100 50 C114 50 128 66 128 96 C128 126 122 152 110 164 C104 168 96 168 90 164 C78 152 72 126 72 96Z",
+  square:"M68 96 C68 68 84 54 100 54 C116 54 132 68 132 96 L132 128 C132 146 120 158 100 160 C80 158 68 146 68 128Z",
+  bull:"M62 100 C62 66 82 50 100 50 C118 50 138 66 138 100 C138 132 126 156 100 162 C74 156 62 132 62 100Z",
+  skull:"M70 96 C70 66 84 52 100 52 C116 52 130 66 130 96 C130 116 124 128 118 136 L114 156 C108 162 92 162 86 156 L82 136 C76 128 70 116 70 96Z"
+};
+const GLYPHS = {
+  key:"M100 26 a16 16 0 1 0 0.1 0 M100 58 L100 168 M100 134 L120 134 M100 152 L116 152",
+  cloud:"M100 96 m-6 0 a6 6 0 1 1 12 0 a12 12 0 1 1 -24 0 a24 24 0 1 1 48 0 a40 40 0 1 1 -80 0",
+  anvil:"M46 72 L154 72 L154 84 L130 94 L124 122 L142 134 L58 134 L76 122 L70 94 L46 84Z M100 60 C92 46 104 40 100 26 C112 38 112 50 100 60",
+  eye:"M36 96 Q100 36 164 96 Q100 156 36 96Z M84 96 a16 16 0 1 0 32 0 a16 16 0 1 0 -32 0",
+  maze:"M36 32 L164 32 L164 160 L36 160 L36 58 M58 54 L142 54 L142 138 L58 138 L58 80 M80 76 L120 76 L120 116 L80 116 L80 96",
+  compass:"M100 18 L111 96 L100 174 L89 96Z M22 96 L100 85 L178 96 L100 107Z",
+  radar:"M70 96 a30 30 0 0 1 60 0 M50 96 a50 50 0 0 1 100 0 M30 96 a70 70 0 0 1 140 0 M100 96 L152 44",
+  banners:"M48 164 L152 36 M152 164 L48 36 M152 36 L180 48 L152 62 M48 36 L20 48 L48 62",
+  dividers:"M100 22 L58 172 M100 22 L142 172 M92 22 a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0 M74 112 L126 112",
+  book:"M28 70 Q64 54 100 74 Q136 54 172 70 L172 152 Q136 136 100 156 Q64 136 28 152Z M100 74 L100 156",
+  lyre:"M62 162 L138 162 M70 162 C38 110 58 58 80 38 M130 162 C162 110 142 58 120 38 M80 38 Q100 28 120 38 M88 58 L88 162 M100 54 L100 162 M112 58 L112 162",
+  scales:"M100 26 L100 166 M62 166 L138 166 M48 58 L152 58 M48 58 L32 108 L64 108Z M152 58 L136 108 L168 108Z"
+};
 function themeOf(o, prim) {
   if (o.theme && PAINT[o.theme]) return PAINT[o.theme];
   const c = o.bg || lighten(prim, .2);
@@ -1174,7 +1195,8 @@ function portrait(sp, o) {
   const skin = sp.skin, sL = lighten(skin, .22), sD = darken(skin, .32), hair = sp.hair || "#3b2a20", hL = lighten(hair, .45), hD = darken(hair, .45);
   const prim = sp.prim, sec = sp.sec || darken(prim, .3), acc = sp.acc || "#e0b130", metal = sp.metal || "#b7c0cc";
   const race = sp.race || "", hat = sp.hat, face = sp.face || [], hc = sp.hatC || prim, expr = o.expr || "neutral";
-  const iris = o.iris || sp.glow || sp.iris || mix(acc, "#3a86ff", .35), hst = sp.hairStyle === "none" ? "none" : (sp.hairStyle || "short");
+  const iris = o.iris || sp.glow || sp.iris || mix(acc, "#3a86ff", .35), hst0 = sp.hairStyle === "none" ? "none" : (sp.hairStyle || "short");
+  const hst = hst0 === "braid" || hst0 === "bun" ? "short" : hst0 === "wild" ? "long" : hst0, marks = sp.marks || [], FACE = FACES[sp.faceShape] || "M70 98 C70 70 84 54 100 54 C118 54 132 70 132 98 C132 122 126 140 114 152 C108 158 104 160 100 160 C96 160 92 158 86 152 C74 140 70 122 70 98Z";
   const robot = hat === "robot", ink = "#1a1218", still = o.still || !MOTION(), A = s => still ? "" : s;
   const glowF = `filter="url(#${id}gw)"`, blur = `filter="url(#${id}bl)"`;
   const p = [];
@@ -1192,7 +1214,7 @@ function portrait(sp, o) {
     <filter id="${id}bl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
     <filter id="${id}gw" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     <filter id="${id}tx"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${PID % 9}"/><feColorMatrix values="0 0 0 0 .35  0 0 0 0 .25  0 0 0 0 .15  0 0 0 .5 -.1"/></filter>
-    <clipPath id="${id}fc"><path d="M70 98 C70 70 84 54 100 54 C118 54 132 70 132 98 C132 122 126 140 114 152 C108 158 104 160 100 160 C96 160 92 158 86 152 C74 140 70 122 70 98Z"/></clipPath>
+    <clipPath id="${id}fc"><path d="${FACE}"/></clipPath>
     <clipPath id="${id}card"><rect x="0" y="0" width="200" height="260" rx="${o.frame ? 12 : 0}"/></clipPath>
   </defs><g clip-path="url(#${id}card)">`);
   // background painting
@@ -1202,6 +1224,7 @@ function portrait(sp, o) {
       <path d="M0 214 L40 196 L74 206 L120 188 L160 204 L200 194 L200 260 L0 260Z" fill="${T.sil}" opacity=".8"/>
       ${particles(T.fx, T.glow, 200, 260, PID, 8)}`);
   }
+  if (sp.aura && GLYPHS[sp.aura]) p.push(`<g opacity="${o.nobg ? .35 : .5}" transform="translate(0 4)"><g>${A(`<animateTransform attributeName="transform" type="rotate" values="0 100 96;360 100 96" dur="60s" repeatCount="indefinite"/>`)}<circle cx="100" cy="96" r="84" fill="none" stroke="${T.glow}" stroke-width="1.6" stroke-dasharray="3 7"/></g><path d="${GLYPHS[sp.aura]}" fill="none" stroke="${T.glow}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" ${glowF}>${A(`<animate attributeName="opacity" values=".55;1;.55" dur="4s" repeatCount="indefinite"/>`)}</path></g>`);
   const flip = o.flip ? ` transform="translate(200 0) scale(-1 1)"` : "";
   p.push(`<g${flip}><g>${A(`<animateTransform attributeName="transform" type="translate" values="0 0;0 1.6;0 0" dur="4.4s" repeatCount="indefinite"/>`)}`);
   // behind the figure
@@ -1244,7 +1267,7 @@ function portrait(sp, o) {
     else if (race === "minotaur") p.push(`<path d="M72 92 L46 84 L58 100 L72 104Z" fill="${skin}"/><path d="M130 92 L156 84 L144 100 L130 104Z" fill="${sD}"/>`);
     else p.push(`<ellipse cx="71" cy="108" rx="6" ry="11" fill="url(#${id}sk)"/><ellipse cx="131" cy="108" rx="6" ry="11" fill="${sD}"/>`);
     // face with soft painted shading
-    p.push(`<path d="M70 98 C70 70 84 54 100 54 C118 54 132 70 132 98 C132 122 126 140 114 152 C108 158 104 160 100 160 C96 160 92 158 86 152 C74 140 70 122 70 98Z" fill="url(#${id}sk)" stroke="${ink}" stroke-opacity=".45" stroke-width="1.6"/>
+    p.push(`<path d="${FACE}" fill="url(#${id}sk)" stroke="${ink}" stroke-opacity=".45" stroke-width="1.6"/>
       <g clip-path="url(#${id}fc)"><ellipse cx="134" cy="112" rx="18" ry="52" fill="${sD}" opacity=".65" ${blur}/><ellipse cx="100" cy="90" rx="34" ry="6" fill="${sD}" opacity=".35" ${blur}/>
       <ellipse cx="92" cy="70" rx="16" ry="9" fill="${sL}" opacity=".55" ${blur}/><ellipse cx="84" cy="124" rx="9" ry="5" fill="#d9706a" opacity=".3" ${blur}/><ellipse cx="117" cy="124" rx="9" ry="5" fill="#d9706a" opacity=".22" ${blur}/>
       <ellipse cx="106" cy="118" rx="4" ry="11" fill="${sD}" opacity=".45" ${blur}/><ellipse cx="100" cy="162" rx="32" ry="10" fill="${sD}" opacity=".55" ${blur}/>
@@ -1252,7 +1275,7 @@ function portrait(sp, o) {
     if (race === "golem") p.push(`<path d="M80 66 L86 80 L82 90 M122 126 L116 138 L120 148 M108 58 L104 70" fill="none" stroke="${darken(skin, .5)}" stroke-width="2.4"/><path d="M90 140 L110 140" stroke="${acc}" stroke-width="2" ${glowF}/>`);
     // eyes
     const eye = (cx, side, delay) => {
-      const cy = 104, h = expr === "stern" ? 4.6 : 6, lo = expr === "pleased" ? 3 : 5;
+      const es = sp.eyeShape, cy = 104, h = (expr === "stern" ? 4.6 : 6) * (es === "narrow" ? .72 : es === "wide" ? 1.2 : 1), lo = (expr === "pleased" ? 3 : 5) * (es === "wide" ? 1.15 : 1);
       if (race === "lich") return `<ellipse cx="${cx}" cy="${cy}" rx="9" ry="7" fill="#1b1420"/><circle cx="${cx}" cy="${cy}" r="3" fill="${iris}" ${glowF}>${A(`<animate attributeName="opacity" values=".6;1;.6" dur="2.2s" repeatCount="indefinite"/>`)}</circle>`;
       const white = sp.glow ? "#1b1420" : "#f4efe6";
       return `<path d="M${cx - 9} ${cy} Q${cx} ${cy - h * 1.2} ${cx + 9} ${cy} Q${cx} ${cy + lo} ${cx - 9} ${cy}Z" fill="${white}"/>
@@ -1260,6 +1283,8 @@ function portrait(sp, o) {
         <path d="M${cx - 10} ${cy + .5} Q${cx} ${cy - h * 1.35} ${cx + 10} ${cy - .5}" fill="none" stroke="${ink}" stroke-width="2.4" stroke-linecap="round"/>
         <path d="M${cx - 8} ${cy - h - 3} Q${cx} ${cy - h - 6} ${cx + 8} ${cy - h - 3}" fill="none" stroke="${sD}" stroke-width="1.2" opacity=".8"/>
         <path d="M${cx - 7} ${cy + lo - .5} Q${cx} ${cy + lo + 1.5} ${cx + 7} ${cy + lo - .5}" fill="none" stroke="${sD}" stroke-width="1" opacity=".7"/>
+        ${es === "sleepy" ? `<path d="M${cx - 10} ${cy + .5} Q${cx} ${cy - h * 1.4} ${cx + 10} ${cy - .5} L${cx + 10} ${cy - 1} Q${cx} ${cy - 1.5} ${cx - 10} ${cy - .5}Z" fill="${sD}"/><path d="M${cx - 10} ${cy - .5} Q${cx} ${cy - 2} ${cx + 10} ${cy - 1}" fill="none" stroke="${ink}" stroke-width="2"/>` : ""}
+        ${es === "fierce" ? `<path d="M${cx - 11 * (side === "L" ? 1 : -1)} ${cy - 7} L${cx + 10 * (side === "L" ? 1 : -1)} ${cy - 2}" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>` : ""}
         ${A(`<ellipse cx="${cx}" cy="${cy - 1}" rx="10.5" ry="0" fill="${skin}"><animate attributeName="ry" values="0;0;7.5;0" keyTimes="0;.93;.965;1" dur="5.8s" begin="${delay}s" repeatCount="indefinite"/></ellipse>`)}`;
     };
     p.push(eye(87, "L", 0), eye(113, "R", 0));
@@ -1280,6 +1305,19 @@ function portrait(sp, o) {
     }
     if (race === "orc") p.push(`<path d="M88 142 L91 128 L95 142Z" fill="#f4efe0" stroke="${ink}" stroke-width=".8"/><path d="M105 142 L109 128 L112 142Z" fill="#f4efe0" stroke="${ink}" stroke-width=".8"/>`);
     if (sp.glow && race !== "lich") p.push(`<circle cx="87" cy="104" r="13" fill="${sp.glow}" opacity=".22" ${blur}/><circle cx="113" cy="104" r="13" fill="${sp.glow}" opacity=".22" ${blur}/>`);
+    // distinguishing marks
+    const M = m => marks.includes(m);
+    if (M("wrinkles")) p.push(`<g fill="none" stroke="${sD}" stroke-width="1.3" opacity=".7"><path d="M82 76 Q100 71 118 76"/><path d="M85 82 Q100 78 115 82"/><path d="M73 102 L69 99 M73 106 L69 107 M127 102 L131 99 M127 106 L131 107"/><path d="M89 121 Q84 131 88 141 M111 121 Q116 131 112 141"/></g>`);
+    if (M("freckles")) p.push(`<g fill="${darken(skin, .35)}" opacity=".7">${[[80, 118], [84, 122], [78, 124], [88, 119], [120, 118], [116, 122], [122, 124], [112, 119], [97, 116], [103, 117]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.1"/>`).join("")}</g>`);
+    if (M("soot")) p.push(`<g fill="#1a0e08" opacity=".35" ${blur}><ellipse cx="82" cy="126" rx="9" ry="5"/><ellipse cx="114" cy="70" rx="10" ry="5"/></g>`);
+    if (M("scar")) p.push(`<path d="M78 86 L95 124" stroke="${mix(skin, "#a03030", .55)}" stroke-width="3" stroke-linecap="round"/><g stroke="${darken(skin, .5)}" stroke-width="1.2">${[0, 1, 2, 3].map(i => `<line x1="${79 + i * 4}" y1="${93 + i * 9}" x2="${85 + i * 4}" y2="${91 + i * 9}"/>`).join("")}</g>`);
+    if (M("runes")) p.push(`<g fill="none" stroke="${sp.glow || acc}" stroke-width="2" ${glowF}>${A(`<animate attributeName="opacity" values=".5;1;.5" dur="3s" repeatCount="indefinite"/>`)}<path d="M86 66 L90 76 L94 66 M106 66 L110 76 L114 66 M98 60 L100 66 L102 60"/><path d="M80 134 L84 140 M120 134 L116 140"/></g>`);
+    if (M("thirdeye")) p.push(`<path d="M100 66 L106 73 L100 80 L94 73Z" fill="${acc}" ${glowF}>${A(`<animate attributeName="opacity" values=".4;1;.4" dur="2.2s" repeatCount="indefinite"/>`)}</path>`);
+    if (M("tattoo")) p.push(`<g fill="none" stroke="#2a1208" stroke-width="2.4" opacity=".8"><path d="M82 72 Q100 60 118 72"/><path d="M88 78 Q100 70 112 78"/><path d="M100 60 L100 70"/></g>`);
+    if (M("stubble")) p.push(`<g fill="${darken(skin, .55)}" opacity=".35">${Array.from({ length: 34 }, (_, i) => { const a = Math.PI * (.12 + .76 * i / 33), x = 100 - Math.cos(a) * 28, y = 128 + Math.sin(a) * 26; return `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1"/>`; }).join("")}</g>`);
+    if (M("facepaint")) p.push(`<g clip-path="url(#${id}fc)"><rect x="100" y="40" width="40" height="130" fill="${sec}" opacity=".4"/><path d="M100 54 L100 164" stroke="#e0b130" stroke-width="2"/><path d="M113 116 L117 124 L113 132 L109 124Z" fill="#e0b130"/></g>`);
+    if (M("goldtooth")) p.push(`<rect x="101" y="137.5" width="3.5" height="3" fill="#e0b130"/>`);
+    if (M("pencil")) p.push(`<g transform="rotate(-30 136 92)"><rect x="128" y="88" width="30" height="5" fill="#f2c230"/><path d="M158 88 L166 90.5 L158 93Z" fill="#e9c9a0"/><rect x="124" y="88" width="5" height="5" fill="#e88a9a"/></g>`);
     // facial hair and accessories
     if (face.includes("beard") || face.includes("longbeard")) {
       const long = face.includes("longbeard"), fire = race === "giant", fill = fire ? `url(#${id}fl)` : `url(#${id}h)`;
@@ -1291,6 +1329,7 @@ function portrait(sp, o) {
     if (face.includes("mask")) p.push(`<path d="M70 116 Q100 110 130 116 L128 140 C120 156 110 162 100 162 C90 162 80 156 72 140Z" fill="url(#${id}c2)" stroke="${ink}" stroke-opacity=".5"/><path d="M80 128 Q100 134 120 128 M84 142 Q100 148 116 142" stroke="${darken(sec, .5)}" fill="none" opacity=".6"/>`);
     if (face.includes("glasses")) p.push(`<g fill="#cfe9ff" fill-opacity=".18" stroke="url(#${id}g)" stroke-width="1.8"><ellipse cx="87" cy="104" rx="12" ry="9"/><ellipse cx="113" cy="104" rx="12" ry="9"/></g><path d="M99 104 L101 104" stroke="url(#${id}g)" stroke-width="1.8"/>`);
     if (face.includes("eyepatch")) p.push(`<path d="M68 92 L134 82" stroke="#111" stroke-width="2.5"/><path d="M76 98 Q87 92 98 98 L96 112 Q87 116 78 112Z" fill="#141414" stroke="url(#${id}g)" stroke-width="1.2"/>`);
+    if (marks.includes("monocle")) p.push(`<circle cx="113" cy="104" r="11.5" fill="#cfe9ff" fill-opacity=".12" stroke="url(#${id}g)" stroke-width="2.6"/><path d="M124 108 Q132 150 140 190" fill="none" stroke="url(#${id}g)" stroke-width="1.4" stroke-dasharray="2 2"/>`);
     if (face.includes("nosering")) p.push(`<circle cx="100" cy="128" r="4.5" fill="none" stroke="url(#${id}g)" stroke-width="2.2"/>`);
     // hair
     if (hat !== "hood") {
@@ -1300,6 +1339,9 @@ function portrait(sp, o) {
       if (hst === "long") p.push(`<path d="M68 92 C62 124 62 166 72 204 C78 172 80 132 80 98Z" fill="url(#${id}h)"/><path d="M132 92 C138 124 138 166 128 204 C122 172 120 132 120 98Z" fill="url(#${id}h)"/>`);
       if (hst === "spiky") p.push(`<path d="M66 106 L56 72 L72 78 L66 46 L86 60 L92 32 L104 54 L118 30 L122 58 L142 46 L136 78 L150 76 L136 106 C132 88 124 78 112 74 C102 82 86 82 74 78 C70 86 68 96 66 106Z" fill="url(#${id}h)" stroke="${ink}" stroke-opacity=".4"/><g stroke="${hL}" stroke-width="1.2" fill="none" opacity=".7"><path d="M88 56 L92 70"/><path d="M110 50 L108 66"/></g>`);
       if (hst === "none") p.push(`<ellipse cx="88" cy="64" rx="12" ry="5" fill="#ffffff" opacity=".35" ${blur}/>`);
+      if (hst0 === "bun") p.push(`<circle cx="100" cy="38" r="15" fill="url(#${id}h)" stroke="${ink}" stroke-opacity=".4"/><path d="M90 34 Q100 28 110 34" stroke="${hL}" stroke-width="1.4" fill="none"/><rect x="84" y="44" width="32" height="4" rx="2" fill="url(#${id}g)"/>`);
+      if (hst0 === "braid") p.push(`${[0, 1, 2, 3, 4, 5].map(i => `<ellipse cx="${72 - i * 1.4}" cy="${112 + i * 16}" rx="8" ry="10" fill="url(#${id}h)" stroke="${hD}" stroke-width="1"/>`).join("")}<rect x="62" y="206" width="12" height="5" rx="2" fill="${acc}"/>`);
+      if (hst0 === "wild") p.push(`<path d="M66 100 L54 84 L66 82 L58 64 L76 70 L76 50 L92 60 L100 42 L108 60 L124 50 L124 70 L142 64 L134 82 L146 84 L134 100 C130 86 124 78 114 74 C104 80 88 80 76 76 C70 84 68 92 66 100Z" fill="url(#${id}h)" stroke="${ink}" stroke-opacity=".4"/>`);
     } else {
       p.push(`<path d="M60 132 C56 78 76 46 100 46 C124 46 144 78 140 132 C146 76 126 34 100 34 C74 34 54 76 60 132Z" fill="${darken(hc, .4)}"/><path d="M76 80 Q100 62 124 80 Q100 72 76 86Z" fill="${darken(hc, .55)}" opacity=".6"/>`);
     }
