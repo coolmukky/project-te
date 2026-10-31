@@ -19,7 +19,7 @@
 | 06 | `06-behavioral-and-strategy.md` | STAR stories, career motivation, strategy answers, questions for the hiring manager |
 | 07 | `07-monday-revision-sheet.md` | One-page review for Monday morning |
 | 08 | `08-mock-interview-protocol.md` | Scoring rubric and how mock interview mode works |
-| — | `interactive-prep.html` | Interactive 2-day runbook: learn → quiz → graded answer → readiness score, plus mock interview |
+| — | `interactive-prep.html` | Interactive quest: 11 regions, 27 interview obstacles (answer → dojo → retest), final role-play and readiness verdict |
 
 ### Confidence legend used throughout
 - ✅ **Confirmed**: stable, documented Palo Alto behavior or terminology. It has been consistent across releases.
